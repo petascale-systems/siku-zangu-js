@@ -1,0 +1,9 @@
+{
+  "name": "sikuzangu-com",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/sikuzangu-com",
+  "projectType": "application",
+  "tags": [],
+  "// targets": "to see all targets run: nx show project sikuzangu-com --web",
+  "targets": {}
+}

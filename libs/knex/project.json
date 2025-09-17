@@ -1,0 +1,9 @@
+{
+  "name": "knex",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/knex/src",
+  "projectType": "library",
+  "tags": [],
+  "// targets": "to see all targets run: nx show project knex --web",
+  "targets": {}
+}

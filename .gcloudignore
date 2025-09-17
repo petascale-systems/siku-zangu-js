@@ -1,0 +1,11 @@
+*
+!/apps
+/apps/*/*
+!/apps/*/.output
+!/.output
+!/dist
+!/dist/apps
+!/atlasgo
+!/atlasgo/api-sikuzangu-com
+!*Dockerfile
+!*entrypoint.sh
