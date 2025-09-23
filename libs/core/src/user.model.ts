@@ -1,3 +1,5 @@
+import {z} from 'zod'
+
 export type Language = 'en' | 'swa'
 export type UserStatus = 'active' | 'inactive'
 
@@ -24,3 +26,28 @@ export type User = {
         receive_insights_tips?: boolean;
     }
 }
+
+export const USER_ZOD_SCHEMA = z.object({
+    kv: z.object({
+        first_name: z.string().max(64, {message: 'First name is too long'}).optional(),
+        last_name: z.string().max(64, {message: 'Last name is too long'}).optional(),
+        status: z.enum(['active', 'inactive']).optional(),
+        phone_number: z.string().regex(new RegExp('[A-Z]{2} d{6,12}'), {message: 'Phone number is invalid'}).optional(),
+        date_of_birth: z.date({message: 'Date of birth is invalid'}).optional(),
+        pin: z.string().regex(new RegExp('d{4}')).optional(),
+        password: z.string().regex(new RegExp('d{4}')).optional(),
+        language: z.enum(['en', 'swa'], {message: 'Language is invalid'}).optional(),
+        email: z.email({message: 'E-mail address is invalid'}).optional(),
+        avg_cycle_length_days: z.number()
+            .min(0, {message: 'Average cycle length is invalid'})
+            .max(365, {message: 'Average cycle length is invalid'}).optional(),
+        avg_period_length_days: z.number()
+            .min(0, {message: 'Average period length is invalid'})
+            .max(365, {message: 'Average period length is invalid'}).optional(),
+        prev_cycle_start_date: z.date({message: 'Previous cycle start date is invalid'}).optional(),
+        receive_period_alerts: z.boolean().optional(),
+        receive_fertile_alerts: z.boolean().optional(),
+        receive_medication_tips: z.boolean().optional(),
+        receive_insights_tips: z.boolean().optional(),
+    }).optional()
+})

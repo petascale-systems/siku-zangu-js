@@ -1,4 +1,4 @@
 variable "database" {
   type    = string
-  default = "siku_zangu"
+  default = "sikuzangu"
 }

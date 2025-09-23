@@ -1,5 +1,5 @@
-import {Admin, AdminsFetchParams, Page} from "@siku-zangu/core";
+import {AdminsFetchParams} from "@siku-zangu/core";
 
-export async function selectAdminsPage(params?: AdminsFetchParams) {
+export async function selectAdminsPage(params: AdminsFetchParams) {
     return {}
 }

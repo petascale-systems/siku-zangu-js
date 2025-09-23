@@ -17,7 +17,8 @@
     "react-native": "0.79.3",
     "react-native-svg": "~15.11.2",
     "react-native-svg-transformer": "~1.5.1",
-    "react-native-web": "~0.20.0"
+    "react-native-web": "~0.20.0",
+    "zod": "^4.1.11"
   },
   "devDependencies": {
     "@babel/core": "^7.14.5",

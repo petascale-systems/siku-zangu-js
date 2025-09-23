@@ -8,8 +8,6 @@ export default function Index() {
      * Note: The corresponding styles are in the ./index.css file.
      */
 
-    const {user} = useUserById()
-
     return (
         <div className={styles.page}>
             <div className="wrapper">
