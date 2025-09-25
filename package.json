@@ -4,6 +4,7 @@
   "dependencies": {
     "@expo/metro-config": "~0.20.14",
     "@expo/metro-runtime": "~5.0.4",
+    "bcrypt-ts": "^7.1.0",
     "expo": "~53.0.10",
     "expo-splash-screen": "~0.30.9",
     "expo-status-bar": "~2.2.3",
