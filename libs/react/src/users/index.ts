@@ -1,1 +1,2 @@
-export * from './use-user-by-id.function'
+export * from './use-user.function';
+export * from './use-users-page.function';

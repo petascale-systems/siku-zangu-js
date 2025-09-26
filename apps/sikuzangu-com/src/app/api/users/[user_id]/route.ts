@@ -9,7 +9,7 @@ export async function GET(req: NextRequest, {params}: { params: Promise<{ user_i
         .catch(e => {
             if (e.status) return Response.json(e, {status: e.status});
 
-            console.error('users/[user_id]/GET() => ', e)
+            console.error(`${req.method.toUpperCase()} ${req.url}: `, e)
             return Response.json({status: 500, message: 'Server error'} as APIError, {status: 500});
         })
 }
@@ -21,7 +21,7 @@ export async function PATCH(req: NextRequest, {params}: { params: Promise<{ user
         .catch(e => {
             if (e.status) return Response.json(e, {status: e.status});
 
-            console.error('users/[user_id]/PATCH() => ', e)
+            console.error(`${req.method.toUpperCase()} ${req.url}: `, e)
             return Response.json({status: 500, message: 'Server error'} as APIError, {status: 500});
         })
 }
@@ -33,7 +33,7 @@ export async function DELETE(req: NextRequest, {params}: { params: Promise<{ use
         .catch(e => {
             if (e.status) return Response.json(e, {status: e.status});
 
-            console.error('users/[user_id]/GET() => ', e)
+            console.error(`${req.method.toUpperCase()} ${req.url}: `, e)
             return Response.json({status: 500, message: 'Server error'} as APIError, {status: 500});
         })
 }
