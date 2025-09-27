@@ -10,16 +10,19 @@ type Props = NativeStackScreenProps<RootStackParamList, 'Register'>;
 
 export const RegisterScreen = ({ navigation, route }: Props) => {
   const { upsertUser, isUpsertingUser, error } = useUser();
+
   const [phone, setPhone] = useState('');
   const [pin, setPin] = useState('');
   const [secure, setSecure] = useState(true);
-  const language = route.params?.lang || 'en';
+  const language = (route.params?.lang === 'en' ? 'en' : 'sw') as 'en' | 'sw';
 
   const handleRegister = async () => {
+    console.log('=== RegisterScreen: handleRegister STARTED ===');
     const phoneRegex = /^[A-Z]{2}\d{6,12}$/;
     const pinRegex = /^\d{4}$/;
 
     if (!phoneRegex.test(phone)) {
+      console.log('RegisterScreen: Invalid phone number:', phone);
       Alert.alert(
         language === 'en' ? 'Error' : 'Hitilafu',
         language === 'en'
@@ -30,6 +33,7 @@ export const RegisterScreen = ({ navigation, route }: Props) => {
     }
 
     if (!pinRegex.test(pin)) {
+      console.log('RegisterScreen: Invalid PIN:', pin);
       Alert.alert(
         language === 'en' ? 'Error' : 'Hitilafu',
         language === 'en'
@@ -40,27 +44,33 @@ export const RegisterScreen = ({ navigation, route }: Props) => {
     }
 
     try {
-      console.log('Sending payload to upsertUser:', { kv: { phone_number: phone, pin, language } });
+      console.log('RegisterScreen: Sending payload to upsertUser:', { kv: { phone_number: phone, pin, language } });
       const user = await upsertUser({ kv: { phone_number: phone, pin, language } });
+      console.log('RegisterScreen: User registered:', user);
+
+
+
       Alert.alert(
         language === 'en' ? 'Success' : 'Mafanikio',
         language === 'en'
           ? 'Account created successfully!'
-          : 'Akaunti imefunguliwa kwa mafanikio!',
-
+          : 'Akaunti imefunguliwa kwa mafanikio!'
       );
+
     } catch (e: any) {
-      console.log('Registration error:', e);
-      const errorMessage = error || // Use error from useUser if available
+      console.log('RegisterScreen: Registration error:', e);
+      const errorMessage =
+        error ||
         (e.status === 409
           ? language === 'en'
             ? 'Phone number is already taken.'
             : 'Nambari ya simu tayari imechukuliwa.'
           : e.issues
-            ? e.issues.map((issue: any) => issue.message).join(', ')
+            ? e.issues.map((issue: any) => issue.error || issue.message).join(', ')
             : language === 'en'
               ? 'Failed to register. Please try again.'
               : 'Imeshindwa kujisajili. Tafadhali jaribu tena.');
+      console.log('RegisterScreen: Showing alert:', errorMessage);
       Alert.alert(language === 'en' ? 'Error' : 'Hitilafu', errorMessage);
     }
   };
@@ -79,7 +89,7 @@ export const RegisterScreen = ({ navigation, route }: Props) => {
           <TextInput
             style={styles.input}
             placeholder={language === 'en' ? 'Enter Phone Number' : 'Ingiza Nambari ya Simu'}
-            keyboardType='phone-pad'
+            keyboardType="phone-pad"
             value={phone}
             onChangeText={setPhone}
             accessibilityLabel={language === 'en' ? 'Phone Number' : 'Nambari ya Simu'}
@@ -94,14 +104,14 @@ export const RegisterScreen = ({ navigation, route }: Props) => {
               secureTextEntry={secure}
               value={pin}
               onChangeText={setPin}
-              keyboardType='numeric'
+              keyboardType="numeric"
               accessibilityLabel={language === 'en' ? 'PIN' : 'Nenosiri'}
             />
             <TouchableOpacity onPress={() => setSecure(!secure)}>
               <Ionicons
                 name={secure ? 'eye-off-outline' : 'eye-outline'}
                 size={22}
-                color='gray'
+                color="gray"
                 accessibilityLabel={language === 'en' ? 'Toggle PIN visibility' : 'Badilisha kuonekana kwa nenosiri'}
               />
             </TouchableOpacity>
@@ -110,7 +120,6 @@ export const RegisterScreen = ({ navigation, route }: Props) => {
         <PrimaryButton
           title={language === 'en' ? 'Register' : 'Jisajili'}
           onPress={handleRegister}
-          disabled={isUpsertingUser}
           accessibilityLabel={language === 'en' ? 'Register' : 'Jisajili'}
         />
       </View>
