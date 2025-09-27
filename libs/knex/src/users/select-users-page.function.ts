@@ -6,7 +6,7 @@ export async function selectUsersPage(params: UsersFetchParams) {
     if (!params.page) params.page = 1;
     if (!params.size) params.size = 20;
 
-    let baseQuery = buildUserTableJoins(DATABASE)
+    const baseQuery = buildUserTableJoins(DATABASE)
     const users = await baseQuery.clone().select(USER_TABLE_COLUMN_ALIASES)
         .offset(params.size).limit(params.size)
         .orderBy("_u.created_at", "desc")

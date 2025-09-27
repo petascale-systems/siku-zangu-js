@@ -1,11 +1,9 @@
-import {APIError, User, USER_ZOD_SCHEMA, userToKv} from "@siku-zangu/core";
-import {
-  DATABASE,
-  isTakenEmail,
-  isTakenPhoneNumber,
-  TABLE_NAME_S_USER,
-  TABLE_NAME_S_USER_KV,
-} from '@siku-zangu/knex';
+import {APIError, User, USER_ZOD_SCHEMA} from "@siku-zangu/core";
+import {DATABASE} from '../create-database.function';
+import  {isTakenEmail} from './is-taken-email.function';
+import {isTakenPhoneNumber} from './is-taken-phone-number.function';
+import {TABLE_NAME_S_USER,  TABLE_NAME_S_USER_KV} from '../table-names';
+import {userToKv} from './user-to-kv.function';
 import {randomUUID} from "node:crypto";
 import {Knex} from "knex";
 
@@ -98,7 +96,9 @@ export async function insertOneUser(user: User) {
 
 
   if (parsedUser?.data?.kv?.phone_number) {
-    if (await isTakenPhoneNumber(parsedUser.data?.kv?.phone_number)) {
+    const isTaken= await isTakenPhoneNumber(parsedUser.data?.kv?.phone_number);
+    console.log(isTaken);
+    if (isTaken) {
       return Promise.reject({
         status: 409,
         message: 'Phone number is taken',
@@ -112,9 +112,7 @@ export async function insertOneUser(user: User) {
   return tx.insert({id_user: userId}).into(TABLE_NAME_S_USER)
     .then(() => tx
       .insert(kvs.map(kv => ({...kv, id_user: userId})))
-      .into(TABLE_NAME_S_USER_KV)
-      .onConflict(['id_user', 'k'])
-      .merge(['v']))
+      .into(TABLE_NAME_S_USER_KV))
     .then(() => buildUserTableJoins(tx)
       .where('_u.id_user', userId)
       .first(USER_TABLE_COLUMN_ALIASES))

@@ -1,4 +1,6 @@
-import {buildUserTableJoins, DATABASE, rowToUser, USER_TABLE_COLUMN_ALIASES} from "@siku-zangu/knex";
+import {buildUserTableJoins, rowToUser, USER_TABLE_COLUMN_ALIASES} from "./insert-one-user.function";
+import {DATABASE} from '../create-database.function';
+
 import {APIError} from "@siku-zangu/core";
 
 export async function selectOneUserByUserId(userIdHex: string) {
