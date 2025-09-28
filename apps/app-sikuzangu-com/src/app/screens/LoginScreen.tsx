@@ -4,12 +4,13 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { PrimaryButton } from '../components/PrimaryButton';
 import { Ionicons } from '@expo/vector-icons';
-import { useUser } from '@siku-zangu/react';
+import { useAccessToken } from '@siku-zangu/react';
+import { APIError } from '@siku-zangu/core';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Login'>;
 
 export const LoginScreen = ({ navigation, route }: Props) => {
-  const { loginUser, isLoggingIn, error } = useUser();
+  const { loginUser, isLoggingIn, error } = useAccessToken();
 
   const [phone, setPhone] = useState('');
   const [pin, setPin] = useState('');
@@ -20,7 +21,6 @@ export const LoginScreen = ({ navigation, route }: Props) => {
   const language = route.params?.lang ?? 'en';
   const displayCountryCode = '+255';
   const storageCountryCode = 'TZ';
-
 
   useEffect(() => {
     const phoneNumber = phone.replace(/\D/g, '');
@@ -35,7 +35,6 @@ export const LoginScreen = ({ navigation, route }: Props) => {
     }
   }, [phone, language]);
 
-
   useEffect(() => {
     if (pin.length === 0) {
       setPinError(language === 'en' ? 'PIN is required' : 'Namba ya siri inahitajika');
@@ -49,7 +48,6 @@ export const LoginScreen = ({ navigation, route }: Props) => {
   const handleLogin = async () => {
     const phoneNumber = phone.replace(/\D/g, '');
     const storedPhoneNumber = `${storageCountryCode} ${phoneNumber}`;
-
 
     if (!phone) {
       setPhoneError(language === 'en' ? 'Phone number is required' : 'Nambari ya simu inahitajika');
@@ -89,8 +87,8 @@ export const LoginScreen = ({ navigation, route }: Props) => {
       );
     } catch (e: any) {
       const errorMessage =
-        e.details ||
-        e.message ||
+        (e as APIError).issues?.map((issue: any) => issue.message).join(', ') ||
+        (e as APIError).message ||
         (e.status === 401
           ? language === 'en'
             ? 'Invalid phone number or PIN'
@@ -105,8 +103,8 @@ export const LoginScreen = ({ navigation, route }: Props) => {
       Alert.alert(language === 'en' ? 'Error' : 'Hitilafu', errorMessage);
     }
   };
-
- /* const handleForgotPin = () => {
+/*
+  const handleForgotPin = () => {
     navigation.navigate('ForgotPin', { lang: language });
   };*/
 

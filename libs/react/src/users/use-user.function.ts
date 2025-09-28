@@ -7,7 +7,7 @@ import { deleteJSON } from '../delete-json.function';
 
 export const USERS_API_PATH = '/api/users';
 export const USER_BY_ID_API_PATH = (id: string) => `/api/users/${id}`;
-export const AUTH_LOGIN_PATH = '/api/users/auth';
+
 
 async function _fetchUserById(id: string) {
   return getJSON<User>(USER_BY_ID_API_PATH(id));
@@ -25,19 +25,11 @@ async function _deleteUser(userId: string) {
   return deleteJSON<User>(USER_BY_ID_API_PATH(userId));
 }
 
-async function _loginUser(credentials: { phone_number: string; pin: string }) {
-  return postJSON<{ phone_number: string; pin: string }, User>(
-    AUTH_LOGIN_PATH,
-    credentials
-  );
-}
-
 export function useUser(userId?: string) {
   const [user, setUser] = useState<User>();
   const [isFetchingUser, setIsFetchingUser] = useState(false);
   const [isUpsertingUser, setIsUpsertingUser] = useState(false);
   const [isDeletingUser, setIsDeletingUser] = useState(false);
-  const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   async function upsertUser(user: User) {
@@ -60,26 +52,6 @@ export function useUser(userId?: string) {
       setIsUpsertingUser(false);
     }
   }
-
-  async function loginUser(credentials: { phone_number: string; pin: string }) {
-    setIsLoggingIn(true);
-    setError(null);
-    try {
-      const loggedInUser = await _loginUser(credentials);
-      if (loggedInUser) setUser(loggedInUser);
-      return loggedInUser;
-    } catch (e: any) {
-      const errorMessage =
-        (e as APIError).issues?.map((issue: any) => issue.message).join(', ') ||
-        (e as APIError).message ||
-        'Failed to login';
-      setError(errorMessage);
-      throw e;
-    } finally {
-      setIsLoggingIn(false);
-    }
-  }
-
   async function deleteUser() {
     if (!userId) return;
     setIsDeletingUser(true);
@@ -114,10 +86,8 @@ export function useUser(userId?: string) {
     isFetchingUser,
     isUpsertingUser,
     isDeletingUser,
-    isLoggingIn,
     error,
     upsertUser,
-    loginUser,
     deleteUser,
   };
 }
