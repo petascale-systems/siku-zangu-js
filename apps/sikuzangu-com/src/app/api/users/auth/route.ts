@@ -1,10 +1,13 @@
 import { NextRequest } from 'next/server';
-import { APIError, USER_ZOD_SCHEMA } from '@siku-zangu/core';
+import { APIError, USER_ZOD_SCHEMA, AccessToken } from '@siku-zangu/core';
 import { selectOneUserByPhone } from '@siku-zangu/knex';
 import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
+
+const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-key-change-this-in-production';
+const JWT_EXPIRES_IN = '7d'; // Token expires in 7 days
 
 export async function POST(req: NextRequest) {
-  console.log('=== BACKEND: POST /api/users/auth STARTED ===');
 
   const headers = new Headers();
   headers.set('Access-Control-Allow-Origin', '*');
@@ -31,7 +34,6 @@ export async function POST(req: NextRequest) {
     }
 
     if (!user.kv.pin) {
-      console.error('Missing PIN for user:', user);
       throw {
         status: 500,
         message: 'User has no stored PIN',
@@ -55,7 +57,25 @@ export async function POST(req: NextRequest) {
         details: issues,
       } as APIError;
     }
-    return Response.json(user, { status: 200, headers });
+
+    const tokenPayload = {
+      user_id: user.user_id,
+      phone_number: user.kv.phone_number,
+      iat: Math.floor(Date.now() / 1000),
+    };
+
+    const token = jwt.sign(tokenPayload, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
+
+
+    const expiresIn = Math.floor(Date.now() / 1000) + (7 * 24 * 60 * 60); // 7 days in seconds
+
+    const accessToken: AccessToken = {
+      token,
+      expires_in: expiresIn,
+      user,
+    };
+
+    return Response.json(accessToken, { status: 200, headers });
   } catch (e: any) {
     return Response.json(
       {
