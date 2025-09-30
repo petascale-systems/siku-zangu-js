@@ -1,5 +1,9 @@
-import {APIError, User, USER_ZOD_SCHEMA, userToKv} from "@siku-zangu/core";
-import {DATABASE, isTakenEmail, TABLE_NAME_S_USER, TABLE_NAME_S_USER_KV} from "@siku-zangu/knex";
+import {APIError, User, USER_ZOD_SCHEMA} from "@siku-zangu/core";
+import {DATABASE} from '../create-database.function';
+import  {isTakenEmail} from './is-taken-email.function';
+import {isTakenPhoneNumber} from './is-taken-phone-number.function';
+import {TABLE_NAME_S_USER,  TABLE_NAME_S_USER_KV} from '../table-names';
+import {userToKv} from './user-to-kv.function';
 import {randomUUID} from "node:crypto";
 import {Knex} from "knex";
 
@@ -66,60 +70,61 @@ export function buildUserTableJoins(db: Knex | Knex.Transaction) {
 }
 
 export async function insertOneUser(user: User) {
-    const parsedUser = USER_ZOD_SCHEMA.safeParse(user)
-    if (!parsedUser.success) {
-        const issues = parsedUser?.error?.issues.map(i => ({
-            path: i?.path,
-            error: i?.message
-        }));
-        return Promise.reject({status: 400, message: 'User validation failed', issues: issues} as APIError)
+  const parsedUser = USER_ZOD_SCHEMA.safeParse(user)
+  if (!parsedUser.success) {
+    const issues = parsedUser?.error?.issues.map(i => ({
+      path: i?.path,
+      error: i?.message
+    }));
+    return Promise.reject({status: 400, message: 'User validation failed', issues: issues} as APIError)
+  }
+
+  const kvs = userToKv(parsedUser.data as User)
+  if (kvs.length <= 0) {
+    return Promise.reject({status: 400, message: 'User validation failed'} as APIError)
+  }
+
+  if (parsedUser?.data?.kv?.email) {
+    if (await isTakenEmail(parsedUser.data?.kv?.email)) {
+      return Promise.reject({
+        status: 409,
+        message: 'E-mail is taken',
+        issues: [{path: ['kv', 'email'], error: 'E-mail is taken'}]
+      } as APIError)
     }
+  }
 
-    const kvs = userToKv(parsedUser.data as User)
-    if (kvs.length <= 0) {
-        return Promise.reject({status: 400, message: 'User validation failed'} as APIError)
+
+  if (parsedUser?.data?.kv?.phone_number) {
+    const isTaken= await isTakenPhoneNumber(parsedUser.data?.kv?.phone_number);
+    console.log(isTaken);
+    if (isTaken) {
+      return Promise.reject({
+        status: 409,
+        message: 'Phone number is taken',
+        issues: [{path: ['kv', 'phone_number'], error: 'Phone number is taken'}]
+      } as APIError)
     }
+  }
 
-    if (parsedUser?.data?.kv?.email) {
-        if (await isTakenEmail(parsedUser.data?.kv?.email)) {
-            return Promise.reject({
-                status: 409,
-                message: 'E-mail is taken',
-                issues: [{path: ['kv', 'email'], error: 'E-mail is taken'}]
-            } as APIError)
-        }
-    }
+  const userId = DATABASE.fn.uuidToBin(randomUUID())
+  const tx = await DATABASE.transaction()
+  return tx.insert({id_user: userId}).into(TABLE_NAME_S_USER)
+    .then(() => tx
+      .insert(kvs.map(kv => ({...kv, id_user: userId})))
+      .into(TABLE_NAME_S_USER_KV))
+    .then(() => buildUserTableJoins(tx)
+      .where('_u.id_user', userId)
+      .first(USER_TABLE_COLUMN_ALIASES))
+    .then(async (row) => {
+      if (!row) return Promise.reject('User INSERTed but SELECT returns zero records')
 
-    if (parsedUser?.data?.kv?.phone_number) {
-        if (await isTakenEmail(parsedUser.data?.kv?.phone_number)) {
-            return Promise.reject({
-                status: 409,
-                message: 'Phone number is taken',
-                issues: [{path: ['kv', 'phone_number'], error: 'Phone number is taken'}]
-            } as APIError)
-        }
-    }
-
-    const userId = DATABASE.fn.uuidToBin(randomUUID())
-    const tx = await DATABASE.transaction()
-    return tx.insert({id_user: userId}).into(TABLE_NAME_S_USER)
-        .then(() => tx
-            .insert(kvs.map(kv => ({...kv, id_user: userId})))
-            .into(TABLE_NAME_S_USER_KV)
-            .onConflict(['id_user', 'k'])
-            .merge(['v']))
-        .then(() => buildUserTableJoins(tx)
-            .where('_u.id_user', userId)
-            .first(USER_TABLE_COLUMN_ALIASES))
-        .then(async (row) => {
-            if (!row) return Promise.reject('User INSERTed but SELECT returns zero records')
-
-            await tx.commit()
-            return rowToUser(row)
-        })
-        .catch(async (e) => {
-            console.error('insertOneUser() => ', e)
-            await tx.rollback()
-            return Promise.reject({status: 500, message: 'User creation failed'})
-        })
+      await tx.commit()
+      return rowToUser(row)
+    })
+    .catch(async (e) => {
+      console.error('insertOneUser() => ', e)
+      await tx.rollback()
+      return Promise.reject({status: 500, message: 'User creation failed'})
+    })
 }

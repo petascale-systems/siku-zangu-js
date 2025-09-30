@@ -11,6 +11,32 @@ const nextConfig = {
     // See: https://nx.dev/recipes/next/next-config-setup
     nx: {},
     serverExternalPackages: ["knex", "mysql2"],
+  async headers() {
+    return [
+      {
+        // Applies to all API routes
+        source: "/api/:path*",
+        headers: [
+          {
+            key: "Access-Control-Allow-Origin",
+            value: "http://localhost:19000",
+          },
+          {
+            key:"Access-Control-Allow-Credentials",
+            value: "true"
+          },
+          {
+            key: "Access-Control-Allow-Methods",
+            value: "GET, POST, PUT, DELETE, OPTIONS",
+          },
+          {
+            key: "Access-Control-Allow-Headers",
+            value: "Content-Type, Authorization",
+          },
+        ],
+      },
+    ];
+  },
 };
 
 const plugins = [

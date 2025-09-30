@@ -1,4 +1,5 @@
-import {DATABASE, TABLE_NAME_S_USER} from "@siku-zangu/knex";
+import {TABLE_NAME_S_USER} from '../table-names'
+import {DATABASE} from '../create-database.function';
 
 export async function userExistsByUserId(userIdHex: string) {
     return DATABASE

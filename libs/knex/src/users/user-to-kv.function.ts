@@ -1,6 +1,5 @@
-import {User} from "./user.model";
-import {createBcryptHash} from "@siku-zangu/knex";
-import {Kv} from "./kv.model";
+import {User, Kv} from "@siku-zangu/core";
+import {createBcryptHash} from '../create-bcrypt-hash.function'
 
 export function userToKv(user: User) {
     const userKv = user?.kv

@@ -7,3 +7,5 @@ export * from './is-taken-phone-number.function'
 export * from './user-exists-by-user-id.function'
 export * from './select-one-user-by-user-id.function'
 export * from './delete-one-user-by-user-id.function'
+export * from './user-to-kv.function'
+
