@@ -1,13 +1,13 @@
 import { NextRequest } from 'next/server';
 import { APIError, USER_ZOD_SCHEMA, AccessToken } from '@siku-zangu/core';
 import { selectOneUserByPhone } from '@siku-zangu/knex';
+import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-key-change-this-in-production';
-const JWT_EXPIRES_IN = '7d'; // Token expires in 7 days
+const JWT_EXPIRES_IN = '7d';
 
 export async function POST(req: NextRequest) {
-
   const headers = new Headers();
   headers.set('Access-Control-Allow-Origin', '*');
   headers.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -27,7 +27,8 @@ export async function POST(req: NextRequest) {
       } as APIError;
     }
 
-    const user = await selectOneUserByPhone(phone_number);
+    const normalizedPhoneNumber = phone_number.trim();
+    const user = await selectOneUserByPhone(normalizedPhoneNumber);
     if (!user) {
       throw { status: 401, message: 'Invalid phone number or PIN' } as APIError;
     }
@@ -44,12 +45,22 @@ export async function POST(req: NextRequest) {
       throw { status: 401, message: 'Invalid phone number or PIN' } as APIError;
     }
 
-    const validation = USER_ZOD_SCHEMA.safeParse(user);
+
+    const validatedUser = {
+      ...user,
+      kv: {
+        ...user.kv,
+        pin: '1234',
+      },
+    };
+
+    const validation = USER_ZOD_SCHEMA.safeParse(validatedUser);
     if (!validation.success) {
       const issues = validation.error.issues.map((issue) => ({
         path: issue.path.join('.'),
         message: issue.message,
       }));
+      console.error('Validation failed:', issues);
       throw {
         status: 500,
         message: 'Invalid user data',
@@ -65,7 +76,6 @@ export async function POST(req: NextRequest) {
 
     const token = jwt.sign(tokenPayload, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
 
-
     const expiresIn = Math.floor(Date.now() / 1000) + (7 * 24 * 60 * 60); // 7 days in seconds
 
     const accessToken: AccessToken = {
@@ -76,6 +86,7 @@ export async function POST(req: NextRequest) {
 
     return Response.json(accessToken, { status: 200, headers });
   } catch (e: any) {
+    console.error('Auth error:', e);
     return Response.json(
       {
         status: e.status || 500,

@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { APIError, User, REGISTER_USER_ZOD_SCHEMA } from '@siku-zangu/core';
+import { APIError, User, USER_ZOD_SCHEMA } from '@siku-zangu/core';
 import { insertOneUser, selectUsersPage } from '@siku-zangu/knex';
 
 export async function POST(req: NextRequest) {
@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
     console.log('BACKEND: User data:', body);
 
     // Validate payload
-    const validation = REGISTER_USER_ZOD_SCHEMA.safeParse(body);
+    const validation = USER_ZOD_SCHEMA.safeParse(body);
     if (!validation.success) {
       const issues = validation.error.issues.map((issue) => ({
         path: issue.path.join('.'),
