@@ -5,7 +5,7 @@ export function createDatabaseConfig() {
         host: process.env['S_DATABASE_HOST'] || 'localhost',
         port: parseInt(process.env['S_DATABASE_PORT'] || '3306'),
         user: process.env['S_DATABASE_USER'] || 'user',
-        password: process.env['S_DATABASE_PASSWORD'] || 'password',
+        password: decodeURIComponent(process.env['S_DATABASE_PASSWORD'] || 'password'),
         database: process.env['S_DATABASE_NAME'] || 'siku_zangu',
     } as DatabaseConfig;
 }

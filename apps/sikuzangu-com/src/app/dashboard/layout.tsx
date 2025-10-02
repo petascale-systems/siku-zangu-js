@@ -21,16 +21,16 @@ export default function Layout({children}: { children: React.ReactNode }) {
                 </div>
 
                 <div className='grow w-full py-4 px-2'>
-                    <NavLink href='/d' text='Dashboard' icon={<HomeIcon className='size-4.5 stroke-2'/>}/>
-                    <NavLink href='/d/admins' text='Admins'
+                    <NavLink href='/dashboard' text='Dashboard' icon={<HomeIcon className='size-4.5 stroke-2'/>}/>
+                    <NavLink href='/dashboard/admins' text='Admins'
                              icon={<ShieldExclamationIcon className='size-5 stroke-2'/>}/>
-                    <NavLink href='/d/users' text='Users' icon={<UsersIcon className='size-4.5 stroke-2'/>}/>
-                    <NavLink href='/d/articles' text='Articles'
+                    <NavLink href='/dashboard/users' text='Users' icon={<UsersIcon className='size-4.5 stroke-2'/>}/>
+                    <NavLink href='/dashboard/articles' text='Articles'
                              icon={<DocumentTextIcon className='size-4.5 stroke-2'/>}/>
-                    <NavLink href='/d/notifications' text='Notifications'
+                    <NavLink href='/dashboard/notifications' text='Notifications'
                              icon={<BellIcon className='size-5 stroke-2'/>}/>
-                    <NavLink href='/d/stats' text='Stats' icon={<ChartBarIcon className='size-4.5 stroke-2'/>}/>
-                    <NavLink href='/d/trends' text='Trends'
+                    <NavLink href='/dashboard/stats' text='Stats' icon={<ChartBarIcon className='size-4.5 stroke-2'/>}/>
+                    <NavLink href='/dashboard/trends' text='Trends'
                              icon={<ArrowTrendingUpIcon className='size-4.5 stroke-2'/>}/>
                 </div>
             </nav>

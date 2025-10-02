@@ -52,7 +52,7 @@ export function Tfoot({colSpan, className = '', page = 1, pageSize = 10, totalPa
         if (totalPages > 3 && page >= 3 && totalPages - page >= 2) start = page - 1
         if (totalPages > 3 && page >= 3 && totalPages - page < 2) start = totalPages - 2
         const newPages = [] as number[]
-        for (let i = start; i <= start + 2; ++i) {
+        for (let i = start; i <= totalPages; ++i) {
             newPages.push(i)
         }
 

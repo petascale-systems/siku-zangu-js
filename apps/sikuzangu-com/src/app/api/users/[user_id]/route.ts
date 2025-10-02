@@ -16,7 +16,8 @@ export async function GET(req: NextRequest, {params}: { params: Promise<{ user_i
 
 export async function PATCH(req: NextRequest, {params}: { params: Promise<{ user_id: string }> }) {
     const {user_id} = await params
-    return updateOneUser(user_id, req.body as User)
+    const body = await req.json()
+    return updateOneUser(user_id, body as User)
         .then(user => Response.json(user))
         .catch(e => {
             if (e.status) return Response.json(e, {status: e.status});

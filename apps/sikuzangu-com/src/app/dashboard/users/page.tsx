@@ -5,7 +5,7 @@ import {Switch, Table, Tbody, Td, Tfoot, Th, Thead, Tr, useUsersPage} from "@sik
 import {Input} from "@headlessui/react";
 import {MagnifyingGlassIcon} from "@heroicons/react/24/outline";
 import {useRouter, useSearchParams} from "next/navigation";
-import {UsersFetchParams} from "@siku-zangu/core";
+import {User, UsersFetchParams, UserStatus} from "@siku-zangu/core";
 
 export default function UsersPage({}: { children: React.ReactNode }) {
     const _router = useRouter()
@@ -16,7 +16,7 @@ export default function UsersPage({}: { children: React.ReactNode }) {
         size: parseInt(`${_searchParams.get('size')}`) || 10,
         q: _searchParams.get('q') || ''
     })
-    const {usersPage} = useUsersPage(_usersFetchParams)
+    const {usersPage, updateUser} = useUsersPage(_usersFetchParams)
 
     const _handlePageChange = async (page: number) => {
         _updateSearchParams({..._usersFetchParams, page})
@@ -26,13 +26,18 @@ export default function UsersPage({}: { children: React.ReactNode }) {
         _updateSearchParams({..._usersFetchParams, page: 1, q: _search})
     }
 
+    const _handleStatusToggleClick = (userId: string, status: UserStatus) => {
+        updateUser(userId, {kv: {status: status}} as User)
+            .catch(console.error)
+    }
+
     const _updateSearchParams = (params: { [key: string]: string | number }) => {
         const queryParams = Object
             .entries(params)
             .filter(e => e[1])
             .map(e => `${e[0]}=${e[1]}`)
             .join('&')
-        _router.push(`/d/users?${queryParams}`)
+        _router.push(`/dashboard/users?${queryParams}`)
     }
 
     useEffect(() => {
@@ -74,7 +79,8 @@ export default function UsersPage({}: { children: React.ReactNode }) {
                                 <Td className='font-medium text-gray-900 capitalize'>{`${item?.kv?.first_name} ${item?.kv?.last_name}`}</Td>
                                 <Td>{item?.kv?.email || '-'}</Td>
                                 <Td>{item?.created_at ? new Date(item?.created_at).toLocaleString() : '-'}</Td>
-                                <Td><Switch checked={item?.kv?.status == 'active'}/></Td>
+                                <Td><Switch checked={item?.kv?.status == 'active'}
+                                            onChange={(active) => _handleStatusToggleClick(item.user_id!, active ? 'active' : 'inactive')}/></Td>
                             </Tr>
                         ))}
                     </Tbody>
