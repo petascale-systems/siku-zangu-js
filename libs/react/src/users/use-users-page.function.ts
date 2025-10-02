@@ -44,7 +44,7 @@ export function useUsersPage(params?: UsersFetchParams) {
         _fetchUsers(params)
             .then(page => setUsersPage(page))
             .finally(() => setIsFetchingUsersPage(false));
-    }, [params]);
+    }, [params?.q, params?.page, params?.size]);
 
     return {usersPage, isFetchingUsersPage, isDeletingUser, isUpdatingUser, updateUser, deleteUser};
 }

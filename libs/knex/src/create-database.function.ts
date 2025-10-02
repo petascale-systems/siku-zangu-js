@@ -5,7 +5,6 @@ import {createDatabaseConfig} from "./create-database-config.function";
 function _createDatabase(config: DatabaseConfig) {
     return knex({
         client: 'mysql2',
-        debug: true,
         connection: {
             host: config.host,
             port: config.port,

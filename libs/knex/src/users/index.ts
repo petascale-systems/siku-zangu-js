@@ -8,4 +8,4 @@ export * from './user-exists-by-user-id.function'
 export * from './select-one-user-by-user-id.function'
 export * from './delete-one-user-by-user-id.function'
 export * from './user-to-kv.function'
-
+export * from './select-user-id-and-password-by-email.function'
