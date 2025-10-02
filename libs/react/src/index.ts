@@ -1,2 +1,4 @@
+import { useAccessToken } from './users';
+
 export * from './users'
-export class useAccessToken {}
+export { useAccessToken } from './users/use-accessToken';

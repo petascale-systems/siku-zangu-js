@@ -83,8 +83,8 @@ export function useAccessToken() {
         (e.status === 401
           ? 'Invalid phone number or PIN'
           : e.status === 400
-          ? 'Invalid input format'
-          : 'Failed to login');
+            ? 'Invalid input format'
+            : 'Failed to login');
       setError(errorMessage);
       throw e;
     } finally {

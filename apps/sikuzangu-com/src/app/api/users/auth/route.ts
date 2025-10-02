@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 import { APIError, USER_ZOD_SCHEMA, AccessToken } from '@siku-zangu/core';
 import { selectOneUserByPhone } from '@siku-zangu/knex';
-import bcrypt from 'bcrypt';
+import bcrypt from "bcryptjs";
 import jwt from 'jsonwebtoken';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-key-change-this-in-production';

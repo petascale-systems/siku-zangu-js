@@ -1,4 +1,4 @@
-import { APIError, User, REGISTER_USER_ZOD_SCHEMA } from '@siku-zangu/core';
+import { APIError, User, USER_ZOD_SCHEMA } from '@siku-zangu/core';
 import { DATABASE } from '../create-database.function';
 import { isTakenEmail } from './is-taken-email.function';
 import { isTakenPhoneNumber } from './is-taken-phone-number.function';
@@ -50,31 +50,31 @@ export function buildUserTableJoins(db: Knex | Knex.Transaction) {
 
 export function rowToUser(row: any) {
   return {
-    user_id: row.user_id || null,
-    created_at: row.created_at instanceof Date ? row.created_at.toISOString() : row.created_at ? String(row.created_at) : null,
-    updated_at: row.updated_at instanceof Date ? row.updated_at.toISOString() : row.updated_at ? String(row.updated_at) : null,
+    user_id: row.user_id || undefined,
+    created_at: row.created_at instanceof Date ? row.created_at.toISOString() : row.created_at || undefined,
+    updated_at: row.updated_at instanceof Date ? row.updated_at.toISOString() : row.updated_at || undefined,
     kv: {
-      first_name: row.first_name || null,
-      last_name: row.last_name || null,
-      status: row.status || null,
-      phone_number: row.phone_number || null,
-      pin: row.pin || null,
-      date_of_birth: row.date_of_birth || null,
+      first_name: row.first_name ?? undefined,
+      last_name: row.last_name ?? undefined,
+      status: row.status ?? undefined,
+      phone_number: row.phone_number || undefined,
+      pin: row.pin || undefined,
+      date_of_birth: row.date_of_birth ?? undefined,
       language: row.language || 'sw',
-      email: row.email || null,
-      avg_cycle_length_days: row.avg_cycle_length_days != null ? Number(row.avg_cycle_length_days) : null,
-      avg_period_length_days: row.avg_period_length_days != null ? Number(row.avg_period_length_days) : null,
-      prev_cycle_start_date: row.prev_cycle_start_date || null,
-      receive_period_alerts: row.receive_period_alerts == 'true' ? true : row.receive_period_alerts == 'false' ? false : null,
-      receive_fertile_alerts: row.receive_fertile_alerts == 'true' ? true : row.receive_fertile_alerts == 'false' ? false : null,
-      receive_medication_tips: row.receive_medication_tips == 'true' ? true : row.receive_medication_tips == 'false' ? false : null,
-      receive_insights_tips: row.receive_insights_tips == 'true' ? true : row.receive_insights_tips == 'false' ? false : null,
+      email: row.email ?? undefined,
+      avg_cycle_length_days: row.avg_cycle_length_days != null ? Number(row.avg_cycle_length_days) : undefined,
+      avg_period_length_days: row.avg_period_length_days != null ? Number(row.avg_period_length_days) : undefined,
+      prev_cycle_start_date: row.prev_cycle_start_date ?? undefined,
+      receive_period_alerts: row.receive_period_alerts === 'true' ? true : row.receive_period_alerts === 'false' ? false : undefined,
+      receive_fertile_alerts: row.receive_fertile_alerts === 'true' ? true : row.receive_fertile_alerts === 'false' ? false : undefined,
+      receive_medication_tips: row.receive_medication_tips === 'true' ? true : row.receive_medication_tips === 'false' ? false : undefined,
+      receive_insights_tips: row.receive_insights_tips === 'true' ? true : row.receive_insights_tips === 'false' ? false : undefined,
     },
   } as User;
 }
 
 export async function insertOneUser(user: User) {
-  const parsedUser = REGISTER_USER_ZOD_SCHEMA.safeParse(user);
+  const parsedUser = USER_ZOD_SCHEMA.safeParse(user);
   if (!parsedUser.success) {
     const issues = parsedUser.error.issues.map(i => ({
       path: i.path,
