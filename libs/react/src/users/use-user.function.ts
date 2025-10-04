@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { User, APIError } from '@siku-zangu/core';
+import { User, UpdateUser, APIError } from '@siku-zangu/core';
 import { getJSON } from '../get-json.function';
 import { postJSON } from '../post-json.function';
 import { patchJSON } from '../patch-json.function';
@@ -8,20 +8,20 @@ import { deleteJSON } from '../delete-json.function';
 export const USERS_API_PATH = '/api/users';
 export const USER_BY_ID_API_PATH = (id: string) => `/api/users/${id}`;
 
-
-async function _fetchUserById(id: string) {
+async function fetchUserById(id: string): Promise<User> {
   return getJSON<User>(USER_BY_ID_API_PATH(id));
 }
 
-async function _createUser(user: User) {
+async function createUser(user: User): Promise<User> {
   return postJSON<User, User>(USERS_API_PATH, user);
 }
 
-async function _updateUser(userId: string, user: User) {
-  return patchJSON<User, User>(USER_BY_ID_API_PATH(userId), user);
+async function updateUser(userId: string, user: UpdateUser): Promise<User> {
+  // @ts-ignore
+  return patchJSON<UpdateUser, User>(USER_BY_ID_API_PATH(userId), user);
 }
 
-async function _deleteUser(userId: string) {
+async function deleteUserById(userId: string): Promise<undefined | User> {
   return deleteJSON<User>(USER_BY_ID_API_PATH(userId));
 }
 
@@ -32,32 +32,41 @@ export function useUser(userId?: string) {
   const [isDeletingUser, setIsDeletingUser] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  async function upsertUser(user: User) {
+  async function upsertUser(userData: User | UpdateUser): Promise<User | undefined> {
     setIsUpsertingUser(true);
     setError(null);
     try {
-      const upsertedUser = await (userId
-        ? _updateUser(userId, user)
-        : _createUser(user));
+      let upsertedUser: User;
+
+      if (userId) {
+        upsertedUser = await updateUser(userId, userData);
+      } else {
+        upsertedUser = await createUser(userData as User);
+      }
+
       if (upsertedUser) setUser(upsertedUser);
       return upsertedUser;
     } catch (e: any) {
       const errorMessage =
-        (e as APIError).issues?.map((issue: any) => issue.message).join(', ') ||
+        (e as APIError).issues?.map((issue: any) => issue.error).join(', ') ||
         (e as APIError).message ||
         'Failed to upsert user';
+
       setError(errorMessage);
       throw e;
     } finally {
       setIsUpsertingUser(false);
     }
   }
-  async function deleteUser() {
-    if (!userId) return;
+
+  async function deleteUser(): Promise<void> {
+    if (!userId) {
+      return;
+    }
     setIsDeletingUser(true);
     setError(null);
     try {
-      await _deleteUser(userId);
+      await deleteUserById(userId);
       setUser(undefined);
     } catch (e: any) {
       const errorMessage = (e as APIError).message || 'Failed to delete user';
@@ -69,16 +78,23 @@ export function useUser(userId?: string) {
   }
 
   useEffect(() => {
-    if (!userId) return;
+    if (!userId) {
+      return;
+    }
     setIsFetchingUser(true);
     setError(null);
-    _fetchUserById(userId)
-      .then(setUser)
+
+    fetchUserById(userId)
+      .then((fetchedUser) => {
+        setUser(fetchedUser);
+      })
       .catch((e: any) => {
         const errorMessage = (e as APIError).message || 'Failed to fetch user';
         setError(errorMessage);
       })
-      .finally(() => setIsFetchingUser(false));
+      .finally(() => {
+        setIsFetchingUser(false);
+      });
   }, [userId]);
 
   return {

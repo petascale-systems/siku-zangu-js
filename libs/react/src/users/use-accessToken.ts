@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { postJSON } from '../post-json.function';
-import { AccessToken, APIError } from '@siku-zangu/core';
+import { AccessToken, APIError, User } from '@siku-zangu/core';
 
 export const ACCESS_TOKEN_KEY = '@siku_zangu:access_token';
 export const AUTH_LOGIN_PATH = '/api/users/auth';
@@ -19,6 +19,7 @@ async function _logoutUser() {
 
 export function useAccessToken() {
   const [token, setToken] = useState<string | null>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -34,8 +35,12 @@ export function useAccessToken() {
           Date.now() < accessToken.expires_in * 1000
         ) {
           setToken(accessToken.token);
+          if (accessToken.user) {
+            setUser(accessToken.user);
+          }
         } else {
           setToken(null);
+          setUser(null);
         }
       })
       .catch((e: any) => {
@@ -70,6 +75,9 @@ export function useAccessToken() {
           JSON.stringify(accessToken)
         );
         setToken(accessToken.token);
+        if (accessToken.user) {
+          setUser(accessToken.user);
+        }
         return accessToken;
       }
       throw {
@@ -98,6 +106,7 @@ export function useAccessToken() {
     try {
       await _logoutUser();
       setToken(null);
+      setUser(null);
     } catch (e: any) {
       const errorMessage = (e as APIError).message || 'Failed to logout';
       setError(errorMessage);
@@ -109,6 +118,7 @@ export function useAccessToken() {
 
   return {
     token,
+    user,
     isLoggingIn,
     isLoggingOut,
     error,
