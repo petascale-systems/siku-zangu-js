@@ -1,7 +1,16 @@
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Alert, ActivityIndicator } from 'react-native';
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  ScrollView,
+  Alert,
+  ActivityIndicator,
+} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useUser } from '@siku-zangu/react';
 import { UpdateUser } from '@siku-zangu/core';
@@ -12,7 +21,8 @@ export const UpdatingNamesScreen = ({ navigation, route }: Props) => {
   const language = route.params?.lang ?? 'en';
   const userId = route.params?.userId;
 
-  const { upsertUser, isUpsertingUser, error, user, isFetchingUser } = useUser(userId);
+  const { upsertUser, isUpsertingUser, error, user, isFetchingUser } =
+    useUser(userId);
 
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
@@ -29,20 +39,30 @@ export const UpdatingNamesScreen = ({ navigation, route }: Props) => {
 
   const validateName = (name: string, field: 'first' | 'last'): string => {
     if (field === 'first' && name.length === 0) {
-      return language === 'en' ? 'First name is required' : 'Jina la kwanza linahitajika';
+      return language === 'en'
+        ? 'First name is required'
+        : 'Jina la kwanza linahitajika';
     }
     if (field === 'last' && name.length === 0) {
       return '';
     }
     if (name.length > 50) {
       return language === 'en'
-        ? `${field === 'first' ? 'First' : 'Last'} name must be at most 50 characters`
-        : `${field === 'first' ? 'Jina la kwanza' : 'Jina la mwisho'} linapaswa kuwa hadi herufi 50`;
+        ? `${
+            field === 'first' ? 'First' : 'Last'
+          } name must be at most 50 characters`
+        : `${
+            field === 'first' ? 'Jina la kwanza' : 'Jina la mwisho'
+          } linapaswa kuwa hadi herufi 50`;
     }
     if (name.length > 0 && /[^A-Za-z\s]/.test(name)) {
       return language === 'en'
-        ? `${field === 'first' ? 'First' : 'Last'} name must contain only letters`
-        : `${field === 'first' ? 'Jina la kwanza' : 'Jina la mwisho'} linapaswa kuwa na herufi pekee`;
+        ? `${
+            field === 'first' ? 'First' : 'Last'
+          } name must contain only letters`
+        : `${
+            field === 'first' ? 'Jina la kwanza' : 'Jina la mwisho'
+          } linapaswa kuwa na herufi pekee`;
     }
     return '';
   };
@@ -77,7 +97,9 @@ export const UpdatingNamesScreen = ({ navigation, route }: Props) => {
     if (firstError || lastError) {
       Alert.alert(
         language === 'en' ? 'Error' : 'Hitilafu',
-        language === 'en' ? 'Please fix errors before saving' : 'Tafadhali sahihisha makosa kabla ya kuhifadhi'
+        language === 'en'
+          ? 'Please fix errors before saving'
+          : 'Tafadhali sahihisha makosa kabla ya kuhifadhi'
       );
       return;
     }
@@ -85,7 +107,9 @@ export const UpdatingNamesScreen = ({ navigation, route }: Props) => {
     if (!userId) {
       Alert.alert(
         language === 'en' ? 'Error' : 'Hitilafu',
-        language === 'en' ? 'User ID not available' : 'Kitambulisho cha mtumiaji hakipatikani'
+        language === 'en'
+          ? 'User ID not available'
+          : 'Kitambulisho cha mtumiaji hakipatikani'
       );
       return;
     }
@@ -103,28 +127,36 @@ export const UpdatingNamesScreen = ({ navigation, route }: Props) => {
 
       console.log('UpdatingNames: Calling upsertUser with:', {
         userId,
-        updateData
+        updateData,
       });
 
       await upsertUser(updateData);
 
       Alert.alert(
         language === 'en' ? 'Success' : 'Mafanikio',
-        language === 'en' ? 'Names updated successfully!' : 'Majina yamebadilishwa kwa mafanikio!',
+        language === 'en'
+          ? 'Names updated successfully!'
+          : 'Majina yamebadilishwa kwa mafanikio!',
         [
           {
             text: language === 'en' ? 'OK' : 'Sawa',
-            onPress: () => navigation.navigate('UpdatingDOB', { lang: language, userId }),
+            onPress: () =>
+              navigation.navigate('UpdatingDOB', { lang: language, userId }),
           },
         ]
       );
     } catch (e: any) {
-      const errorMessage = e.message || (language === 'en' ? 'Failed to update names' : 'Imeshindwa kubadilisha majina');
+      const errorMessage =
+        e.message ||
+        (language === 'en'
+          ? 'Failed to update names'
+          : 'Imeshindwa kubadilisha majina');
       Alert.alert(language === 'en' ? 'Error' : 'Hitilafu', errorMessage);
     }
   };
 
-  const isFormValid = firstName.trim().length > 0 && !firstNameError && !lastNameError;
+  const isFormValid =
+    firstName.trim().length > 0 && !firstNameError && !lastNameError;
 
   if (isFetchingUser) {
     return (
@@ -151,46 +183,64 @@ export const UpdatingNamesScreen = ({ navigation, route }: Props) => {
         {language === 'en' ? 'Set up your profile' : 'Weka profaili yako'}
       </Text>
       <Text style={styles.subtitle}>
-        {language === 'en' ? "Let's get to know you better!" : 'Tukujue vizuri zaidi!'}
+        {language === 'en'
+          ? "Let's get to know you better!"
+          : 'Tukujue vizuri zaidi!'}
       </Text>
 
       <View style={styles.formContainer}>
         <View style={styles.inputWrapper}>
           <Text style={styles.label}>
-            {language === 'en' ? 'First name (required)' : 'Jina la kwanza (lazima)'}
+            {language === 'en'
+              ? 'First name (required)'
+              : 'Jina la kwanza (lazima)'}
           </Text>
           <TextInput
             style={[styles.input, firstNameError ? styles.errorBorder : null]}
             value={firstName}
             onChangeText={handleFirstNameChange}
-            placeholder={language === 'en' ? 'Enter first name' : 'Ingiza jina la kwanza'}
+            placeholder={
+              language === 'en' ? 'Enter first name' : 'Ingiza jina la kwanza'
+            }
             maxLength={50}
-            accessibilityLabel={language === 'en' ? 'First name' : 'Jina la kwanza'}
+            accessibilityLabel={
+              language === 'en' ? 'First name' : 'Jina la kwanza'
+            }
             editable={!isUpsertingUser}
           />
-          {firstNameError ? <Text style={styles.errorText}>{firstNameError}</Text> : null}
+          {firstNameError ? (
+            <Text style={styles.errorText}>{firstNameError}</Text>
+          ) : null}
         </View>
 
         <View style={styles.inputWrapper}>
           <Text style={styles.label}>
-            {language === 'en' ? 'Last name (optional)' : 'Jina la mwisho (si lazima)'}
+            {language === 'en'
+              ? 'Last name (optional)'
+              : 'Jina la mwisho (si lazima)'}
           </Text>
           <TextInput
             style={[styles.input, lastNameError ? styles.errorBorder : null]}
             value={lastName}
             onChangeText={handleLastNameChange}
-            placeholder={language === 'en' ? 'Enter last name' : 'Ingiza jina la mwisho'}
+            placeholder={
+              language === 'en' ? 'Enter last name' : 'Ingiza jina la mwisho'
+            }
             maxLength={50}
-            accessibilityLabel={language === 'en' ? 'Last name' : 'Jina la mwisho'}
+            accessibilityLabel={
+              language === 'en' ? 'Last name' : 'Jina la mwisho'
+            }
             editable={!isUpsertingUser}
           />
-          {lastNameError ? <Text style={styles.errorText}>{lastNameError}</Text> : null}
+          {lastNameError ? (
+            <Text style={styles.errorText}>{lastNameError}</Text>
+          ) : null}
         </View>
       </View>
 
       <Text style={styles.privacyText}>
         {language === 'en'
-          ? 'We know how much privacy matters to you. That\'s why we never share data without consent.'
+          ? "We know how much privacy matters to you. That's why we never share data without consent."
           : 'Tujua jinsi faragha inavyokuwa muhimu kwako. Ndiyo maana hatutoi data bila idhini.'}
       </Text>
       <TouchableOpacity>
@@ -200,7 +250,11 @@ export const UpdatingNamesScreen = ({ navigation, route }: Props) => {
       </TouchableOpacity>
 
       <TouchableOpacity
-        style={[styles.nextButton, (!isFormValid || isUpsertingUser || !userId) && styles.nextButtonDisabled]}
+        style={[
+          styles.nextButton,
+          (!isFormValid || isUpsertingUser || !userId) &&
+            styles.nextButtonDisabled,
+        ]}
         onPress={handleSave}
         disabled={!isFormValid || isUpsertingUser || !userId}
         accessibilityLabel={language === 'en' ? 'Next' : 'Ijayo'}
@@ -240,17 +294,17 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 18,
-    fontFamily: "Inter",
-    fontStyle: "normal",
+    fontFamily: 'Inter',
+    fontStyle: 'normal',
     fontWeight: '600',
     textAlign: 'center',
     marginTop: 51,
-    color:"#333333"
+    color: '#333333',
   },
   subtitle: {
     fontSize: 14,
-    fontFamily: "Inter",
-    fontStyle: "normal",
+    fontFamily: 'Inter',
+    fontStyle: 'normal',
     fontWeight: '400',
     textAlign: 'center',
     color: '#333333',
@@ -296,15 +350,15 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginTop: 80,
     fontStyle: 'normal',
-    fontFamily: "Inter",
+    fontFamily: 'Inter',
     fontWeight: '400',
     color: '#645F5F',
     textAlign: 'center',
   },
   privacyLink: {
     color: '#E66386',
-    fontFamily: "Inter",
-    fontStyle: "normal",
+    fontFamily: 'Inter',
+    fontStyle: 'normal',
     fontWeight: '400',
     fontSize: 12,
     textAlign: 'center',
@@ -313,8 +367,8 @@ const styles = StyleSheet.create({
   },
   nextButton: {
     backgroundColor: '#FD5A7E',
-    fontFamily: "Inter",
-    fontStyle: "normal",
+    fontFamily: 'Inter',
+    fontStyle: 'normal',
     fontWeight: '600',
     paddingVertical: 15,
     borderRadius: 24,
@@ -329,6 +383,6 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: '600',
     fontSize: 16,
-    fontStyle: "normal",
+    fontStyle: 'normal',
   },
 });

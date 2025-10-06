@@ -8,7 +8,6 @@ import { DATABASE } from "../create-database.function";
 import { TABLE_NAME_S_USER, TABLE_NAME_S_USER_KV } from "../table-names";
 import { Knex } from 'knex';
 
-// Create a partial schema for updates where all kv fields are optional
 const UPDATE_USER_ZOD_SCHEMA = USER_ZOD_SCHEMA.extend({
   kv: USER_ZOD_SCHEMA.shape.kv.partial()
 });

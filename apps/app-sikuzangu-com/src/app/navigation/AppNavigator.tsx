@@ -6,6 +6,11 @@ import { RegisterScreen } from '../screens/RegisterScreen';
 import { LoginScreen } from '../screens/LoginScreen';
 import { UpdatingNamesScreen} from '../screens/UpdatingNamesScreen';
 import {UpdatingDOBScreen}  from '../screens/UpdatingDOBScreen';
+import {UpdatingPeriodScreen} from '../screens/UpdatingPeriodScreen';
+import {UpdatingPeriodLengthScreen} from '../screens/UpdatingPeriodLengthScreen';
+import {UpdatingCycleLengthScreen} from '../screens/UpdatingCycleLengthScreen';
+import {UpdatingSymptomsMoodsScreen} from '../screens/UpdatingSymptomsMoodsScreen';
+import {UpdatingMedicationScreen} from '../screens/UpdatingMedicationScreen';
 
 export type RootStackParamList = {
   Language: undefined;
@@ -14,6 +19,11 @@ export type RootStackParamList = {
   ProfileSetUp: { lang: 'en' | 'sw' };
   UpdatingNames: { lang: 'en' | 'sw'; userId: string };
   UpdatingDOB: { lang: 'en' | 'sw'; userId: string };
+  UpdatingPeriod: {lang: 'en' | 'sw'; userId: string};
+  UpdatingPeriodLength: {lang: 'en' | 'sw'; userId: string};
+  UpdatingCycleLength: {lang: 'en' | 'sw'; userId: string};
+  UpdatingSymptomsMoods: {lang: 'en' | 'sw'; userId: string};
+  UpdatingMedication: {lang: 'en' | 'sw'; userId: string};
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -30,6 +40,11 @@ export const AppNavigator = () => {
         <Stack.Screen name="Login" component={LoginScreen} />
         <Stack.Screen name="UpdatingNames" component={UpdatingNamesScreen} />
         <Stack.Screen name="UpdatingDOB" component={UpdatingDOBScreen} />
+        <Stack.Screen name="UpdatingPeriod" component={UpdatingPeriodScreen}/>
+        <Stack.Screen name="UpdatingPeriodLength" component={UpdatingPeriodLengthScreen}/>
+        <Stack.Screen name="UpdatingCycleLength" component={UpdatingCycleLengthScreen}/>
+        <Stack.Screen name="UpdatingSymptomsMoods" component={UpdatingSymptomsMoodsScreen}/>
+        <Stack.Screen name="UpdatingMedication" component={UpdatingMedicationScreen}/>
       </Stack.Navigator>
     </NavigationContainer>
   );

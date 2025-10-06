@@ -1,144 +1,322 @@
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
-import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Alert, ActivityIndicator } from 'react-native';
+import React, { useState, useRef } from 'react';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  Alert,
+  ActivityIndicator,
+  ScrollView,
+  Animated,
+  Dimensions,
+} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useUser } from '@siku-zangu/react';
-import { UpdateUser, User } from '@siku-zangu/core';
+import { UpdateUser } from '@siku-zangu/core';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'UpdatingDOB'>;
+
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 export const UpdatingDOBScreen = ({ navigation, route }: Props) => {
   const language = route.params?.lang ?? 'en';
   const userId = route.params?.userId;
+  const { upsertUser, isUpsertingUser } = useUser(userId);
 
-  const { upsertUser, isUpsertingUser, error, user, isFetchingUser } = useUser(userId);
+  const [selectedDay, setSelectedDay] = useState<number>(12);
+  const [selectedMonth, setSelectedMonth] = useState<number>(8); // September (0-indexed)
+  const [selectedYear, setSelectedYear] = useState<number>(2003);
+  const [activePicker, setActivePicker] = useState<'day' | 'month' | 'year'>(
+    'day'
+  );
 
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [firstNameError, setFirstNameError] = useState('');
-  const [lastNameError, setLastNameError] = useState('');
-  const [hasAttemptedSave, setHasAttemptedSave] = useState(false);
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(50)).current;
 
-  useEffect(() => {
-    if (user && !isFetchingUser && !firstName && !lastName) {
-      setFirstName(user.kv?.first_name || '');
-      setLastName(user.kv?.last_name || '');
-    }
-  }, [user, isFetchingUser]);
+  React.useEffect(() => {
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 600,
+        useNativeDriver: true,
+      }),
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 500,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, []);
 
-  const validateName = (name: string, field: 'first' | 'last'): string => {
-    if (field === 'first' && name.length === 0) {
-      return language === 'en' ? 'First name is required' : 'Jina la kwanza linahitajika';
-    }
-    if (field === 'last' && name.length === 0) {
-      return '';
-    }
-    if (name.length > 50) {
-      return language === 'en'
-        ? `${field === 'first' ? 'First' : 'Last'} name must be at most 50 characters`
-        : `${field === 'first' ? 'Jina la kwanza' : 'Jina la mwisho'} linapaswa kuwa hadi herufi 50`;
-    }
-    if (name.length > 0 && /[^A-Za-z\s]/.test(name)) {
-      return language === 'en'
-        ? `${field === 'first' ? 'First' : 'Last'} name must contain only letters`
-        : `${field === 'first' ? 'Jina la kwanza' : 'Jina la mwisho'} linapaswa kuwa na herufi pekee`;
-    }
-    return '';
+  const months = [
+    {
+      label: language === 'en' ? 'January' : 'Januari',
+      value: 0,
+      short: 'Jan',
+    },
+    {
+      label: language === 'en' ? 'February' : 'Februari',
+      value: 1,
+      short: 'Feb',
+    },
+    { label: language === 'en' ? 'March' : 'Machi', value: 2, short: 'Mar' },
+    { label: language === 'en' ? 'April' : 'Aprili', value: 3, short: 'Apr' },
+    { label: language === 'en' ? 'May' : 'Mei', value: 4, short: 'May' },
+    { label: language === 'en' ? 'June' : 'Juni', value: 5, short: 'Jun' },
+    { label: language === 'en' ? 'July' : 'Julai', value: 6, short: 'Jul' },
+    { label: language === 'en' ? 'August' : 'Agosti', value: 7, short: 'Aug' },
+    {
+      label: language === 'en' ? 'September' : 'Septemba',
+      value: 8,
+      short: 'Sep',
+    },
+    { label: language === 'en' ? 'October' : 'Oktoba', value: 9, short: 'Oct' },
+    {
+      label: language === 'en' ? 'November' : 'Novemba',
+      value: 10,
+      short: 'Nov',
+    },
+    {
+      label: language === 'en' ? 'December' : 'Desemba',
+      value: 11,
+      short: 'Dec',
+    },
+  ];
+
+  const getDaysInMonth = (month: number, year: number) => {
+    return new Date(year, month + 1, 0).getDate();
   };
 
-  const handleFirstNameChange = (text: string) => {
-    if (/^[A-Za-z\s]*$/.test(text)) {
-      setFirstName(text);
-      if (hasAttemptedSave) {
-        setFirstNameError(validateName(text, 'first'));
-      }
-    }
+  const days = Array.from(
+    { length: getDaysInMonth(selectedMonth, selectedYear) },
+    (_, i) => i + 1
+  );
+  const years = Array.from({ length: 50 }, (_, i) => 1975 + i);
+
+  const formatDateToISO = (
+    day: number,
+    month: number,
+    year: number
+  ): string => {
+    const monthStr = String(month + 1).padStart(2, '0');
+    const dayStr = String(day).padStart(2, '0');
+    return `${year}-${monthStr}-${dayStr}`;
   };
 
-  const handleLastNameChange = (text: string) => {
-    if (/^[A-Za-z\s]*$/.test(text)) {
-      setLastName(text);
-      if (hasAttemptedSave) {
-        setLastNameError(validateName(text, 'last'));
-      }
-    }
+  const isValidDate = (day: number, month: number, year: number): boolean => {
+    const date = new Date(year, month, day);
+    return (
+      date.getFullYear() === year &&
+      date.getMonth() === month &&
+      date.getDate() === day
+    );
   };
 
   const handleSave = async () => {
-    setHasAttemptedSave(true);
-
-    const firstError = validateName(firstName.trim(), 'first');
-    const lastError = validateName(lastName.trim(), 'last');
-
-    setFirstNameError(firstError);
-    setLastNameError(lastError);
-
-    if (firstError || lastError) {
+    if (!userId) {
       Alert.alert(
         language === 'en' ? 'Error' : 'Hitilafu',
-        language === 'en' ? 'Please fix errors before saving' : 'Tafadhali sahihisha makosa kabla ya kuhifadhi'
+        language === 'en'
+          ? 'User ID not found'
+          : 'Kitambulisho cha mtumiaji hakipatikani'
       );
       return;
     }
 
-    if (!userId) {
+    if (!isValidDate(selectedDay, selectedMonth, selectedYear)) {
       Alert.alert(
-        language === 'en' ? 'Error' : 'Hitilafu',
-        language === 'en' ? 'User ID not available' : 'Kitambulisho cha mtumiaji hakipatikani'
+        language === 'en' ? 'Invalid Date' : 'Tarehe si sahihi',
+        language === 'en'
+          ? 'Please select a valid date'
+          : 'Tafadhali chagua tarehe sahihi'
       );
       return;
     }
 
     try {
-      const updateData: Partial<User> = {
-        kv: {
-          first_name: firstName.trim(),
-        } as Partial<User['kv']>,
-      };
+      const date_of_birth = formatDateToISO(
+        selectedDay,
+        selectedMonth,
+        selectedYear
+      );
+      const updateData: UpdateUser = { kv: { date_of_birth } };
 
-      if (lastName.trim()) {
-        updateData.kv!.last_name = lastName.trim();
-      }
-
-      console.log('UpdatingNames: Calling upsertUser with:', {
-        userId,
-        updateData
-      });
+      console.log('UpdatingDOB: Saving date:', date_of_birth);
 
       await upsertUser(updateData);
 
       Alert.alert(
         language === 'en' ? 'Success' : 'Mafanikio',
-        language === 'en' ? 'Names updated successfully!' : 'Majina yamebadilishwa kwa mafanikio!',
+        language === 'en'
+          ? 'Date of birth saved successfully!'
+          : 'Tarehe ya kuzaliwa imehifadhiwa!',
         [
           {
             text: language === 'en' ? 'OK' : 'Sawa',
-
+            onPress: () =>
+              navigation.navigate('UpdatingPeriod', { lang: language, userId }),
           },
         ]
       );
-    } catch (e: any) {
-      const errorMessage = e.message || (language === 'en' ? 'Failed to update names' : 'Imeshindwa kubadilisha majina');
+    } catch (error: any) {
+      const errorMessage =
+        error.message ||
+        (language === 'en'
+          ? 'Failed to save date of birth'
+          : 'Imeshindwa kuhifadhi tarehe ya kuzaliwa');
       Alert.alert(language === 'en' ? 'Error' : 'Hitilafu', errorMessage);
     }
   };
 
-  const isFormValid = firstName.trim().length > 0 && !firstNameError && !lastNameError;
-
-  if (isFetchingUser) {
-    return (
-      <View style={[styles.container, styles.centerContent]}>
-        <ActivityIndicator size="large" color="#FF4081" />
-        <Text style={styles.loadingText}>
-          {language === 'en' ? 'Loading...' : 'Inapakia...'}
+  const renderDateDisplay = () => (
+    <View style={styles.dateDisplay}>
+      <TouchableOpacity
+        style={[
+          styles.dateSegment,
+          activePicker === 'day' && styles.activeDateSegment,
+        ]}
+        onPress={() => setActivePicker('day')}
+      >
+        <Text
+          style={[
+            styles.dateSegmentText,
+            activePicker === 'day' && styles.activeDateSegmentText,
+          ]}
+        >
+          {selectedDay}
         </Text>
+        <Text style={styles.dateSegmentLabel}>
+          {language === 'en' ? 'DAY' : 'SIKU'}
+        </Text>
+      </TouchableOpacity>
+
+      <View style={styles.dateSeparator}>
+        <Text style={styles.dateSeparatorText}>/</Text>
       </View>
-    );
-  }
+
+      <TouchableOpacity
+        style={[
+          styles.dateSegment,
+          activePicker === 'month' && styles.activeDateSegment,
+        ]}
+        onPress={() => setActivePicker('month')}
+      >
+        <Text
+          style={[
+            styles.dateSegmentText,
+            activePicker === 'month' && styles.activeDateSegmentText,
+          ]}
+        >
+          {months[selectedMonth].short}
+        </Text>
+        <Text style={styles.dateSegmentLabel}>
+          {language === 'en' ? 'MONTH' : 'MWEZI'}
+        </Text>
+      </TouchableOpacity>
+
+      <View style={styles.dateSeparator}>
+        <Text style={styles.dateSeparatorText}>/</Text>
+      </View>
+
+      <TouchableOpacity
+        style={[
+          styles.dateSegment,
+          activePicker === 'year' && styles.activeDateSegment,
+        ]}
+        onPress={() => setActivePicker('year')}
+      >
+        <Text
+          style={[
+            styles.dateSegmentText,
+            activePicker === 'year' && styles.activeDateSegmentText,
+          ]}
+        >
+          {selectedYear}
+        </Text>
+        <Text style={styles.dateSegmentLabel}>
+          {language === 'en' ? 'YEAR' : 'MWAKA'}
+        </Text>
+      </TouchableOpacity>
+    </View>
+  );
+
+  const renderPicker = () => (
+    <View style={styles.pickerContainer}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.pickerScrollContent}
+      >
+        {activePicker === 'day' &&
+          days.map((day) => (
+            <TouchableOpacity
+              key={day}
+              style={[
+                styles.pickerItem,
+                selectedDay === day && styles.selectedPickerItem,
+              ]}
+              onPress={() => setSelectedDay(day)}
+            >
+              <Text
+                style={[
+                  styles.pickerItemText,
+                  selectedDay === day && styles.selectedPickerItemText,
+                ]}
+              >
+                {day}
+              </Text>
+            </TouchableOpacity>
+          ))}
+
+        {activePicker === 'month' &&
+          months.map((month) => (
+            <TouchableOpacity
+              key={month.value}
+              style={[
+                styles.pickerItem,
+                selectedMonth === month.value && styles.selectedPickerItem,
+              ]}
+              onPress={() => setSelectedMonth(month.value)}
+            >
+              <Text
+                style={[
+                  styles.pickerItemText,
+                  selectedMonth === month.value &&
+                    styles.selectedPickerItemText,
+                ]}
+              >
+                {month.label}
+              </Text>
+            </TouchableOpacity>
+          ))}
+
+        {activePicker === 'year' &&
+          years.map((year) => (
+            <TouchableOpacity
+              key={year}
+              style={[
+                styles.pickerItem,
+                selectedYear === year && styles.selectedPickerItem,
+              ]}
+              onPress={() => setSelectedYear(year)}
+            >
+              <Text
+                style={[
+                  styles.pickerItemText,
+                  selectedYear === year && styles.selectedPickerItemText,
+                ]}
+              >
+                {year}
+              </Text>
+            </TouchableOpacity>
+          ))}
+      </ScrollView>
+    </View>
+  );
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
+    <View style={styles.container}>
       <TouchableOpacity
         style={styles.backButton}
         onPress={() => navigation.goBack()}
@@ -147,90 +325,72 @@ export const UpdatingDOBScreen = ({ navigation, route }: Props) => {
         <Ionicons name="arrow-back" size={24} color="black" />
       </TouchableOpacity>
 
-      <Text style={styles.title}>
-        {language === 'en' ? 'Set up your profile' : 'Weka profaili yako'}
-      </Text>
-      <Text style={styles.subtitle}>
-        {language === 'en' ? "Let's get to know you better!" : 'Tukujue vizuri zaidi!'}
-      </Text>
-
-      <View style={styles.formContainer}>
-        <View style={styles.inputWrapper}>
-          <Text style={styles.label}>
-            {language === 'en' ? 'First name (required)' : 'Jina la kwanza (lazima)'}
-          </Text>
-          <TextInput
-            style={[styles.input, firstNameError ? styles.errorBorder : null]}
-            value={firstName}
-            onChangeText={handleFirstNameChange}
-            placeholder={language === 'en' ? 'Enter first name' : 'Ingiza jina la kwanza'}
-            maxLength={50}
-            accessibilityLabel={language === 'en' ? 'First name' : 'Jina la kwanza'}
-            editable={!isUpsertingUser}
-          />
-          {firstNameError ? <Text style={styles.errorText}>{firstNameError}</Text> : null}
-        </View>
-
-        <View style={styles.inputWrapper}>
-          <Text style={styles.label}>
-            {language === 'en' ? 'Last name (optional)' : 'Jina la mwisho (si lazima)'}
-          </Text>
-          <TextInput
-            style={[styles.input, lastNameError ? styles.errorBorder : null]}
-            value={lastName}
-            onChangeText={handleLastNameChange}
-            placeholder={language === 'en' ? 'Enter last name' : 'Ingiza jina la mwisho'}
-            maxLength={50}
-            accessibilityLabel={language === 'en' ? 'Last name' : 'Jina la mwisho'}
-            editable={!isUpsertingUser}
-          />
-          {lastNameError ? <Text style={styles.errorText}>{lastNameError}</Text> : null}
-        </View>
-      </View>
-
-      <Text style={styles.privacyText}>
-        {language === 'en'
-          ? 'We know how much privacy matters to you. That\'s why we never share data without consent.'
-          : 'Tujua jinsi faragha inavyokuwa muhimu kwako. Ndiyo maana hatutoi data bila idhini.'}
-      </Text>
-      <TouchableOpacity>
-        <Text style={styles.privacyLink}>
-          {language === 'en' ? 'Privacy Policy' : 'Sera ya Faragha'}
-        </Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity
-        style={[styles.nextButton, (!isFormValid || isUpsertingUser || !userId) && styles.nextButtonDisabled]}
-        onPress={handleSave}
-        disabled={!isFormValid || isUpsertingUser || !userId}
-        accessibilityLabel={language === 'en' ? 'Next' : 'Ijayo'}
+      <Animated.View
+        style={[
+          styles.content,
+          {
+            opacity: fadeAnim,
+            transform: [{ translateY: slideAnim }],
+          },
+        ]}
       >
-        {isUpsertingUser ? (
-          <ActivityIndicator size="small" color="#fff" />
-        ) : (
-          <Text style={styles.nextButtonText}>
-            {language === 'en' ? 'NEXT' : 'IJAYO'}
-          </Text>
-        )}
-      </TouchableOpacity>
-    </ScrollView>
+        <Text style={styles.title}>
+          {language === 'en' ? 'When were you born?' : 'Ulizaliwa lini?'}
+        </Text>
+        <Text style={styles.subtitle}>
+          {language === 'en'
+            ? 'Knowing your age helps us give you better tips.'
+            : 'Kujua umri wako hutusaidia kukupa ushauri bora.'}
+        </Text>
+
+        {renderDateDisplay()}
+        {renderPicker()}
+
+        <Text style={styles.termsText}>
+          {language === 'en' ? (
+            <>
+              Review our{' '}
+              <Text style={styles.termsConditions}>Terms and Conditions</Text>{' '}
+              to learn about the minimum age requirement. You can change your
+              answer on your profile any time.
+            </>
+          ) : (
+            <>
+              Angalia{' '}
+              <Text style={styles.termsConditions}>Sheria na Masharti</Text>{' '}
+              yetu kujua kuhusu umri wa chini unaohitajika. Unaweza kubadilisha
+              jibu lako wakati wowote katika profaili yako.
+            </>
+          )}
+        </Text>
+
+        <TouchableOpacity
+          style={[
+            styles.nextButton,
+            isUpsertingUser && styles.nextButtonDisabled,
+          ]}
+          onPress={handleSave}
+          disabled={isUpsertingUser}
+          accessibilityLabel={language === 'en' ? 'Next' : 'Ijayo'}
+        >
+          {isUpsertingUser ? (
+            <ActivityIndicator size="small" color="#fff" />
+          ) : (
+            <Text style={styles.nextButtonText}>
+              {language === 'en' ? 'NEXT' : 'IJAYO'}
+            </Text>
+          )}
+        </TouchableOpacity>
+      </Animated.View>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    flexGrow: 1,
+    flex: 1,
     backgroundColor: '#FFF5F2',
     padding: 20,
-  },
-  centerContent: {
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  loadingText: {
-    marginTop: 10,
-    fontSize: 16,
-    color: '#777',
   },
   backButton: {
     position: 'absolute',
@@ -238,83 +398,125 @@ const styles = StyleSheet.create({
     left: 20,
     zIndex: 10,
   },
+  content: {
+    flex: 1,
+  },
   title: {
     fontSize: 18,
-    fontFamily: "Inter",
-    fontStyle: "normal",
+    fontFamily: 'Inter',
+    fontStyle: 'normal',
     fontWeight: '600',
     textAlign: 'center',
     marginTop: 51,
-    color:"#333333"
+    color: '#333333',
   },
   subtitle: {
     fontSize: 14,
-    fontFamily: "Inter",
-    fontStyle: "normal",
+    fontFamily: 'Inter',
+    fontStyle: 'normal',
     fontWeight: '400',
     textAlign: 'center',
-    color: '#333333',
+    color: '#645F5F',
     marginBottom: 40,
   },
-  formContainer: {
-    backgroundColor: 'white',
-    borderRadius: 16,
-    padding: 20,
-    marginTop: 80,
+  dateDisplay: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    borderRadius: 20,
+    padding: 10,
+    marginTop: 20,
+    marginBottom: 20,
     shadowColor: '#000',
     shadowOpacity: 0.1,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 6,
-    elevation: 3,
+    shadowOffset: { width: 0, height: 4 },
+    shadowRadius: 12,
+    elevation: 5,
   },
-  inputWrapper: {
-    marginBottom: 20,
+  dateSegment: {
+    alignItems: 'center',
+    padding: 12,
+    borderRadius: 12,
+    minWidth: 80,
   },
-  label: {
-    fontSize: 14,
-    color: '#777',
-    marginBottom: 5,
+  activeDateSegment: {
+    backgroundColor: '#FD5A7E',
   },
-  input: {
-    borderWidth: 1,
-    borderColor: '#f4a5a5',
-    borderRadius: 8,
-    padding: 10,
+  dateSegmentText: {
     fontSize: 16,
+    fontWeight: '700',
+    color: '#333333',
+    fontFamily: 'Inter',
+  },
+  activeDateSegmentText: {
+    color: '#FFFFFF',
+  },
+  dateSegmentLabel: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: '#999999',
+    marginTop: 10,
+    fontFamily: 'Inter',
+  },
+  dateSeparator: {
+    paddingHorizontal: 8,
+  },
+  dateSeparatorText: {
+    fontSize: 20,
+    fontWeight: '300',
+    color: '#CCCCCC',
+  },
+  pickerContainer: {
     backgroundColor: '#fff',
+    borderRadius: 20,
+    height: 200,
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowOffset: { width: 0, height: 4 },
+    shadowRadius: 12,
+    elevation: 5,
+    marginBottom: 40,
   },
-  errorBorder: {
-    borderColor: '#E66386',
-    borderWidth: 2,
+  pickerScrollContent: {
+    paddingVertical: 20,
   },
-  errorText: {
-    color: '#E66386',
-    fontSize: 12,
-    marginTop: 5,
+  pickerItem: {
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    alignItems: 'center',
   },
-  privacyText: {
-    fontSize: 12,
-    marginTop: 80,
+  selectedPickerItem: {
+    backgroundColor: '#FFF5F2',
+  },
+  pickerItemText: {
+    fontSize: 18,
+    fontWeight: '500',
+    color: '#666666',
+    fontFamily: 'Inter',
+  },
+  selectedPickerItemText: {
+    color: '#FD5A7E',
+    fontWeight: '700',
+  },
+  termsText: {
+    fontSize: 14,
+    fontFamily: 'Inter',
     fontStyle: 'normal',
-    fontFamily: "Inter",
     fontWeight: '400',
     color: '#645F5F',
     textAlign: 'center',
+    marginTop: 20,
+    lineHeight: 18,
   },
-  privacyLink: {
+  termsConditions: {
     color: '#E66386',
-    fontFamily: "Inter",
-    fontStyle: "normal",
-    fontWeight: '400',
-    fontSize: 12,
-    textAlign: 'center',
-    marginVertical: 10,
-    textDecorationLine: 'underline',
+    fontWeight: '600',
   },
   nextButton: {
     backgroundColor: '#FD5A7E',
-    fontFamily: "Inter",
-    fontStyle: "normal",
+    fontFamily: 'Inter',
+    fontStyle: 'normal',
     fontWeight: '600',
     paddingVertical: 15,
     borderRadius: 24,
@@ -329,6 +531,6 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: '600',
     fontSize: 16,
-    fontStyle: "normal",
+    fontStyle: 'normal',
   },
 });
