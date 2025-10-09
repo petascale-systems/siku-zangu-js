@@ -27,7 +27,6 @@ export type User = {
   };
 };
 
-// Derive UpdateUser from User - makes all kv fields optional
 export type UpdateUser = Omit<User, 'kv'> & {
   kv?: Partial<User['kv']>;
 };
