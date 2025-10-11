@@ -11,6 +11,7 @@ import {UpdatingPeriodLengthScreen} from '../screens/UpdatingPeriodLengthScreen'
 import {UpdatingCycleLengthScreen} from '../screens/UpdatingCycleLengthScreen';
 import {UpdatingSymptomsMoodsScreen} from '../screens/UpdatingSymptomsMoodsScreen';
 import {UpdatingMedicationScreen} from '../screens/UpdatingMedicationScreen';
+import {CalenderScreen } from '../screens/CalenderScreen';
 
 export type RootStackParamList = {
   Language: undefined;
@@ -24,6 +25,7 @@ export type RootStackParamList = {
   UpdatingCycleLength: {lang: 'en' | 'sw'; userId: string};
   UpdatingSymptomsMoods: {lang: 'en' | 'sw'; userId: string};
   UpdatingMedication: {lang: 'en' | 'sw'; userId: string};
+  Calender: {lang: 'en' | 'sw'; userId: string};
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -45,6 +47,7 @@ export const AppNavigator = () => {
         <Stack.Screen name="UpdatingCycleLength" component={UpdatingCycleLengthScreen}/>
         <Stack.Screen name="UpdatingSymptomsMoods" component={UpdatingSymptomsMoodsScreen}/>
         <Stack.Screen name="UpdatingMedication" component={UpdatingMedicationScreen}/>
+        <Stack.Screen name="Calender" component={CalenderScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

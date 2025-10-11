@@ -73,7 +73,10 @@ export const UpdatingMedicationScreen = ({ navigation, route }: Props) => {
           {
             text: language === 'en' ? 'OK' : 'Sawa',
             onPress: () => {
-              navigation.goBack();
+              navigation.navigate('Calender', {
+                lang: language,
+                userId,
+              })
             },
           },
         ]
