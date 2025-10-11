@@ -74,14 +74,27 @@ export const LoginScreen = ({ navigation, route }: Props) => {
     }
 
     try {
-      await loginUser({ phone_number: storedPhoneNumber, pin });
+      const accessToken = await loginUser({ phone_number: storedPhoneNumber, pin });
+
+      if (!accessToken?.user?.user_id) {
+        throw {
+          status: 500,
+          message: language === 'en' ? 'User ID not found in response' : 'Kitambulisho cha mtumiaji hakijapatikana',
+        } as APIError;
+      }
+
+      const userId = accessToken.user.user_id;
+
       Alert.alert(
         language === 'en' ? 'Success' : 'Mafanikio',
         language === 'en' ? 'Logged in successfully!' : 'Umeingia kwa mafanikio!',
         [
           {
             text: language === 'en' ? 'OK' : 'Sawa',
-            onPress: () => navigation.navigate('ProfileSetUp', { lang: language }),
+            onPress: () => navigation.navigate('UpdatingNames', {
+              lang: language,
+              userId: userId
+            }),
           },
         ]
       );
@@ -103,10 +116,6 @@ export const LoginScreen = ({ navigation, route }: Props) => {
       Alert.alert(language === 'en' ? 'Error' : 'Hitilafu', errorMessage);
     }
   };
-/*
-  const handleForgotPin = () => {
-    navigation.navigate('ForgotPin', { lang: language });
-  };*/
 
   return (
     <View style={styles.container}>
@@ -166,7 +175,7 @@ export const LoginScreen = ({ navigation, route }: Props) => {
           </View>
           {pinError ? <Text style={styles.errorText}>{pinError}</Text> : null}
         </View>
-        <TouchableOpacity /*onPress={handleForgotPin}*/>
+        <TouchableOpacity>
           <Text style={styles.forgotLink}>{language === 'en' ? 'Forgot PIN?' : 'Umesahau Nenosiri?'}</Text>
         </TouchableOpacity>
 

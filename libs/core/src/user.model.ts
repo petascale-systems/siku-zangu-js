@@ -27,6 +27,10 @@ export type User = {
   };
 };
 
+export type UpdateUser = Omit<User, 'kv'> & {
+  kv?: Partial<User['kv']>;
+};
+
 export const USER_ZOD_SCHEMA = z.object({
   user_id: z.string().optional(),
   created_at: z.string().optional(),
@@ -50,7 +54,8 @@ export const USER_ZOD_SCHEMA = z.object({
     receive_insights_tips: z.boolean().optional(),
   }),
 });
-export function userToKv(user: User): { id_user?: string; k: string; v: string | number | boolean }[] {
+
+export function userToKv(user: User | UpdateUser): { id_user?: string; k: string; v: string | number | boolean }[] {
   const kvs: { id_user?: string; k: string; v: string | number | boolean }[] = [];
   if (!user.kv) return kvs;
   for (const [k, v] of Object.entries(user.kv)) {
