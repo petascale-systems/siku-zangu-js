@@ -1,4 +1,5 @@
-import {APIError, User, userToKv} from "@siku-zangu/core";
+import {APIError, User, } from "@siku-zangu/core";
+import {userToKv} from "./user-to-kv.function";
 import {userExistsByUserId} from "./user-exists-by-user-id.function";
 import {buildUserTableJoins, rowToUser, USER_TABLE_COLUMN_ALIASES} from "./insert-one-user.function";
 import {DATABASE} from "../create-database.function";
