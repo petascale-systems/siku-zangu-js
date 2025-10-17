@@ -9,6 +9,7 @@ import {composePlugins, withNx} from '@nx/next';
 const nextConfig = {
     // Use this to set Nx-specific options
     // See: https://nx.dev/recipes/next/next-config-setup
+    output: 'standalone',
     nx: {},
     serverExternalPackages: ["knex", "mysql2"],
   async headers() {

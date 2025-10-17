@@ -1,0 +1,15 @@
+FROM node:20.9.0-alpine
+
+WORKDIR /var/lib
+COPY dist/apps/sikuzangu-com/.next/standalone .
+COPY dist/apps/sikuzangu-com/.next/static ./dist/apps/sikuzangu-com/.next/static
+COPY atlasgo ./atlasgo
+COPY sikuzangu-com-docker-entrypoint.sh /usr/bin/
+
+RUN chmod 550 /usr/bin/sikuzangu-com-docker-entrypoint.sh
+RUN apk add --no-cache curl
+RUN curl -sSf https://atlasgo.sh | sh
+
+EXPOSE 3000
+ENTRYPOINT [ "sikuzangu-com-docker-entrypoint.sh" ]
+CMD ["node", "./apps/sikuzangu-com/server.js"]

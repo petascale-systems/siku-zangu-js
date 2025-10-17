@@ -1,13 +1,13 @@
 'use client'
 
-import React, {useEffect, useState} from "react";
+import {useEffect, useState} from "react";
 import {Switch, Table, Tbody, Td, Tfoot, Th, Thead, Tr, useUsersPage} from "@siku-zangu/react";
 import {Input} from "@headlessui/react";
 import {MagnifyingGlassIcon} from "@heroicons/react/24/outline";
 import {useRouter, useSearchParams} from "next/navigation";
 import {User, UsersFetchParams, UserStatus} from "@siku-zangu/core";
 
-export default function UsersPage({}: { children: React.ReactNode }) {
+export default function UsersPage() {
     const _router = useRouter()
     const _searchParams = useSearchParams()
     const [_search, _setSearch] = useState('')
@@ -60,8 +60,9 @@ export default function UsersPage({}: { children: React.ReactNode }) {
                         <Input type="text" placeholder='Search users ...' value={_search}
                                onChange={(e) => _setSearch(e.target.value)}
                                className='appearance-none focus:outline-none placeholder:text-gray-300 text-gray-500 md:w-72'/>
-                        <button className='hover:bg-secondary/5 rounded px-2 text-xs py-1 text-gray-700 cursor-pointer'
-                                onClick={_handleSearchBtnClick}>Search
+                        <button
+                            className='hover:bg-secondary/5 rounded px-2 text-xs py-1 text-gray-700 cursor-pointer'
+                            onClick={_handleSearchBtnClick}>Search
                         </button>
                     </div>
                 </div>
@@ -79,13 +80,16 @@ export default function UsersPage({}: { children: React.ReactNode }) {
                                 <Td className='font-medium text-gray-900 capitalize'>{`${item?.kv?.first_name} ${item?.kv?.last_name}`}</Td>
                                 <Td>{item?.kv?.email || '-'}</Td>
                                 <Td>{item?.created_at ? new Date(item?.created_at).toLocaleString() : '-'}</Td>
-                                <Td><Switch checked={item?.kv?.status == 'active'}
-                                            onChange={(active) => _handleStatusToggleClick(item.user_id!, active ? 'active' : 'inactive')}/></Td>
+                                <Td>
+                                    <Switch checked={item?.kv?.status == 'active'}
+                                            onChange={(active) => _handleStatusToggleClick(item.user_id!, active ? 'active' : 'inactive')}/>
+                                </Td>
                             </Tr>
                         ))}
                     </Tbody>
 
-                    <Tfoot colSpan={4} pageSize={_usersFetchParams.size}
+                    <Tfoot colSpan={4}
+                           pageSize={_usersFetchParams.size}
                            page={usersPage?.page ?? 1}
                            totalPages={usersPage?.totalPages ?? 0}
                            onChange={_handlePageChange}/>

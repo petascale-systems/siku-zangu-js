@@ -21,7 +21,7 @@ function _encryptSessionData(admin: Admin) {
         .sign(_sessionSecretKey)
 }
 
-export async function POST(req: NextRequest, res: NextResponse) {
+export async function POST(req: NextRequest) {
     const result = EMAIL_AND_PASSWORD_SCHEMA.safeParse(await req.json())
     if (!result.success) return Promise.reject({
         status: 400,
