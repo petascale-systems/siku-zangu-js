@@ -6,5 +6,6 @@ export async function userExistsByUserId(userIdHex: string) {
         .from(TABLE_NAME_S_USER)
         .where('id_user', Buffer.from(userIdHex.replace('-', ''), 'hex'))
         .count<{ count: number }>({count: '*'})
-        .then((count) => count.count > 0)
+        .first()
+        .then((count) => count && count.count > 0)
 }

@@ -19,7 +19,7 @@ export function userToKv(user: User) {
         v: userKv?.avg_cycle_length_days.toString()
     })
     if (userKv?.avg_period_length_days) kvs.push({
-        k: 'avg_period_length_days.toString()',
+        k: 'avg_period_length_days',
         v: userKv?.avg_period_length_days.toString()
     })
     if (userKv?.receive_period_alerts == true || userKv?.receive_period_alerts == false) kvs.push({

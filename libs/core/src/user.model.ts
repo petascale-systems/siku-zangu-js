@@ -27,6 +27,10 @@ export type User = {
   };
 };
 
+export type UpdateUser = Omit<User, 'kv'> & {
+  kv?: Partial<User['kv']>;
+};
+
 export const USER_ZOD_SCHEMA = z.object({
   user_id: z.string().optional(),
   created_at: z.string().optional(),
@@ -35,7 +39,7 @@ export const USER_ZOD_SCHEMA = z.object({
     first_name: z.string().max(64, { message: 'First name is too long' }).optional(),
     last_name: z.string().max(64, { message: 'Last name is too long' }).optional(),
     status: z.enum(['active', 'inactive']).optional(),
-    phone_number: z.string().regex(/^[A-Z]{2}\d{6,12}$/, { message: 'Phone number must be 2 uppercase letters followed by 6-12 digits' }),
+    phone_number: z.string().regex(/^[A-Z]{2}\s?\d{6,12}$/, { message: 'Phone number must be 2 uppercase letters, optionally followed by a space, then 6-12 digits' }),
     date_of_birth: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, { message: 'Date of birth must be in YYYY-MM-DD format' }).optional(),
     pin: z.string().regex(/^\d{4}$/, { message: 'PIN must be exactly 4 digits' }),
     password: z.string().regex(/^\d{4}$/, { message: 'Password must be exactly 4 digits' }).optional(),
@@ -51,13 +55,7 @@ export const USER_ZOD_SCHEMA = z.object({
   }),
 });
 
-export type APIError = {
-  status?: 400 | 401 | 403 | 404 | 405 | 409 | 415 | 422 | 500 | 501 | 503;
-  message?: string;
-  issues?: { path?: string[]; error?: string }[];
-};
-
-export function userToKv(user: User): { id_user?: string; k: string; v: string | number | boolean }[] {
+export function userToKv(user: User | UpdateUser): { id_user?: string; k: string; v: string | number | boolean }[] {
   const kvs: { id_user?: string; k: string; v: string | number | boolean }[] = [];
   if (!user.kv) return kvs;
   for (const [k, v] of Object.entries(user.kv)) {

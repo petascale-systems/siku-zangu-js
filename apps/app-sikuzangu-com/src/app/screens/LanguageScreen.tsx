@@ -9,29 +9,27 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 type Props = NativeStackScreenProps<RootStackParamList, 'Language'>;
 
 export const LanguageScreen = ({ navigation }: Props) => {
-  const [selectedLang, setSelectedLang] = useState<'en' | 'swa'>('en');
-  const [isLoading, setIsLoading]= useState(false);
+  const [selectedLang, setSelectedLang] = useState<'en' | 'sw'>('en');
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleContinue = async () => {
     setIsLoading(true);
     try {
       await AsyncStorage.setItem('language', selectedLang);
-      navigation.navigate("Register", { lang: selectedLang });
+      navigation.navigate('Register', { lang: selectedLang });
     } catch (error) {
-      Alert.alert("Error", "Failed to save language preference");
+      Alert.alert('Error', 'Failed to save language preference');
     } finally {
       setIsLoading(false);
     }
-    }
+  };
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>
         {selectedLang === 'en'
-          ? "Your Cycle. Your Health. Your Language"
-          : "Mzunguko Wako. Afya Yako. Lugha Yako"
-
-      }
+          ? 'Your Cycle. Your Health. Your Language'
+          : 'Mzunguko Wako. Afya Yako. Lugha Yako'}
       </Text>
       <LanguageCard
         flag={require('../../../assets/images/uk.png')}
@@ -44,22 +42,17 @@ export const LanguageScreen = ({ navigation }: Props) => {
         flag={require('../../../assets/images/tz.png')}
         title="Kiswahili"
         subtitle="Karibu"
-        selected={selectedLang === 'swa'}
-        onPress={() => setSelectedLang('swa')}
+        selected={selectedLang === 'sw'}
+        onPress={() => setSelectedLang('sw')}
       />
       <PrimaryButton
-        title={`${
-          selectedLang === 'en'
-            ? 'Continue in English'
-            : 'Endelea Kwa Kiswahili'
-        }`}
+        title={selectedLang === 'en' ? 'Continue in English' : 'Endelea Kwa Kiswahili'}
         onPress={handleContinue}
-        disabled = {isLoading}
+        disabled={isLoading}
       />
     </View>
   );
-
-  };
+};
 
 const styles = StyleSheet.create({
   container: {

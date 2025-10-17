@@ -9,6 +9,7 @@ import {composePlugins, withNx} from '@nx/next';
 const nextConfig = {
     // Use this to set Nx-specific options
     // See: https://nx.dev/recipes/next/next-config-setup
+    output: 'standalone',
     nx: {},
     serverExternalPackages: ["knex", "mysql2"],
   async headers() {
@@ -19,7 +20,7 @@ const nextConfig = {
         headers: [
           {
             key: "Access-Control-Allow-Origin",
-            value: "http://localhost:19000",
+            value: "http://localhost:8081",
           },
           {
             key:"Access-Control-Allow-Credentials",
