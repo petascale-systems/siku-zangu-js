@@ -1,37 +1,80 @@
-import React, { useState } from 'react';
-import { View, TouchableOpacity, ScrollView, StyleSheet, Text } from 'react-native';
+import React, { useState, useMemo } from 'react';
+import {
+  View,
+  TouchableOpacity,
+  ScrollView,
+  StyleSheet,
+  Text,
+} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import Svg, { Circle, Text as SvgText } from 'react-native-svg';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import { NavbarCard } from '../components/App-nav-component';
+import { useAccessToken } from '@siku-zangu/react';
+import {
+  calculateCycleData,
+  formatDate,
+  formatDateRange,
+  getCircularCoordinates,
+  getDaysInMonth,
+  MONTH_NAMES_EN,
+  MONTH_NAMES_SW,
+} from '../utils/cycleCalculations';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Calender'>;
 
 const RADIUS = 120;
-const DAYS_IN_MONTH = 31;
 const CENTER_X = 180;
 const CENTER_Y = 180;
-
-// Example data
-const periodDays = [1, 2, 3, 4, 5, 6];
-const fertilityDays = [10, 11, 12, 13, 14, 15];
-const ovulationDays = [17, 18];
-const predictedDays = [29, 30, 31];
-
-const getCoordinates = (day: number, radius = RADIUS) => {
-  const angle = ((day - 1) / DAYS_IN_MONTH) * (2 * Math.PI) - Math.PI / 2;
-  const x = CENTER_X + radius * Math.cos(angle);
-  const y = CENTER_Y + radius * Math.sin(angle);
-  return { x, y, angle };
-};
 
 export const CalenderScreen = ({ navigation, route }: Props) => {
   const language = route.params?.lang ?? 'en';
   const userId = route.params?.userId;
+  const { user } = useAccessToken();
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
   const insets = useSafeAreaInsets();
+
+  const currentDate = new Date();
+  const currentMonth = currentDate.getMonth();
+  const currentYear = currentDate.getFullYear();
+  const monthNames = language === 'en' ? MONTH_NAMES_EN : MONTH_NAMES_SW;
+
+  const cycleData = useMemo(() => {
+    if (!user?.kv?.prev_cycle_start_date) {
+      return {
+        periodDays: [1, 2, 3, 4, 5, 6],
+        fertilityDays: [10, 11, 12, 13, 14, 15],
+        ovulationDays: [17, 18],
+        predictedDays: [29, 30, 31],
+        nextPeriodDate: new Date(2025, 9, 24),
+        ovulationDate: new Date(2025, 9, 10),
+        daysUntilPeriod: 6,
+        daysInMonth: getDaysInMonth(currentMonth, currentYear),
+      };
+    }
+
+    const data = calculateCycleData(
+      user.kv.prev_cycle_start_date,
+      user.kv.avg_cycle_length_days || 28,
+      user.kv.avg_period_length_days || 5,
+      currentMonth,
+      currentYear
+    );
+    return data;
+  }, [user, currentMonth, currentYear]);
+
+  const {
+    periodDays,
+    fertilityDays,
+    ovulationDays,
+    predictedDays,
+    nextPeriodDate,
+    ovulationDate,
+    daysUntilPeriod,
+    daysInMonth,
+  } = cycleData;
 
   const handleBack = () => navigation.goBack();
 
@@ -58,7 +101,7 @@ export const CalenderScreen = ({ navigation, route }: Props) => {
 
         <View style={styles.card}>
           <Text style={styles.month}>
-            {language === 'en' ? 'August 2025' : 'Agosti 2025'}
+            {`${monthNames[currentMonth]} ${currentYear}`}
           </Text>
           <View style={styles.calendarContainer}>
             <Svg height="360" width="360">
@@ -70,32 +113,38 @@ export const CalenderScreen = ({ navigation, route }: Props) => {
                 fontWeight="600"
                 fill="#999"
               >
-                Aug
+                {monthNames[currentMonth].slice(0, 3)}
               </SvgText>
 
-              {Array.from({ length: DAYS_IN_MONTH }, (_, i) => {
+              {Array.from({ length: daysInMonth }, (_, i) => {
                 const day = i + 1;
-                const { x, y, angle } = getCoordinates(day);
+                const { x, y, angle } = getCircularCoordinates(
+                  day,
+                  daysInMonth,
+                  RADIUS,
+                  CENTER_X,
+                  CENTER_Y
+                );
                 let fill = '#fff';
                 let stroke = '#e0e0e0';
                 let strokeDasharray: string | null = null;
                 let sequenceNum: number | null = null;
 
                 if (periodDays.includes(day)) {
-                  fill = '#FF4C7C';
-                  stroke = '#FF4C7C';
+                  fill = '#FF5E87';
+                  stroke = '#FF5E87';
                   sequenceNum = periodDays.indexOf(day) + 1;
-                } else if (fertilityDays.includes(day)) {
-                  fill = '#1ABC9C';
-                  stroke = '#1ABC9C';
-                } else if (ovulationDays.includes(day)) {
-                  fill = '#9B59B6';
-                  stroke = '#9B59B6';
                 } else if (predictedDays.includes(day)) {
                   fill = '#fff';
                   stroke = '#bbb';
                   strokeDasharray = '4 4';
                   sequenceNum = predictedDays.indexOf(day) + 1;
+                } else if (ovulationDays.includes(day)) {
+                  fill = '#D245D2';
+                  stroke = '#D245D2';
+                } else if (fertilityDays.includes(day)) {
+                  fill = '#27B3B3';
+                  stroke = '#27B3B3';
                 }
 
                 const badgeRadius = RADIUS + 20;
@@ -156,15 +205,15 @@ export const CalenderScreen = ({ navigation, route }: Props) => {
 
           <View style={styles.legend}>
             <LegendItem
-              color="#FF4C7C"
+              color="#FF5E87"
               label={language === 'en' ? 'Period' : 'Hedhi'}
             />
             <LegendItem
-              color="#9B59B6"
+              color="#D245D2"
               label={language === 'en' ? 'Ovulation' : 'Ovulation'}
             />
             <LegendItem
-              color="#1ABC9C"
+              color="#27B3B3"
               label={language === 'en' ? 'Fertility' : 'Uzazi'}
             />
             <LegendItem
@@ -178,7 +227,7 @@ export const CalenderScreen = ({ navigation, route }: Props) => {
         <View style={styles.row}>
           <InfoCard
             title={language === 'en' ? 'Cycle Length' : 'Urefu wa Mzunguko'}
-            value="28"
+            value={String(user?.kv?.avg_cycle_length_days || 28)}
             unit={language === 'en' ? 'days' : 'siku'}
             icon="calendar-outline"
             iconColor="#FF4C7C"
@@ -186,7 +235,11 @@ export const CalenderScreen = ({ navigation, route }: Props) => {
           />
           <InfoCard
             title={language === 'en' ? 'Next Period' : 'Hedhi Inayofuata'}
-            value={language === 'en' ? 'in 6 days' : 'baada ya siku 6'}
+            value={
+              language === 'en'
+                ? `in ${daysUntilPeriod} days`
+                : `baada ya siku ${daysUntilPeriod}`
+            }
             icon="water-outline"
             iconColor="#1ABC9C"
           />
@@ -194,7 +247,11 @@ export const CalenderScreen = ({ navigation, route }: Props) => {
 
         <PhaseCard
           title={language === 'en' ? 'Ovulation Phase' : 'Awamu ya Ovulation'}
-          date={language === 'en' ? 'Expected on Aug 14' : 'Inatarajiwa Agosti 14'}
+          date={
+            language === 'en'
+              ? `Expected on ${formatDate(ovulationDate, monthNames)}`
+              : `Inatarajiwa ${formatDate(ovulationDate, monthNames)}`
+          }
           description={
             language === 'en'
               ? 'Your body releases an egg — the most fertile day in your cycle.'
@@ -206,7 +263,11 @@ export const CalenderScreen = ({ navigation, route }: Props) => {
 
         <PhaseCard
           title={language === 'en' ? 'Fertility Phase' : 'Awamu ya Uzazi'}
-          date={language === 'en' ? 'Aug 10 – Aug 15' : 'Agosti 10 - Agosti 15'}
+          date={formatDateRange(
+            new Date(ovulationDate.getTime() - 5 * 24 * 60 * 60 * 1000),
+            new Date(ovulationDate.getTime() + 1 * 24 * 60 * 60 * 1000),
+            monthNames
+          )}
           description={
             language === 'en'
               ? 'Best chance of getting pregnant.'
@@ -219,7 +280,9 @@ export const CalenderScreen = ({ navigation, route }: Props) => {
         <TouchableOpacity
           style={styles.trackingCard}
           activeOpacity={0.8}
-          accessibilityLabel={language === 'en' ? 'Track Cycle' : 'Fuatilia Mzunguko'}
+          accessibilityLabel={
+            language === 'en' ? 'Track Cycle' : 'Fuatilia Mzunguko'
+          }
           accessibilityRole="button"
         >
           <View style={styles.trackingContent}>
@@ -231,7 +294,9 @@ export const CalenderScreen = ({ navigation, route }: Props) => {
                 {language === 'en' ? 'High accuracy' : 'Usahihi wa juu'}
               </Text>
               <Text style={styles.trackingText}>
-                {language === 'en' ? 'Best time for tracking' : 'Wakati bora wa kufuatilia'}
+                {language === 'en'
+                  ? 'Best time for tracking'
+                  : 'Wakati bora wa kufuatilia'}
               </Text>
             </View>
           </View>
@@ -276,13 +341,13 @@ interface InfoCardProps {
 }
 
 const InfoCard: React.FC<InfoCardProps> = ({
-                                             title,
-                                             value,
-                                             unit,
-                                             icon,
-                                             iconColor,
-                                             graph,
-                                           }) => (
+  title,
+  value,
+  unit,
+  icon,
+  iconColor,
+  graph,
+}) => (
   <View style={styles.infoCard}>
     {icon && (
       <View style={[styles.iconCircle, { backgroundColor: `${iconColor}15` }]}>
@@ -320,12 +385,12 @@ interface PhaseCardProps {
 }
 
 const PhaseCard: React.FC<PhaseCardProps> = ({
-                                               title,
-                                               date,
-                                               description,
-                                               color,
-                                               icon,
-                                             }) => (
+  title,
+  date,
+  description,
+  color,
+  icon,
+}) => (
   <View style={styles.phaseCard}>
     <View style={[styles.phaseAccent, { backgroundColor: color }]} />
     <View style={styles.phaseHeader}>
@@ -345,8 +410,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFF5F2',
     padding: 10,
   },
-  header: {
-  },
+  header: {},
   backButton: {
     position: 'absolute',
     top: 10,
@@ -354,7 +418,7 @@ const styles = StyleSheet.create({
     zIndex: 10,
   },
   headerTitle: {
-    textAlign:'center',
+    textAlign: 'center',
     fontSize: 20,
     fontWeight: '700',
     color: '#FD5A7E',
@@ -378,10 +442,10 @@ const styles = StyleSheet.create({
     marginVertical: 8,
   },
   month: {
-    fontSize: 22,
+    fontSize: 20,
     fontWeight: '700',
     marginBottom: 12,
-    color: '#222',
+    color: '#1F2937',
     letterSpacing: 0.5,
   },
   legend: {
@@ -404,7 +468,7 @@ const styles = StyleSheet.create({
   },
   legendLabel: {
     fontSize: 13,
-    color: '#666',
+    color: '#374151',
     fontWeight: '500',
   },
   row: {
@@ -518,7 +582,7 @@ const styles = StyleSheet.create({
     padding: 18,
     marginHorizontal: 12,
     marginTop: 8,
-    marginBottom: 100,
+    marginBottom: 20,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',

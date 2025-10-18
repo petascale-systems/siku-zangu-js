@@ -91,7 +91,7 @@ export const LoginScreen = ({ navigation, route }: Props) => {
         [
           {
             text: language === 'en' ? 'OK' : 'Sawa',
-            onPress: () => navigation.navigate('UpdatingNames', {
+            onPress: () => navigation.navigate('Calender', {
               lang: language,
               userId: userId
             }),
