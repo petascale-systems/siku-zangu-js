@@ -1,11 +1,5 @@
-import React, { useState, useMemo } from 'react';
-import {
-  View,
-  TouchableOpacity,
-  ScrollView,
-  StyleSheet,
-  Text,
-} from 'react-native';
+import React, { useMemo, useState } from 'react';
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import Svg, { Circle, Text as SvgText } from 'react-native-svg';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -20,7 +14,7 @@ import {
   getCircularCoordinates,
   getDaysInMonth,
   MONTH_NAMES_EN,
-  MONTH_NAMES_SW,
+  MONTH_NAMES_SW
 } from '../utils/cycleCalculations';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Calender'>;
@@ -33,7 +27,7 @@ export const CalenderScreen = ({ navigation, route }: Props) => {
   const language = route.params?.lang ?? 'en';
   const userId = route.params?.userId;
   const { user } = useAccessToken();
-  const [selectedDay, setSelectedDay] = useState<number | null>(null);
+  const [selectedDay] = useState<number | null>(null);
   const insets = useSafeAreaInsets();
 
   const currentDate = new Date();
@@ -55,14 +49,13 @@ export const CalenderScreen = ({ navigation, route }: Props) => {
       };
     }
 
-    const data = calculateCycleData(
+    return calculateCycleData(
       user.kv.prev_cycle_start_date,
       user.kv.avg_cycle_length_days || 28,
       user.kv.avg_period_length_days || 5,
       currentMonth,
       currentYear
     );
-    return data;
   }, [user, currentMonth, currentYear]);
 
   const {
@@ -70,7 +63,6 @@ export const CalenderScreen = ({ navigation, route }: Props) => {
     fertilityDays,
     ovulationDays,
     predictedDays,
-    nextPeriodDate,
     ovulationDate,
     daysUntilPeriod,
     daysInMonth,
@@ -78,6 +70,7 @@ export const CalenderScreen = ({ navigation, route }: Props) => {
 
   const handleBack = () => navigation.goBack();
 
+  // @ts-ignore
   return (
     <View style={{ flex: 1, backgroundColor: '#FFF5F2' }}>
       <ScrollView
@@ -151,7 +144,7 @@ export const CalenderScreen = ({ navigation, route }: Props) => {
                 const badgeX = CENTER_X + badgeRadius * Math.cos(angle);
                 const badgeY = CENTER_Y + badgeRadius * Math.sin(angle);
 
-                // @ts-ignore
+                // @ts-expect-error
                 return (
                   <React.Fragment key={day}>
                     <Circle
@@ -265,7 +258,7 @@ export const CalenderScreen = ({ navigation, route }: Props) => {
           title={language === 'en' ? 'Fertility Phase' : 'Awamu ya Uzazi'}
           date={formatDateRange(
             new Date(ovulationDate.getTime() - 5 * 24 * 60 * 60 * 1000),
-            new Date(ovulationDate.getTime() + 1 * 24 * 60 * 60 * 1000),
+            new Date(ovulationDate.getTime() + 24 * 60 * 60 * 1000),
             monthNames
           )}
           description={
