@@ -70,7 +70,6 @@ export const CalenderScreen = ({ navigation, route }: Props) => {
 
   const handleBack = () => navigation.goBack();
 
-  // @ts-ignore
   return (
     <View style={{ flex: 1, backgroundColor: '#FFF5F2' }}>
       <ScrollView
@@ -144,7 +143,7 @@ export const CalenderScreen = ({ navigation, route }: Props) => {
                 const badgeX = CENTER_X + badgeRadius * Math.cos(angle);
                 const badgeY = CENTER_Y + badgeRadius * Math.sin(angle);
 
-                // @ts-expect-error
+
                 return (
                   <React.Fragment key={day}>
                     <Circle
