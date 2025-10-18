@@ -27,5 +27,5 @@ docker run --publish 3001:3000 \
 --env S_DATABASE_NAME=siku_zangu \
 --env ATLASGO_VAR_DATABASE=siku_zangu \
 --env ATLASGO_URL=mysql://root:PetaPlay%40%23%246yty@mysql84:3306/siku_zangu \
-sikuzangu-org
+sikuzangu-com
 ```
