@@ -6,11 +6,13 @@ name: Deploy https://sikuzangu.org
 steps:
   - name: docker-build
     image: node:20.9.0-alpine
+    privileged: true
     commands:
       - npm install
       - npx nx build sikuzangu-com --skip-nx-cache
       - docker build -t sikuzangu-com -f ./sikuzangu-com-Dockerfile .
   - name: docker-run
+    privileged: true
     environment:
       S_DATABASE_HOST:
         from_secret: _S_DATABASE_HOST
