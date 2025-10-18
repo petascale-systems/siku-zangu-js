@@ -4,53 +4,105 @@ import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
+
 interface Props {
-  navigation: NativeStackNavigationProp<RootStackParamList>;
+  navigation: NativeStackNavigationProp<RootStackParamList, any>;
   language: 'en' | 'sw';
-  userId?: string;
+  userId: string;
 }
+
 export const NavbarCard: React.FC<Props> = ({ navigation, language, userId }) => {
   const insets = useSafeAreaInsets();
+
+  /*
+  const handleHomePress = () => {
+    navigation.navigate('Home', {
+      lang: language,
+      userId: userId,
+    });
+  };
+  /
+
+   */
+
+  const handleCalendarPress = () => {
+    navigation.navigate('Calender', {
+      lang: language,
+      userId: userId,
+    });
+  };
+
+/*
+  const handleAddPress = () => {
+    // Navigate to Add/Track screen when implemented
+    navigation.navigate('Calender', {
+      lang: language,
+      userId: userId,
+    });
+  };
+*/
+  const handleInsightsPress = () => {
+    navigation.navigate('Insights', {
+      lang: language,
+      userId: userId,
+    });
+  };
+
+  const handleProfilePress = () => {
+    navigation.navigate('Insights', {
+      lang: language,
+      userId: userId,
+    });
+  };
 
   return (
     <View
       style={[
         styles.bottomNav,
-        { paddingBottom: insets.bottom + 16 }, // Adjust for safe area
+        { paddingBottom: insets.bottom + 16 },
       ]}
     >
       <TouchableOpacity
         style={styles.navItem}
         accessibilityLabel={language === 'en' ? 'Home' : 'Nyumbani'}
         accessibilityRole="button"
+       // onPress={handleHomePress}
       >
         <Ionicons name="home" size={26} color="#FF4C7C" />
       </TouchableOpacity>
+
       <TouchableOpacity
         style={styles.navItem}
         accessibilityLabel={language === 'en' ? 'Calendar' : 'Kalenda'}
         accessibilityRole="button"
+        onPress={handleCalendarPress}
       >
         <Ionicons name="calendar-outline" size={28} color="#3EA310" />
       </TouchableOpacity>
+
       <TouchableOpacity
         style={styles.navItem}
         accessibilityLabel={language === 'en' ? 'Add' : 'Ongeza'}
         accessibilityRole="button"
+        // onPress={handleAddPress}
       >
         <Ionicons name="add-circle" size={26} color="#CE2020" />
       </TouchableOpacity>
+
       <TouchableOpacity
         style={styles.navItem}
         accessibilityLabel={language === 'en' ? 'Insights' : 'Maarifa'}
         accessibilityRole="button"
+        onPress={handleInsightsPress}
       >
         <Ionicons name="bulb-sharp" size={26} color="#30B3EB" />
       </TouchableOpacity>
+
       <TouchableOpacity
         style={styles.navItem}
         accessibilityLabel={language === 'en' ? 'Profile' : 'Wasifu'}
         accessibilityRole="button"
+        onPress={handleProfilePress}
       >
         <View style={styles.userBadge}>
           <Ionicons name="person" size={22} color="#36558F" />
@@ -81,7 +133,6 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-
   },
   userBadge: {
     position: 'relative',

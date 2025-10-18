@@ -71,26 +71,19 @@ export const CalenderScreen = ({ navigation, route }: Props) => {
   const handleBack = () => navigation.goBack();
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#FFF5F2' }}>
-      <ScrollView
-        style={[styles.container, { paddingTop: insets.top }]}
-        showsVerticalScrollIndicator={false}
-      >
-        <View style={[styles.header]}>
-          <TouchableOpacity
-            onPress={handleBack}
-            style={styles.backButton}
-            accessibilityLabel={language === 'en' ? 'Back' : 'Rudi'}
-            accessibilityRole="button"
-          >
-            <Ionicons name="arrow-back" size={24} color="black" />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>
-            {language === 'en' ? 'Calendar' : 'Kalenda'}
-          </Text>
-          <View style={{ width: 32 }} />
-        </View>
+    <View style={[styles.container, { paddingTop: insets.top }]}>
+      <View style={styles.header}>
+        <TouchableOpacity style={styles.backButton} onPress={handleBack}>
+          <Ionicons name="arrow-back" size={24} color="#000" />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Calendar</Text>
+        <View style={{ width: 32 }} />
+      </View>
 
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
+      >
         <View style={styles.card}>
           <Text style={styles.month}>
             {`${monthNames[currentMonth]} ${currentYear}`}
@@ -142,7 +135,6 @@ export const CalenderScreen = ({ navigation, route }: Props) => {
                 const badgeRadius = RADIUS + 20;
                 const badgeX = CENTER_X + badgeRadius * Math.cos(angle);
                 const badgeY = CENTER_Y + badgeRadius * Math.sin(angle);
-
 
                 return (
                   <React.Fragment key={day}>
@@ -292,7 +284,7 @@ export const CalenderScreen = ({ navigation, route }: Props) => {
               </Text>
             </View>
           </View>
-          <Ionicons name="chevron-forward" size={20} color="#3E3E3E" />
+          <Ionicons name="chevron-forward" size={20} color="#fff" />
         </TouchableOpacity>
       </ScrollView>
 
@@ -333,13 +325,13 @@ interface InfoCardProps {
 }
 
 const InfoCard: React.FC<InfoCardProps> = ({
-  title,
-  value,
-  unit,
-  icon,
-  iconColor,
-  graph,
-}) => (
+                                             title,
+                                             value,
+                                             unit,
+                                             icon,
+                                             iconColor,
+                                             graph,
+                                           }) => (
   <View style={styles.infoCard}>
     {icon && (
       <View style={[styles.iconCircle, { backgroundColor: `${iconColor}15` }]}>
@@ -377,12 +369,12 @@ interface PhaseCardProps {
 }
 
 const PhaseCard: React.FC<PhaseCardProps> = ({
-  title,
-  date,
-  description,
-  color,
-  icon,
-}) => (
+                                               title,
+                                               date,
+                                               description,
+                                               color,
+                                               icon,
+                                             }) => (
   <View style={styles.phaseCard}>
     <View style={[styles.phaseAccent, { backgroundColor: color }]} />
     <View style={styles.phaseHeader}>
@@ -400,35 +392,36 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#FFF5F2',
-    padding: 10,
   },
-  header: {},
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    marginBottom: 8,
+  },
   backButton: {
-    position: 'absolute',
-    top: 10,
-    left: 20,
-    zIndex: 10,
+    padding: 6,
   },
   headerTitle: {
-    textAlign: 'center',
     fontSize: 20,
     fontWeight: '700',
     color: '#FD5A7E',
-    letterSpacing: 0.3,
-    marginTop: 10,
+  },
+  scrollContent: {
+    paddingHorizontal: 16,
+    paddingBottom: 100,
   },
   card: {
     backgroundColor: '#fff',
-    borderRadius: 20,
+    borderRadius: 18,
     paddingVertical: 20,
     alignItems: 'center',
-    marginHorizontal: 12,
-    marginTop: 16,
-    marginBottom: 20,
+    marginVertical: 10,
     shadowColor: '#FF4C7C',
-    shadowOpacity: 0.12,
-    shadowRadius: 12,
-    elevation: 4,
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    elevation: 3,
   },
   calendarContainer: {
     marginVertical: 8,
@@ -466,25 +459,27 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginHorizontal: 12,
-    marginBottom: 16,
+    marginVertical: 10,
     gap: 12,
   },
   infoCard: {
     flex: 1,
     backgroundColor: '#fff',
-    borderRadius: 16,
+    borderRadius: 18,
     alignItems: 'center',
     paddingVertical: 18,
     paddingHorizontal: 12,
-    shadowColor: '#000',
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 2,
+    shadowColor: '#FF4C7C',
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    elevation: 3,
   },
   iconCircle: {
-    padding: 12,
-    borderRadius: 50,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
     marginBottom: 8,
   },
   cardTitle: {
@@ -520,14 +515,13 @@ const styles = StyleSheet.create({
   },
   phaseCard: {
     backgroundColor: '#fff',
-    borderRadius: 16,
-    padding: 16,
-    marginHorizontal: 12,
-    marginBottom: 12,
-    shadowColor: '#000',
-    shadowOpacity: 0.06,
-    shadowRadius: 6,
-    elevation: 2,
+    borderRadius: 18,
+    padding: 18,
+    marginVertical: 10,
+    shadowColor: '#FF4C7C',
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    elevation: 3,
     borderLeftWidth: 4,
     borderLeftColor: 'transparent',
   },
@@ -537,8 +531,8 @@ const styles = StyleSheet.create({
     top: 0,
     bottom: 0,
     width: 4,
-    borderTopLeftRadius: 16,
-    borderBottomLeftRadius: 16,
+    borderTopLeftRadius: 18,
+    borderBottomLeftRadius: 18,
   },
   phaseHeader: {
     flexDirection: 'row',
@@ -570,18 +564,16 @@ const styles = StyleSheet.create({
   },
   trackingCard: {
     backgroundColor: '#FF4C7C',
-    borderRadius: 16,
+    borderRadius: 18,
     padding: 18,
-    marginHorizontal: 12,
-    marginTop: 8,
-    marginBottom: 20,
+    marginVertical: 10,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     shadowColor: '#FF4C7C',
     shadowOpacity: 0.3,
     shadowRadius: 12,
-    elevation: 4,
+    elevation: 2,
   },
   trackingContent: {
     flexDirection: 'row',
@@ -591,7 +583,7 @@ const styles = StyleSheet.create({
   bulbIcon: {
     width: 44,
     height: 44,
-    borderRadius: 50,
+    borderRadius: 22,
     backgroundColor: 'rgba(255, 255, 255, 0.25)',
     justifyContent: 'center',
     alignItems: 'center',
