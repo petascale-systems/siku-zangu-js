@@ -1,7 +1,7 @@
 ---
 kind: pipeline
 type: exec
-name: Release https://sikuzangu.org v${DRONE_TAG}
+name: release
 steps:
   - name: docker-build
     commands:
