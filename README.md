@@ -19,6 +19,7 @@ atlas schema apply --url="$ATLASGO_URL" \
 ```
 
 ```shell
+docker build -t sikuzangu-com:0.0.4 -f ./sikuzangu-com-Dockerfile .
 docker run --publish 3001:3000 \
 --network petascale.systems \
 --env S_DATABASE_HOST=mysql84 \
@@ -27,5 +28,10 @@ docker run --publish 3001:3000 \
 --env S_DATABASE_NAME=siku_zangu \
 --env ATLASGO_VAR_DATABASE=siku_zangu \
 --env ATLASGO_URL=mysql://root:PetaPlay%40%23%246yty@mysql84:3306/siku_zangu \
-sikuzangu-com
+sikuzangu-com:0.0.4
 ```
+
+nx build sikuzangu-com
+mv "dist/apps/sikuzangu-com/public" "dist/apps/sikuzangu-com/.next/standalone/dist/apps/sikuzangu-com"
+mv "dist/apps/sikuzangu-com/.next/static" "dist/apps/sikuzangu-com/.next/standalone/dist/apps/sikuzangu-com/.next"
+node dist/apps/sikuzangu-com/.next/standalone/apps/sikuzangu-com/server.js

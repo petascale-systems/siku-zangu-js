@@ -20,7 +20,7 @@ const nextConfig = {
                 headers: [
                     {
                         key: "Access-Control-Allow-Origin",
-                        value: "http://localhost:8081",
+                        value: "http://localhost:8081,http://localhost:3000,https://sikuzangu.org",
                     },
                     {
                         key: "Access-Control-Allow-Credentials",
@@ -28,11 +28,11 @@ const nextConfig = {
                     },
                     {
                         key: "Access-Control-Allow-Methods",
-                        value: "GET, POST, PUT, DELETE, OPTIONS",
+                        value: "GET,OPTIONS,PATCH,DELETE,POST,PUT",
                     },
                     {
                         key: "Access-Control-Allow-Headers",
-                        value: "Content-Type, Authorization",
+                        value: "Authorization,X-CSRF-Token,X-Requested-With,Accept,Accept-Version,Content-Length,Content-MD5,Content-Type,Date,X-Api-Version",
                     },
                 ],
             },

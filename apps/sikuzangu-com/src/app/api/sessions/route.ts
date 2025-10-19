@@ -1,9 +1,10 @@
-import {NextRequest, NextResponse} from "next/server";
+import {NextRequest} from "next/server";
 import {Admin, APIError, EMAIL_AND_PASSWORD_SCHEMA} from "@siku-zangu/core";
 import {selectOneAdminByUserId, selectUserIdAndPasswordByEmail} from "@siku-zangu/knex";
 import {compareSync} from "bcrypt-ts";
 import {SignJWT} from 'jose'
 import {cookies} from "next/headers";
+import {handleAPIError} from "@siku-zangu/core";
 
 const _sessionSecretKey = new TextEncoder().encode(process.env.S_JWT_SIGNING_KEY || 'IcAchOsEVerSewAChMarKoHI');
 
@@ -22,14 +23,14 @@ function _encryptSessionData(admin: Admin) {
 }
 
 export async function POST(req: NextRequest) {
-    const result = EMAIL_AND_PASSWORD_SCHEMA.safeParse(await req.json())
-    if (!result.success) return Promise.reject({
-        status: 400,
-        message: 'Invalid email or password',
-        issues: [{path: ['email'], error: 'Invalid email or password'}]
-    } as APIError);
+    return handleAPIError(async () => {
+        const result = EMAIL_AND_PASSWORD_SCHEMA.safeParse(await req.json())
+        if (!result.success) return Promise.reject({
+            status: 400,
+            message: 'Invalid email or password',
+            issues: [{path: ['email'], error: 'Invalid email or password'}]
+        } as APIError);
 
-    try {
         const idAndPwd = await selectUserIdAndPasswordByEmail(result.data.email)
         if (!compareSync(result.data.password, idAndPwd.password)) {
             return Promise.reject({
@@ -53,13 +54,5 @@ export async function POST(req: NextRequest) {
         })
 
         return Response.json(admin, {status: 201})
-    } catch (e: any) {
-        console.error(e)
-        if (e.status) return Response.json(e, {status: e.status});
-
-        console.error(`${req.method.toUpperCase()} ${req.url}: `, e)
-        return Response.json({status: 500, message: 'Server error', details: e.message} as APIError, {
-            status: 500,
-        });
-    }
+    })
 }
