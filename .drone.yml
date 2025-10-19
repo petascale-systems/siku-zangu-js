@@ -29,6 +29,7 @@ steps:
       - >-
         docker 
         run 
+        --detach
         --name=sikuzangu-com 
         --publish=40001:3000                           
         --network=petascale.systems 
