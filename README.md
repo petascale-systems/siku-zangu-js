@@ -19,6 +19,7 @@ atlas schema apply --url="$ATLASGO_URL" \
 ```
 
 ```shell
+npx nx build sikuzangu-com --skip-nx-cache
 docker build -t sikuzangu-com:0.0.4 -f ./sikuzangu-com-Dockerfile .
 docker run --publish 3001:3000 \
 --network petascale.systems \

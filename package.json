@@ -1,7 +1,6 @@
 {
   "name": "sikuzangu.com",
   "version": "1.0.0",
-  "type": "module",
   "dependencies": {
     "@expo/metro-config": "~0.20.14",
     "@expo/metro-runtime": "~5.0.4",
