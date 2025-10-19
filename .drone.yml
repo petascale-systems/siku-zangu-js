@@ -35,7 +35,7 @@ steps:
         --network=petascale.systems 
         --env=S_DATABASE_HOST=$S_DATABASE_HOST 
         --env=S_DATABASE_USER=$S_DATABASE_USER 
-        --env=S_DATABASE_PASSWORD==$S_DATABASE_PASSWORD 
+        --env=S_DATABASE_PASSWORD=$S_DATABASE_PASSWORD 
         --env=S_DATABASE_NAME=$S_DATABASE_NAME 
         --env=ATLASGO_VAR_DATABASE=$ATLASGO_VAR_DATABASE 
         --env=ATLASGO_URL=$ATLASGO_URL 
