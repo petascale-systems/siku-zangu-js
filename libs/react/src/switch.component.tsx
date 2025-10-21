@@ -1,7 +1,7 @@
 import {Switch as _Switch} from '@headlessui/react'
 import React from "react";
 
-export default function Switch({checked = false, onChange}: {
+export function Switch({checked = false, onChange}: {
     checked?: boolean,
     onChange?: (value: boolean) => void
 }) {

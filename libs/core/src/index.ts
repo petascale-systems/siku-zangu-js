@@ -9,5 +9,5 @@ export * from './page.model'
 export * from './kv.model'
 export * from './email-and-password.model'
 export * from './user-id-and-password.model'
-
+export * from './handle-api-error.function'
 

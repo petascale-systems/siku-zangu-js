@@ -1,7 +1,7 @@
 import {Page, User, UsersFetchParams} from "@siku-zangu/core";
 import {useEffect, useState} from "react";
 import {getJSON} from "../get-json.function";
-import {_deleteUser, _updateUser, USERS_API_PATH} from "@siku-zangu/react";
+import {deleteUserById as _deleteUser, updateUser as _updateUser, USERS_API_PATH} from './use-user.function'
 
 async function _fetchUsers(params?: UsersFetchParams) {
     return getJSON<Page<User>>(USERS_API_PATH, params || {});

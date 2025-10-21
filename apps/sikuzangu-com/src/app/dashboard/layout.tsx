@@ -1,6 +1,6 @@
 "use client"
 
-import React from "react";
+import React, {Suspense} from "react";
 import {NavLink} from "@siku-zangu/react";
 import {
     ArrowTrendingUpIcon,
@@ -40,7 +40,9 @@ export default function Layout({children}: { children: React.ReactNode }) {
                 </div>
 
                 <div className='p-5 bg-gray-50 grow overflow-y-auto'>
-                    {children}
+                   <Suspense fallback={<span>Loading...</span>}>
+                       {children}
+                   </Suspense>
                 </div>
             </main>
         </div>

@@ -15,7 +15,6 @@ export const USER_TABLE_COLUMN_ALIASES = {
   last_name: '_last_name.v',
   status: DATABASE.raw('coalesce(_status.v,"active")'),
   phone_number: '_phone_number.v',
-  pin: '_pin.v',
   date_of_birth: '_date_of_birth.v',
   language: DATABASE.raw('coalesce(_language.v,"sw")'),
   email: '_email.v',
@@ -27,6 +26,10 @@ export const USER_TABLE_COLUMN_ALIASES = {
   receive_medication_tips: '_receive_medication_tips.v',
   receive_insights_tips: '_receive_insights_tips.v',
 };
+export const USER_TABLE_COLUMN_ALIASES_WITH_PIN = {
+  ...USER_TABLE_COLUMN_ALIASES,
+  pin: '_pin.v',
+};
 
 export function buildUserTableJoins(db: Knex | Knex.Transaction) {
   return db
@@ -35,7 +38,6 @@ export function buildUserTableJoins(db: Knex | Knex.Transaction) {
     .leftJoin('s_user_kv as _last_name', DATABASE.raw('_last_name.id_user=_u.id_user and _last_name.k="last_name"'))
     .leftJoin('s_user_kv as _status', DATABASE.raw('_status.id_user=_u.id_user and _status.k="status"'))
     .leftJoin('s_user_kv as _phone_number', DATABASE.raw('_phone_number.id_user=_u.id_user and _phone_number.k="phone_number"'))
-    .leftJoin('s_user_kv as _pin', DATABASE.raw('_pin.id_user=_u.id_user and _pin.k="pin"'))
     .leftJoin('s_user_kv as _date_of_birth', DATABASE.raw('_date_of_birth.id_user=_u.id_user and _date_of_birth.k="date_of_birth"'))
     .leftJoin('s_user_kv as _language', DATABASE.raw('_language.id_user=_u.id_user and _language.k="language"'))
     .leftJoin('s_user_kv as _email', DATABASE.raw('_email.id_user=_u.id_user and _email.k="email"'))
@@ -47,7 +49,10 @@ export function buildUserTableJoins(db: Knex | Knex.Transaction) {
     .leftJoin('s_user_kv as _receive_medication_tips', DATABASE.raw('_receive_medication_tips.id_user=_u.id_user and _receive_medication_tips.k="receive_medication_tips"'))
     .leftJoin('s_user_kv as _receive_insights_tips', DATABASE.raw('_receive_insights_tips.id_user=_u.id_user and _receive_insights_tips.k="receive_insights_tips"'));
 }
-
+export function buildUserTableJoinsWithPin(db: Knex | Knex.Transaction) {
+  return buildUserTableJoins(db)
+    .leftJoin('s_user_kv as _pin', DATABASE.raw('_pin.id_user=_u.id_user and _pin.k="pin"'));
+}
 export function rowToUser(row: any) {
   return {
     user_id: row.user_id || undefined,
@@ -72,6 +77,7 @@ export function rowToUser(row: any) {
     },
   } as User;
 }
+
 
 export async function insertOneUser(user: User) {
   const parsedUser = USER_ZOD_SCHEMA.safeParse(user);

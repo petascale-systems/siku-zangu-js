@@ -4,7 +4,7 @@ import {ReactNode, useEffect, useState} from "react";
 import Link from "next/link";
 import {usePathname} from "next/navigation";
 
-export default function NavLink({href, text, icon}: { href: string, text?: string, icon?: ReactNode }) {
+export function NavLink({href, text, icon}: { href: string, text?: string, icon?: ReactNode }) {
     const pathname = usePathname();
     const [activeClass, setActiveClass] = useState('text-gray-700');
 

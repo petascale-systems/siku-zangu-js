@@ -1,5 +1,3 @@
-import React from "react";
-
-export default function Page({}: { children: React.ReactNode }) {
+export default function Page() {
     return <div>Dashboard</div>
 }
