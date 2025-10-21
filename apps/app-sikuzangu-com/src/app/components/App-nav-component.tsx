@@ -14,16 +14,14 @@ interface Props {
 export const NavbarCard: React.FC<Props> = ({ navigation, language, userId }) => {
   const insets = useSafeAreaInsets();
 
-  /*
+
   const handleHomePress = () => {
-    navigation.navigate('Home', {
+    navigation.navigate('Dashboard', {
       lang: language,
       userId: userId,
     });
   };
-  /
 
-   */
 
   const handleCalendarPress = () => {
     navigation.navigate('Calender', {
@@ -66,7 +64,7 @@ export const NavbarCard: React.FC<Props> = ({ navigation, language, userId }) =>
         style={styles.navItem}
         accessibilityLabel={language === 'en' ? 'Home' : 'Nyumbani'}
         accessibilityRole="button"
-       // onPress={handleHomePress}
+       onPress={handleHomePress}
       >
         <Ionicons name="home" size={26} color="#FF4C7C" />
       </TouchableOpacity>
