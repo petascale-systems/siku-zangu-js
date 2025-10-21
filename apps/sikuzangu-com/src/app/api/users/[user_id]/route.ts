@@ -24,7 +24,7 @@ export async function GET(
     return new Response(null, { headers });
   }
   try {
-    const { user_id } = await params;  // ← AWAIT HERE
+    const { user_id } = await params;
     const user = await selectOneUserByUserId(user_id);
     return Response.json(user, { status: 200, headers });
   } catch (e: any) {
@@ -44,7 +44,7 @@ export async function PATCH(
     return new Response(null, { headers });
   }
   try {
-    const { user_id } = await params;  // ← AWAIT HERE
+    const { user_id } = await params;
     const body = await req.json();
     const user = await updateOneUser(user_id, body);
     return Response.json(user, { status: 200, headers });
@@ -65,7 +65,7 @@ export async function DELETE(
     return new Response(null, { headers });
   }
   try {
-    const { user_id } = await params;  // ← AWAIT HERE
+    const { user_id } = await params;
     await deleteOneUserByUserId(user_id);
     return new Response(null, { status: 204, headers });
   } catch (e: any) {
