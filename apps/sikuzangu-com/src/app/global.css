@@ -1,11 +1,85 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
 @import "tailwindcss";
 
+@plugin "flowbite-react/plugin/tailwindcss";
+@source "../../../../.flowbite-react/class-list.json";
 @source "../../../../libs/react/src";
 
+@custom-variant dark (&:not(*));
 @theme {
     --color-primary: #FD5A7E;
+    --color-primary-50: #fff1f3;
+    --color-primary-100: #ffe4e8;
+    --color-primary-200: #ffccd6;
+    --color-primary-300: #fea3b5;
+    --color-primary-400: #fd5a7e;
+    --color-primary-500: #f73c6a;
+    --color-primary-600: #e41a55;
+    --color-primary-700: #c10f49;
+    --color-primary-800: #a11043;
+    --color-primary-900: #8a113f;
+    --color-primary-950: #4d041e;
     --color-secondary: #7E22CE;
+    --color-secondary-50: #faf5ff;
+    --color-secondary-100: #f4e8ff;
+    --color-secondary-200: #ebd5ff;
+    --color-secondary-300: #dcb4fe;
+    --color-secondary-400: #c484fc;
+    --color-secondary-500: #ac55f7;
+    --color-secondary-600: #9533ea;
+    --color-secondary-700: #7e22ce;
+    --color-secondary-800: #6921a8;
+    --color-secondary-900: #551c87;
+    --color-secondary-950: #390764;
     --color-tertiary: #36558F;
+    --color-tertiary-50: #f4f6fb;
+    --color-tertiary-100: #e8ecf6;
+    --color-tertiary-200: #ccd6eb;
+    --color-tertiary-300: #9fb5da;
+    --color-tertiary-400: #6c8ec4;
+    --color-tertiary-500: #4970ae;
+    --color-tertiary-600: #36558f;
+    --color-tertiary-700: #2e4776;
+    --color-tertiary-800: #293d63;
+    --color-tertiary-900: #263554;
+    --color-tertiary-950: #1a2237;
     --font-display: "Inter", sans-serif;
+}
+
+:root {
+    button {
+        @apply cursor-pointer disabled:cursor-not-allowed;
+    }
+
+    .tiptap {
+        p {
+            @apply my-4 first:mt-0 last:mb-0 text-base leading-relaxed;
+        }
+
+        h1 {
+            @apply text-3xl font-bold mt-8 mb-4 first:mt-0 last:mb-0;
+        }
+
+        h2 {
+            @apply text-2xl font-bold mt-8 mb-4 first:mt-0 last:mb-0;
+        }
+
+        h3 {
+            @apply text-xl font-bold mt-8 mb-4 first:mt-0 last:mb-0;
+        }
+
+        ul {
+            @apply list-disc list-inside;
+        }
+
+        ol, menu {
+            @apply list-decimal list-inside;
+        }
+
+        ul, ol, menu {
+            p {
+                @apply inline;
+            }
+        }
+    }
 }

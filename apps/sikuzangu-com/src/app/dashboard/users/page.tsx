@@ -1,6 +1,6 @@
 'use client'
 
-import {useEffect, useState} from "react";
+import {KeyboardEvent, useEffect, useState} from "react";
 import {Switch, Table, Tbody, Td, Tfoot, Th, Thead, Tr, useUsersPage} from "@siku-zangu/react";
 import {Input} from "@headlessui/react";
 import {MagnifyingGlassIcon} from "@heroicons/react/24/outline";
@@ -13,22 +13,22 @@ export default function UsersPage() {
     const [_search, _setSearch] = useState('')
     const [_usersFetchParams, _setUsersFetchParams] = useState<UsersFetchParams>({
         page: parseInt(`${_searchParams.get('page')}`) || 1,
-        size: parseInt(`${_searchParams.get('size')}`) || 10,
+        size: parseInt(`${_searchParams.get('size')}`) || 20,
         q: _searchParams.get('q') || ''
     })
     const {usersPage, updateUser} = useUsersPage(_usersFetchParams)
 
     const _handlePageChange = async (page: number) => {
-        _updateSearchParams({..._usersFetchParams, page})
-    }
-
-    const _handleSearchBtnClick = () => {
-        _updateSearchParams({..._usersFetchParams, page: 1, q: _search})
+        _updateSearchParams({..._usersFetchParams, page});
     }
 
     const _handleStatusToggleClick = (userId: string, status: UserStatus) => {
-        updateUser(userId, {kv: {status: status}} as User)
-            .catch(console.error)
+        updateUser(userId, {kv: {status: status}} as User).catch(console.error);
+    }
+
+    const _handleQInputEnter = (q: KeyboardEvent<HTMLInputElement>) => {
+        if (q.key !== 'Enter') return;
+        _updateSearchParams({..._usersFetchParams, page: 1, q: _search});
     }
 
     const _updateSearchParams = (params: { [key: string]: string | number }) => {
@@ -36,21 +36,21 @@ export default function UsersPage() {
             .entries(params)
             .filter(e => e[1])
             .map(e => `${e[0]}=${e[1]}`)
-            .join('&')
-        _router.push(`/dashboard/users?${queryParams}`)
+            .join('&');
+        _router.push(`/dashboard/users?${queryParams}`);
     }
 
     useEffect(() => {
         _setSearch(_searchParams.get('q') || '')
         _setUsersFetchParams({
             page: parseInt(`${_searchParams.get('page')}`) || 1,
-            size: parseInt(`${_searchParams.get('size')}`) || 10,
+            size: parseInt(`${_searchParams.get('size')}`) || 20,
             q: _searchParams.get('q') || ''
-        })
-    }, [_searchParams])
+        });
+    }, [_searchParams]);
 
     return (
-        <div className='w-full flex flex-col gap-6'>
+        <div className='w-full flex flex-col gap-6 p-5'>
             <span className='text-xl font-bold'>User Management</span>
             <div className="w-full bg-white rounded-lg border border-gray-200 divide-y divide-gray-200 shadow-xs">
                 <div className='flex justify-between items-center p-4'>
@@ -59,11 +59,8 @@ export default function UsersPage() {
                         <MagnifyingGlassIcon className='size-4.5 text-gray-400 stroke-2'/>
                         <Input type="text" placeholder='Search users ...' value={_search}
                                onChange={(e) => _setSearch(e.target.value)}
+                               onKeyUp={_handleQInputEnter}
                                className='appearance-none focus:outline-none placeholder:text-gray-300 text-gray-500 md:w-72'/>
-                        <button
-                            className='hover:bg-secondary/5 rounded px-2 text-xs py-1 text-gray-700 cursor-pointer'
-                            onClick={_handleSearchBtnClick}>Search
-                        </button>
                     </div>
                 </div>
                 <Table>
