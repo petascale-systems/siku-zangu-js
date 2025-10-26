@@ -28,7 +28,10 @@ const _sikuZanguOrgTheme = createTheme({
         }
     },
     radio: {
-        base: 'size-5 rounded'
+        base: 'size-5 checked:bg-gray-400 checked:bg-dot-icon',
+        color: {
+            default: "text-primary-600 focus:ring-primary-600",
+        }
     },
     spinner: {
         base: "inline animate-spin text-gray-200",

@@ -10,10 +10,13 @@ import {
     NumberedListIcon,
     UnderlineIcon
 } from '@heroicons/react/24/outline';
+import {useEffect} from "react";
 
-export function Editor({placeholder, content, onChange}: {
+export function Editor({id, placeholder, content, loading, onChange}: {
+    id?: string,
     placeholder?: string,
     content?: string,
+    loading?: boolean,
     onChange?: (value: string) => void
 }) {
     const editor = useEditor({
@@ -24,7 +27,7 @@ export function Editor({placeholder, content, onChange}: {
         extensions: [StarterKit],
         editorProps: {
             attributes: {
-                class: 'focus:outline-none p-3 prose prose-sm sm:prose-base lg:prose-lg xl:prose-2xl min-h-56',
+                class: 'focus:outline-none p-3 prose prose-sm sm:prose-base lg:prose-lg xl:prose-2xl min-h-56 w-full',
                 placeholder: placeholder ?? '',
             },
         },
@@ -50,8 +53,12 @@ export function Editor({placeholder, content, onChange}: {
         },
     })
 
+    useEffect(() => {
+        if (!loading) editor?.commands.setContent(content ?? '');
+    }, [loading]);
+
     return (
-        <div className='rounded-lg border border-gray-300 divide-y divide-gray-200'>
+        <div id={id} className='rounded-lg border border-gray-300 divide-y divide-gray-200 w-full'>
             <div className="flex justify-start items-center gap-3 p-2">
                 <button
                     onClick={() => editor?.chain().focus().toggleBold().run()}

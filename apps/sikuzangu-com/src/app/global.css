@@ -53,19 +53,19 @@
 
     .tiptap {
         p {
-            @apply my-4 first:mt-0 last:mb-0 text-base leading-relaxed;
+            @apply my-4 first:mt-0 last:mb-0 text-sm leading-relaxed;
         }
 
         h1 {
-            @apply text-3xl font-bold mt-8 mb-4 first:mt-0 last:mb-0;
+            @apply text-3xl font-bold mt-4 mb-4 first:mt-0 last:mb-0;
         }
 
         h2 {
-            @apply text-2xl font-bold mt-8 mb-4 first:mt-0 last:mb-0;
+            @apply text-2xl font-bold mt-4 mb-4 first:mt-0 last:mb-0;
         }
 
         h3 {
-            @apply text-xl font-bold mt-8 mb-4 first:mt-0 last:mb-0;
+            @apply text-xl font-bold mt-4 mb-4 first:mt-0 last:mb-0;
         }
 
         ul {

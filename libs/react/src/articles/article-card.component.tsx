@@ -1,6 +1,7 @@
 import {Article, ArticleStatus} from "@siku-zangu/core";
 import Link from "next/link";
 import {useEffect, useState} from "react";
+import {ARTICLE_COVER_IMAGE_API_PATH} from "./use-article.function";
 
 export function ArticleStatusBadge({status = 'draft'}: { status?: ArticleStatus }) {
     const [_className, _setClassName] = useState(() => {
@@ -33,7 +34,9 @@ export function ArticleCard({article}: { article: Article }) {
     const [_imgSrc, _setImgSrc] = useState('https://placehold.co/600x400?text=Error+404');
 
     useEffect(() => {
-        if (article?.kv?.has_cover_image) _setImgSrc(`/api/articles/${article.article_id}/cover-image`)
+        if (article.article_id && article?.kv?.has_cover_image) {
+            _setImgSrc(ARTICLE_COVER_IMAGE_API_PATH(article.article_id))
+        }
     }, [article]);
     return (
         <Link href={`/dashboard/articles/${article.article_id}`}
