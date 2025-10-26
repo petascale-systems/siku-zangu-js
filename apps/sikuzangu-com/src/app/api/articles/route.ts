@@ -2,7 +2,7 @@ import {NextRequest} from "next/server";
 import {APIError, Article, ArticleStatus, handleAPIError} from "@siku-zangu/core";
 import {insertOneArticle, selectArticlesPage, selectOneAdminByUserId} from "@siku-zangu/knex";
 import {cookies} from "next/headers";
-import {verifyJWT} from "../sessions/current/route";
+import {verifyJWT} from "../sessions/current/verify-jwt.function";
 
 export async function POST(req: NextRequest) {
     return handleAPIError(async () => {
