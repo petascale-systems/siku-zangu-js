@@ -21,7 +21,8 @@ export default function Layout({children}: { children: React.ReactNode }) {
                 </div>
 
                 <div className='grow w-full py-4 px-2'>
-                    <NavLink href='/dashboard' text='Dashboard' icon={<HomeIcon className='size-4.5 stroke-2'/>}/>
+                    <NavLink href='/dashboard' text='Dashboard' activeMode='exact'
+                             icon={<HomeIcon className='size-4.5 stroke-2'/>}/>
                     <NavLink href='/dashboard/admins' text='Admins'
                              icon={<ShieldExclamationIcon className='size-5 stroke-2'/>}/>
                     <NavLink href='/dashboard/users' text='Users' icon={<UsersIcon className='size-4.5 stroke-2'/>}/>
@@ -39,10 +40,10 @@ export default function Layout({children}: { children: React.ReactNode }) {
                     <span className='text-primary text-base font-medium'>Sikuzangu Admin Portal</span>
                 </div>
 
-                <div className='p-5 bg-gray-50 grow overflow-y-auto'>
-                   <Suspense fallback={<span>Loading...</span>}>
-                       {children}
-                   </Suspense>
+                <div className='bg-gray-50 grow overflow-y-auto'>
+                    <Suspense fallback={<span>Loading...</span>}>
+                        {children}
+                    </Suspense>
                 </div>
             </main>
         </div>
