@@ -26,11 +26,9 @@ export const UpdatingPeriodScreen = ({ navigation, route }: Props) => {
   const { upsertUser, isUpsertingUser } = useUser(userId);
 
   const currentDate = new Date();
-  const [selectedDay, setSelectedDay] = useState<number>(12);
-  const [selectedMonth, setSelectedMonth] = useState<number>(6);
-  const [selectedYear, setSelectedYear] = useState<number>(
-    currentDate.getFullYear()
-  );
+  const [selectedDay, setSelectedDay] = useState<number>(currentDate.getDate());
+  const [selectedMonth, setSelectedMonth] = useState<number>(currentDate.getMonth());
+  const [selectedYear, setSelectedYear] = useState<number>(currentDate.getFullYear());
   const [activePicker, setActivePicker] = useState<'day' | 'month' | 'year'>(
     'day'
   );

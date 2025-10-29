@@ -12,7 +12,7 @@ import {
   Animated,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useAccessToken, useUser } from '@siku-zangu/react';
+import { useUser } from '@siku-zangu/react';
 import { UpdateUser } from '@siku-zangu/core';
 import { NavbarCard } from '../components/App-nav-component';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -20,20 +20,50 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 type Props = NativeStackScreenProps<RootStackParamList, 'AddLog'>;
 
 export const LogEntryScreen = ({ navigation, route }: Props) => {
-  const { user } = useAccessToken();
   const language = route.params?.lang ?? 'en';
   const userId = route.params?.userId;
-  const { upsertUser, isUpsertingUser } = useUser(userId);
+  const { upsertUser, isUpsertingUser, user } = useUser(userId);
   const insets = useSafeAreaInsets();
 
   const symptoms = [
-    { key: 'cramps', label: language === 'en' ? 'Cramps' : 'Maumivu', icon: '🔥', color: '#FFE4E1' },
-    { key: 'fatigue', label: language === 'en' ? 'Fatigue' : 'Uchovu', icon: '😴', color: '#E6E6FA' },
-    { key: 'bloating', label: language === 'en' ? 'Bloating' : 'Kuvimba', icon: '💧', color: '#E0F7FA' },
-    { key: 'tender_breast', label: language === 'en' ? 'Tender breast' : 'Matiti', icon: '🤱', color: '#FCE4EC' },
-    { key: 'backache', label: language === 'en' ? 'Backache' : 'Mgongo', icon: '🔴', color: '#FFEBEE' },
-    { key: 'headache', label: language === 'en' ? 'Headache' : 'Kichwa', icon: '😵', color: '#FFF3E0' },
+    {
+      key: 'cramps',
+      label: language === 'en' ? 'Cramps' : 'Maumivu ya Tumbo',
+      icon: 'fitness-outline',
+      color: '#F59E0B',
+    },
+    {
+      key: 'fatigue',
+      label: language === 'en' ? 'Fatigue' : 'Uchovu',
+      icon: 'flash-outline',
+      color: '#8B5CF6',
+    },
+    {
+      key: 'bloating',
+      label: language === 'en' ? 'Bloating' : 'Kuvimba',
+      icon: 'water-outline',
+      color: '#3B82F6',
+    },
+    {
+      key: 'tender_breast',
+      label: language === 'en' ? 'Tender Breasts' : 'Matiti Yanayouma',
+      icon: 'female-outline',
+      color: '#EC4899',
+    },
+    {
+      key: 'backache',
+      label: language === 'en' ? 'Backache' : 'Maumivu ya Mgongo',
+      icon: 'body-outline',
+      color: '#EF4444',
+    },
+    {
+      key: 'headache',
+      label: language === 'en' ? 'Headache' : 'Maumivu ya Kichwa',
+      icon: 'medkit-outline',
+      color: '#10B981',
+    },
   ];
+
 
   const moods = [
     { key: 'happy', label: language === 'en' ? 'Happy' : 'Furaha', emoji: '😊', color: '#FFF9C4' },
@@ -51,38 +81,83 @@ export const LogEntryScreen = ({ navigation, route }: Props) => {
     { key: 'birth_control', label: language === 'en' ? 'Birth Control' : 'Kupunguza uzazi', icon: '💊', color: '#F3E5F5' },
   ];
 
+  const months = language === 'en'
+    ? [
+      { value: 0, label: 'Jan' }, { value: 1, label: 'Feb' }, { value: 2, label: 'Mar' },
+      { value: 3, label: 'Apr' }, { value: 4, label: 'May' }, { value: 5, label: 'Jun' },
+      { value: 6, label: 'Jul' }, { value: 7, label: 'Aug' }, { value: 8, label: 'Sep' },
+      { value: 9, label: 'Oct' }, { value: 10, label: 'Nov' }, { value: 11, label: 'Dec' }
+    ]
+    : [
+      { value: 0, label: 'Jan' }, { value: 1, label: 'Feb' }, { value: 2, label: 'Mac' },
+      { value: 3, label: 'Apr' }, { value: 4, label: 'Mei' }, { value: 5, label: 'Jun' },
+      { value: 6, label: 'Jul' }, { value: 7, label: 'Ago' }, { value: 8, label: 'Sep' },
+      { value: 9, label: 'Okt' }, { value: 10, label: 'Nov' }, { value: 11, label: 'Des' }
+    ];
+
+  const [initialLastPeriodDays, setInitialLastPeriodDays] = useState<number | null>(null);
+  const [initialAvgCycleDays, setInitialAvgCycleDays] = useState<number | null>(null);
+  const [initialDay, setInitialDay] = useState<number | null>(null);
+  const [initialMonth, setInitialMonth] = useState<number | null>(null);
+  const [initialYear, setInitialYear] = useState<number | null>(null);
+
   const [selectedSymptoms, setSelectedSymptoms] = useState<string[]>([]);
   const [selectedMoods, setSelectedMoods] = useState<string[]>([]);
   const [selectedMedications, setSelectedMedications] = useState<string[]>([]);
-  const [lastPeriodDays, setLastPeriodDays] = useState<number>(7);
-  const [avgCycleDays, setAvgCycleDays] = useState<number>(28);
+  const [lastPeriodDays, setLastPeriodDays] = useState<number | null>(null);
+  const [avgCycleDays, setAvgCycleDays] = useState<number | null>(null);
+  const [selectedDay, setSelectedDay] = useState<number | null>(null);
+  const [selectedMonth, setSelectedMonth] = useState<number | null>(null);
+  const [selectedYear, setSelectedYear] = useState<number | null>(null);
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(50)).current;
 
-  // Initialize state from user data
   React.useEffect(() => {
-    if (user?.kv) {
-      // Parse arrays if they're strings, otherwise use as-is
-      const symptoms = typeof user.kv.selected_symptoms === 'string'
-        ? JSON.parse(user.kv.selected_symptoms)
-        : (user.kv.selected_symptoms || []);
+    if (!user?.kv) return;
 
-      const moods = typeof user.kv.selected_moods === 'string'
-        ? JSON.parse(user.kv.selected_moods)
-        : (user.kv.selected_moods || []);
+    const savedSymptoms = user.kv.selected_symptoms ?? [];
+    const savedMoods = user.kv.selected_moods ?? [];
+    const savedMeds = user.kv.selected_medications ?? [];
 
-      const meds = typeof user.kv.selected_medications === 'string'
-        ? JSON.parse(user.kv.selected_medications)
-        : (user.kv.selected_medications || []);
+    setSelectedSymptoms(savedSymptoms);
+    setSelectedMoods(savedMoods);
+    setSelectedMedications(savedMeds);
+    const periodDays = user.kv.avg_period_length_days ?? null;
+    const cycleDays = user.kv.avg_cycle_length_days ?? null;
 
-      setSelectedSymptoms(symptoms);
-      setSelectedMoods(moods);
-      setSelectedMedications(meds);
-      setLastPeriodDays(user.kv.avg_period_length_days || 7);
-      setAvgCycleDays(user.kv.avg_cycle_length_days || 28);
+    setLastPeriodDays(periodDays);
+    setAvgCycleDays(cycleDays);
+
+    setInitialLastPeriodDays(periodDays);
+    setInitialAvgCycleDays(cycleDays);
+
+    if (user.kv.prev_cycle_start_date) {
+      const d = new Date(user.kv.prev_cycle_start_date);
+      const day = d.getDate();
+      const month = d.getMonth();
+      const year = d.getFullYear();
+
+      setSelectedDay(day);
+      setSelectedMonth(month);
+      setSelectedYear(year);
+      setInitialDay(day);
+      setInitialMonth(month);
+      setInitialYear(year);
     }
   }, [user]);
+  const getDaysInMonth = (month: number | null, year: number | null) => {
+    if (month === null || !year) return 31;
+    return new Date(year, month + 1, 0).getDate();
+  };
+
+  const days = Array.from(
+    { length: getDaysInMonth(selectedMonth, selectedYear) },
+    (_, i) => i + 1
+  );
+
+  const currentYear = new Date().getFullYear();
+  const years = Array.from({ length: 3 }, (_, i) => currentYear - 1 + i);
 
   React.useEffect(() => {
     Animated.parallel([
@@ -107,92 +182,188 @@ export const LogEntryScreen = ({ navigation, route }: Props) => {
     }
   };
 
-  const handleBack = () => navigation.goBack();
+  const onDateChange = (type: 'day' | 'month' | 'year', value: number) => {
+    if (type === 'day') setSelectedDay(value);
+    if (type === 'month') setSelectedMonth(value);
+    if (type === 'year') setSelectedYear(value);
+  };
+
+  const formatDateToISO = (day: number | null, month: number | null, year: number | null): string => {
+    if (!day || month === null || !year) return '';
+    const monthStr = String(month + 1).padStart(2, '0');
+    const dayStr = String(day).padStart(2, '0');
+    return `${year}-${monthStr}-${dayStr}`;
+  };
+
+  const isValidDate = (day: number | null, month: number | null, year: number | null): boolean => {
+    if (!day || month === null || !year) return false;
+    const date = new Date(year, month, day);
+    return (
+      date.getFullYear() === year &&
+      date.getMonth() === month &&
+      date.getDate() === day
+    );
+  };
+
+  const renderPicker = (
+    label: string,
+    options: number[],
+    selectedValue: number | null,
+    onSelect: (value: number) => void,
+    isMonth = false
+  ) => {
+    return (
+      <View style={styles.pickerContainer}>
+        <Text style={styles.pickerLabel}>{label}</Text>
+        <ScrollView
+          style={styles.pickerScroll}
+          showsVerticalScrollIndicator={false}
+          nestedScrollEnabled={true}
+        >
+          {options.map((option) => {
+            const displayValue = isMonth
+              ? months[option].label
+              : option.toString();
+            const isSelected = selectedValue === option;
+
+            return (
+              <TouchableOpacity
+                key={option}
+                style={[
+                  styles.pickerOption,
+                  isSelected && styles.pickerOptionSelected
+                ]}
+                onPress={() => onSelect(option)}
+              >
+                <Text style={[
+                  styles.pickerOptionText,
+                  isSelected && styles.pickerOptionTextSelected
+                ]}>
+                  {displayValue}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
+      </View>
+    );
+  };
 
   const handleSave = async () => {
-    if (!userId) {
+    if (!lastPeriodDays) {
       Alert.alert(
-        language === 'en' ? 'Error' : 'Hitilafu',
+        language === 'en' ? 'Missing Information' : 'Taarifa Zinazokosekana',
         language === 'en'
-          ? 'User ID not available'
-          : 'Kitambulisho cha mtumiaji hakipatikani'
+          ? 'Please select how long your last period lasted.'
+          : 'Tafadhali chagua muda gani hedhi yako ya mwisho ilidumu.'
+      );
+      return;
+    }
+
+    if (!avgCycleDays) {
+      Alert.alert(
+        language === 'en' ? 'Missing Information' : 'Taarifa Zinazokosekana',
+        language === 'en'
+          ? 'Please select your average menstrual cycle length.'
+          : 'Tafadhali chagua urefu wa wastani wa mzunguko wako wa hedhi.'
+      );
+      return;
+    }
+
+    if (!selectedDay || selectedMonth === null || !selectedYear) {
+      Alert.alert(
+        language === 'en' ? 'Invalid Date' : 'Tarehe si Sahihi',
+        language === 'en'
+          ? 'Please select a complete date for your last period start.'
+          : 'Tafadhali chagua tarehe kamili ya kuanza kwa hedhi yako ya mwisho.'
+      );
+      return;
+    }
+
+    if (!isValidDate(selectedDay, selectedMonth, selectedYear)) {
+      Alert.alert(
+        language === 'en' ? 'Invalid Date' : 'Tarehe si Sahihi',
+        language === 'en'
+          ? 'Please select a valid date.'
+          : 'Tafadhali chagua tarehe sahihi.'
+      );
+      return;
+    }
+
+    const updates: Partial<UpdateUser['kv']> = {};
+    if (selectedSymptoms.length > 0) {
+      updates.selected_symptoms = selectedSymptoms;
+    }
+    if (selectedMoods.length > 0) {
+      updates.selected_moods = selectedMoods;
+    }
+    if (selectedMedications.length > 0) {
+      updates.selected_medications = selectedMedications;
+    }
+    if (lastPeriodDays !== initialLastPeriodDays) {
+      updates.avg_period_length_days = lastPeriodDays;
+    }
+    if (avgCycleDays !== initialAvgCycleDays) {
+      updates.avg_cycle_length_days = avgCycleDays;
+    }
+    const newDateStr = formatDateToISO(selectedDay, selectedMonth, selectedYear);
+    const initialDateStr = formatDateToISO(initialDay, initialMonth, initialYear);
+    if (newDateStr !== initialDateStr) {
+      updates.prev_cycle_start_date = newDateStr;
+    }
+
+    if (Object.keys(updates).length === 0) {
+      Alert.alert(
+        language === 'en' ? 'No Changes' : 'Hakuna Mabadiliko',
+        language === 'en'
+          ? 'No changes to save.'
+          : 'Hakuna mabadiliko ya kuhifadhi.'
       );
       return;
     }
 
     try {
-      const timestamp = new Date().toISOString();
-      const currentSymptomLogs = user?.kv.symptom_logs || [];
-      const currentMoodLogs = user?.kv.mood_logs || [];
-      const currentMedicationLogs = user?.kv.medication_logs || [];
-
-
-      const newSymptomLogs = selectedSymptoms.map(symptom => ({
-        symptom,
-        timestamp,
-      }));
-
-      const newMoodLogs = selectedMoods.map(mood => ({
-        mood,
-        timestamp,
-      }));
-
-      const newMedicationLogs = selectedMedications.map(medication => ({
-        medication,
-        timestamp,
-      }));
-
-      const updateData: UpdateUser = {
-        kv: {
-          selected_symptoms: selectedSymptoms,
-          selected_moods: selectedMoods,
-          selected_medications: selectedMedications,
-          avg_period_length_days: lastPeriodDays,
-          avg_cycle_length_days: avgCycleDays,
-          symptom_logs: [...currentSymptomLogs, ...newSymptomLogs],
-          mood_logs: [...currentMoodLogs, ...newMoodLogs],
-          medication_logs: [...currentMedicationLogs, ...newMedicationLogs],
-        },
-      };
-
-      console.log('LogEntry: Calling upsertUser with:', {
-        userId,
-        updateData,
-      });
-
-      await upsertUser(updateData);
+      await upsertUser({ kv: updates });
 
       Alert.alert(
         language === 'en' ? 'Success' : 'Mafanikio',
-        language === 'en'
-          ? 'Your log has been saved!'
-          : 'Rekodi yako imehifadhiwa kwa mafanikio!',
+        language === 'en' ? 'Log saved successfully!' : 'Rekodi imehifadhiwa!',
+        [{ text: 'OK' }]
       );
+      setSelectedSymptoms([]);
+      setSelectedMoods([]);
+      setSelectedMedications([]);
+
+      if (updates.avg_period_length_days !== undefined) {
+        setInitialLastPeriodDays(lastPeriodDays);
+      }
+      if (updates.avg_cycle_length_days !== undefined) {
+        setInitialAvgCycleDays(avgCycleDays);
+      }
+      if (updates.prev_cycle_start_date) {
+        setInitialDay(selectedDay);
+        setInitialMonth(selectedMonth);
+        setInitialYear(selectedYear);
+      }
     } catch (e: any) {
-      const errorMessage =
-        e.message ||
-        (language === 'en'
-          ? 'Failed to save log'
-          : 'Imeshindwa kuhifadhi rekodi');
-      Alert.alert(language === 'en' ? 'Error' : 'Hitilafu', errorMessage);
+      Alert.alert('Error', e.message || 'Failed to save');
     }
   };
-
+  const handleBack = () => navigation.goBack();
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={handleBack}>
           <Ionicons name="arrow-back" size={24} color="#000" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>
-          {language === 'en' ? 'Log Entry' : 'Rekodi'}
-        </Text>
+        <Text style={styles.headerTitle}>Log Entry</Text>
         <View style={{ width: 32 }} />
       </View>
 
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
+        nestedScrollEnabled={true}
       >
         <Animated.View
           style={{
@@ -204,35 +375,36 @@ export const LogEntryScreen = ({ navigation, route }: Props) => {
             <Text style={styles.sectionTitle}>
               {language === 'en' ? 'Log your symptoms' : 'Rekodi dalili zako'}
             </Text>
-            <View style={styles.card}>
-              <View style={styles.symptomsGrid}>
-                {symptoms.map((item) => {
-                  const isSelected = selectedSymptoms.includes(item.key);
-                  return (
-                    <TouchableOpacity
-                      key={item.key}
-                      style={[
-                        styles.symptomCard,
-                        { backgroundColor: item.color },
-                        isSelected && styles.symptomCardSelected,
-                      ]}
-                      onPress={() =>
-                        toggleSelection(selectedSymptoms, setSelectedSymptoms, item.key)
-                      }
-                    >
-                      <Text style={styles.symptomIcon}>{item.icon}</Text>
-                      <Text style={[styles.symptomLabel, isSelected && styles.symptomLabelSelected]}>
-                        {item.label}
-                      </Text>
-                      {isSelected && (
-                        <View style={styles.checkmark}>
-                          <Ionicons name="checkmark-circle" size={20} color="#FF4C7C" />
-                        </View>
-                      )}
-                    </TouchableOpacity>
-                  );
-                })}
-              </View>
+            <View style={styles.symptomsGrid}>
+              {symptoms.map((item) => {
+                const isSelected = selectedSymptoms.includes(item.key);
+                return (
+                  <TouchableOpacity
+                    key={item.key}
+                    style={[
+                      styles.symptomCard,
+                      isSelected && styles.symptomCardSelected,
+                    ]}
+                    onPress={() =>
+                      toggleSelection(selectedSymptoms, setSelectedSymptoms, item.key)
+                    }
+                  >
+                    <Text style={styles.symptomIcon}>   <Ionicons
+                      name={item.icon}
+                      size={24}
+                      color={item.color}
+                    /></Text>
+                    <Text style={[styles.symptomLabel, isSelected && styles.symptomLabelSelected]}>
+                      {item.label}
+                    </Text>
+                    {isSelected && (
+                      <View style={styles.checkmark}>
+                        <Ionicons name="checkmark-circle" size={20} color="#FD5A7E" />
+                      </View>
+                    )}
+                  </TouchableOpacity>
+                );
+              })}
             </View>
           </View>
 
@@ -240,62 +412,60 @@ export const LogEntryScreen = ({ navigation, route }: Props) => {
             <Text style={styles.sectionTitle}>
               {language === 'en' ? 'Cycle Details' : 'Maelezo ya Mzunguko'}
             </Text>
-            <View style={styles.card}>
-              <View style={styles.cycleDetailCard}>
-                <Text style={styles.cycleDetailLabel}>
-                  {language === 'en'
-                    ? 'Last Period lasted for?'
-                    : 'Hedhi ya mwisho ilidumu kwa?'}
-                </Text>
-                <View style={styles.daysSelector}>
-                  {[5, 6, 7, 8, 9].map((day) => (
-                    <TouchableOpacity
-                      key={day}
+            <View style={styles.cycleDetailCard}>
+              <Text style={styles.cycleDetailLabel}>
+                {language === 'en'
+                  ? 'Last Period lasted for?'
+                  : 'Hedhi ya mwisho ilidumu kwa?'}
+              </Text>
+              <View style={styles.daysSelector}>
+                {[5, 6, 7, 8, 9].map((day) => (
+                  <TouchableOpacity
+                    key={day}
+                    style={[
+                      styles.dayCircle,
+                      lastPeriodDays === day && styles.dayCircleSelected,
+                    ]}
+                    onPress={() => setLastPeriodDays(day)}
+                  >
+                    <Text
                       style={[
-                        styles.dayCircle,
-                        lastPeriodDays === day && styles.dayCircleSelected,
+                        styles.dayText,
+                        lastPeriodDays === day && styles.dayTextSelected,
                       ]}
-                      onPress={() => setLastPeriodDays(day)}
                     >
-                      <Text
-                        style={[
-                          styles.dayText,
-                          lastPeriodDays === day && styles.dayTextSelected,
-                        ]}
-                      >
-                        {day}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
+                      {day}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
               </View>
-              <View style={styles.cycleDetailCard}>
-                <Text style={styles.cycleDetailLabel}>
-                  {language === 'en'
-                    ? 'My average menstrual cycle is?'
-                    : 'Mzunguko wangu wa wastani ni?'}
-                </Text>
-                <View style={styles.daysSelector}>
-                  {[26, 27, 28, 29, 30].map((day) => (
-                    <TouchableOpacity
-                      key={day}
+            </View>
+            <View style={styles.cycleDetailCard}>
+              <Text style={styles.cycleDetailLabel}>
+                {language === 'en'
+                  ? 'My average menstrual cycle is?'
+                  : 'Mzunguko wangu wa wastani ni?'}
+              </Text>
+              <View style={styles.daysSelector}>
+                {[26, 27, 28, 29, 30].map((day) => (
+                  <TouchableOpacity
+                    key={day}
+                    style={[
+                      styles.dayCircle,
+                      avgCycleDays === day && styles.dayCircleSelected,
+                    ]}
+                    onPress={() => setAvgCycleDays(day)}
+                  >
+                    <Text
                       style={[
-                        styles.dayCircle,
-                        avgCycleDays === day && styles.dayCircleSelected,
+                        styles.dayText,
+                        avgCycleDays === day && styles.dayTextSelected,
                       ]}
-                      onPress={() => setAvgCycleDays(day)}
                     >
-                      <Text
-                        style={[
-                          styles.dayText,
-                          avgCycleDays === day && styles.dayTextSelected,
-                        ]}
-                      >
-                        {day}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
+                      {day}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
               </View>
             </View>
           </View>
@@ -304,33 +474,31 @@ export const LogEntryScreen = ({ navigation, route }: Props) => {
             <Text style={styles.sectionTitle}>
               {language === 'en' ? 'Medication' : 'Dawa'}
             </Text>
-            <View style={styles.card}>
-              <View style={styles.medicationList}>
-                {medications.map((item) => {
-                  const isSelected = selectedMedications.includes(item.key);
-                  return (
-                    <TouchableOpacity
-                      key={item.key}
-                      style={[
-                        styles.medicationCard,
-                        { backgroundColor: item.color },
-                        isSelected && styles.medicationCardSelected,
-                      ]}
-                      onPress={() =>
-                        toggleSelection(selectedMedications, setSelectedMedications, item.key)
-                      }
-                    >
-                      <Text style={styles.medicationIcon}>{item.icon}</Text>
-                      <Text style={styles.medicationLabel}>{item.label}</Text>
-                      {isSelected && (
-                        <View style={styles.medicationCheck}>
-                          <Ionicons name="checkmark-circle" size={20} color="#FF4C7C" />
-                        </View>
-                      )}
-                    </TouchableOpacity>
-                  );
-                })}
-              </View>
+            <View style={styles.medicationList}>
+              {medications.map((item) => {
+                const isSelected = selectedMedications.includes(item.key);
+                return (
+                  <TouchableOpacity
+                    key={item.key}
+                    style={[
+                      styles.medicationCard,
+                      { backgroundColor: item.color },
+                      isSelected && styles.medicationCardSelected,
+                    ]}
+                    onPress={() =>
+                      toggleSelection(selectedMedications, setSelectedMedications, item.key)
+                    }
+                  >
+                    <Text style={styles.medicationIcon}>{item.icon}</Text>
+                    <Text style={styles.medicationLabel}>{item.label}</Text>
+                    {isSelected && (
+                      <View style={styles.medicationCheck}>
+                        <Ionicons name="checkmark-circle" size={18} color="#FD5A7E" />
+                      </View>
+                    )}
+                  </TouchableOpacity>
+                );
+              })}
             </View>
           </View>
 
@@ -338,30 +506,63 @@ export const LogEntryScreen = ({ navigation, route }: Props) => {
             <Text style={styles.sectionTitle}>
               {language === 'en' ? 'Log your mood' : 'Rekodi hisia yako'}
             </Text>
-            <View style={styles.card}>
-              <View style={styles.moodsGrid}>
-                {moods.map((item) => {
-                  const isSelected = selectedMoods.includes(item.key);
-                  return (
-                    <TouchableOpacity
-                      key={item.key}
-                      style={[
-                        styles.moodCard,
-                        { backgroundColor: item.color },
-                        isSelected && styles.moodCardSelected,
-                      ]}
-                      onPress={() =>
-                        toggleSelection(selectedMoods, setSelectedMoods, item.key)
-                      }
-                    >
-                      <Text style={styles.moodEmoji}>{item.emoji}</Text>
-                      <Text style={[styles.moodLabel, isSelected && styles.moodLabelSelected]}>
-                        {item.label}
-                      </Text>
-                    </TouchableOpacity>
-                  );
-                })}
-              </View>
+            <View style={styles.moodsGrid}>
+              {moods.map((item) => {
+                const isSelected = selectedMoods.includes(item.key);
+                return (
+                  <TouchableOpacity
+                    key={item.key}
+                    style={[
+                      styles.moodCard,
+                      { backgroundColor: item.color },
+                      isSelected && styles.moodCardSelected,
+                    ]}
+                    onPress={() =>
+                      toggleSelection(selectedMoods, setSelectedMoods, item.key)
+                    }
+                  >
+                    <Text style={styles.moodEmoji}>{item.emoji}</Text>
+                    <Text style={[styles.moodLabel, isSelected && styles.moodLabelSelected]}>
+                      {item.label}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </View>
+
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>
+              {language === 'en' ? 'Start date of last period' : 'Tarehe ya kuanza kwa hedhi ya mwisho'}
+            </Text>
+            <View style={styles.datePreview}>
+              <Ionicons name="calendar-outline" size={18} color="#FF6B9D" />
+              <Text style={styles.datePreviewText}>
+                {selectedDay && selectedMonth !== null && selectedYear
+                  ? `${selectedDay} ${months[selectedMonth].label} ${selectedYear}`
+                  : language === 'en' ? 'Select date' : 'Chagua tarehe'}
+              </Text>
+            </View>
+            <View style={styles.datePickerRow}>
+              {renderPicker(
+                language === 'en' ? 'Day' : 'Siku',
+                days,
+                selectedDay,
+                v => onDateChange('day', v)
+              )}
+              {renderPicker(
+                language === 'en' ? 'Month' : 'Mwezi',
+                Array.from({ length: 12 }, (_, i) => i),
+                selectedMonth,
+                v => onDateChange('month', v),
+                true
+              )}
+              {renderPicker(
+                language === 'en' ? 'Year' : 'Mwaka',
+                years,
+                selectedYear,
+                v => onDateChange('year', v)
+              )}
             </View>
           </View>
 
@@ -372,16 +573,14 @@ export const LogEntryScreen = ({ navigation, route }: Props) => {
             ]}
             onPress={handleSave}
             disabled={isUpsertingUser}
+            accessibilityLabel={language === 'en' ? 'Next' : 'Ijayo'}
           >
             {isUpsertingUser ? (
               <ActivityIndicator size="small" color="#fff" />
             ) : (
-              <>
-                <Ionicons name="checkmark-circle" size={20} color="#fff" style={{ marginRight: 8 }} />
-                <Text style={styles.saveButtonText}>
-                  {language === 'en' ? 'SAVE LOG' : 'HIFADHI REKODI'}
-                </Text>
-              </>
+              <Text style={styles.saveButtonText}>
+                {language === 'en' ? 'NEXT' : 'IJAYO'}
+              </Text>
             )}
           </TouchableOpacity>
         </Animated.View>
@@ -413,27 +612,21 @@ const styles = StyleSheet.create({
     color: '#FD5A7E',
   },
   scrollContent: {
-    paddingHorizontal: 16,
+    paddingHorizontal: 20,
+    paddingTop: 20,
     paddingBottom: 100,
   },
   section: {
-    marginBottom: 20,
+    marginBottom: 30,
   },
   sectionTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#1F2937',
-    marginBottom: 12,
-    letterSpacing: 0.3,
-  },
-  card: {
-    backgroundColor: '#fff',
-    borderRadius: 18,
-    padding: 16,
-    shadowColor: '#FF4C7C',
-    shadowOpacity: 0.1,
-    shadowRadius: 10,
-    elevation: 3,
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333333',
+    fontFamily: 'Inter',
+    fontStyle: 'normal',
+
+    marginBottom: 15,
   },
   symptomsGrid: {
     flexDirection: 'row',
@@ -449,45 +642,47 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: 12,
     position: 'relative',
-    borderWidth: 2,
-    borderColor: 'transparent',
+    backgroundColor: '#F6F0FF',
   },
   symptomCardSelected: {
-    borderColor: '#FF4C7C',
-    shadowColor: '#FF4C7C',
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 4,
+    borderWidth: 2,
+    borderColor: '#FD5A7E',
   },
   symptomIcon: {
-    fontSize: 32,
+    fontSize: 28,
     marginBottom: 8,
   },
   symptomLabel: {
     fontSize: 11,
-    color: '#666',
+    color: '#555',
     textAlign: 'center',
-    fontWeight: '500',
   },
   symptomLabelSelected: {
-    fontWeight: '700',
-    color: '#FF4C7C',
+    fontWeight: '600',
+    color: '#FD5A7E',
   },
   checkmark: {
     position: 'absolute',
-    top: 6,
-    right: 6,
+    top: 8,
+    right: 8,
   },
   cycleDetailCard: {
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
   },
   cycleDetailLabel: {
     fontSize: 14,
-    color: '#666',
-    marginBottom: 16,
+    color: '#645F5F',
+    fontFamily: 'Inter',
+    fontStyle: 'normal',
     fontWeight: '500',
+    marginBottom: 12,
   },
   daysSelector: {
     flexDirection: 'row',
@@ -500,12 +695,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#F5F5F5',
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 2,
-    borderColor: 'transparent',
   },
   dayCircleSelected: {
-    backgroundColor: '#FFE4EC',
-    borderColor: '#FF4C7C',
+    backgroundColor: '#FFD5E5',
   },
   dayText: {
     fontSize: 16,
@@ -513,8 +705,7 @@ const styles = StyleSheet.create({
     color: '#999',
   },
   dayTextSelected: {
-    color: '#FF4C7C',
-    fontWeight: '700',
+    color: '#FD5A7E',
   },
   medicationList: {
     gap: 12,
@@ -525,25 +716,19 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 16,
     position: 'relative',
-    borderWidth: 2,
-    borderColor: 'transparent',
   },
   medicationCardSelected: {
-    borderColor: '#FF4C7C',
-    shadowColor: '#FF4C7C',
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 4,
+    borderWidth: 2,
+    borderColor: '#FD5A7E',
   },
   medicationIcon: {
-    fontSize: 28,
+    fontSize: 24,
     marginRight: 12,
   },
   medicationLabel: {
     fontSize: 14,
-    color: '#666',
+    color: '#555',
     flex: 1,
-    fontWeight: '500',
   },
   medicationCheck: {
     position: 'absolute',
@@ -562,42 +747,91 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 12,
-    borderWidth: 2,
-    borderColor: 'transparent',
   },
   moodCardSelected: {
-    borderColor: '#FF4C7C',
-    shadowColor: '#FF4C7C',
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 4,
+    borderWidth: 2,
+    borderColor: '#FD5A7E',
   },
   moodEmoji: {
-    fontSize: 36,
+    fontSize: 32,
     marginBottom: 8,
   },
   moodLabel: {
     fontSize: 11,
-    color: '#666',
+    color: '#555',
     textAlign: 'center',
-    fontWeight: '500',
   },
   moodLabelSelected: {
-    fontWeight: '700',
-    color: '#FF4C7C',
+    fontWeight: '600',
+    color: '#FD5A7E',
+  },
+  datePreview: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#fff',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 12,
+    marginBottom: 16,
+    gap: 8,
+  },
+  datePreviewText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#FF6B9D',
+  },
+  datePickerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 10,
+  },
+  pickerContainer: {
+    flex: 1,
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 12,
+    maxHeight: 200,
+  },
+  pickerLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#999',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  pickerScroll: {
+    maxHeight: 150,
+  },
+  pickerOption: {
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    alignItems: 'center',
+    borderRadius: 8,
+    marginBottom: 4,
+    height: 40,
+  },
+  pickerOptionSelected: {
+    backgroundColor: '#FFD5E5',
+  },
+  pickerOptionText: {
+    fontSize: 14,
+    color: '#666',
+  },
+  pickerOptionTextSelected: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#FD5A7E',
   },
   saveButton: {
-    backgroundColor: '#FF4C7C',
-    paddingVertical: 18,
-    borderRadius: 18,
+    backgroundColor: '#FD5A7E',
+    fontFamily: 'Inter',
+    fontStyle: 'normal',
+    fontWeight: '600',
+    paddingVertical: 15,
+    borderRadius: 24,
     alignItems: 'center',
-    marginTop: 20,
-    flexDirection: 'row',
-    justifyContent: 'center',
-    shadowColor: '#FF4C7C',
-    shadowOpacity: 0.3,
-    shadowRadius: 12,
-    elevation: 5,
+    marginTop: 10,
   },
   saveButtonDisabled: {
     backgroundColor: '#FFB6C1',
@@ -605,8 +839,8 @@ const styles = StyleSheet.create({
   },
   saveButtonText: {
     color: '#fff',
-    fontWeight: '700',
+    fontWeight: '600',
     fontSize: 16,
-    letterSpacing: 0.5,
+    fontStyle: 'normal',
   },
 });
