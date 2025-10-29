@@ -31,7 +31,7 @@ export interface MoodConfig {
 }
 
 export interface SymptomConfig {
-  icon: string;
+  icon: any;
   color: string;
   label: string;
 }

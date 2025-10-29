@@ -112,7 +112,7 @@ export const CalenderScreen = ({ navigation, route }: Props) => {
                 );
                 let fill = '#fff';
                 let stroke = '#e0e0e0';
-                let strokeDasharray: string | null = null;
+                let strokeDasharray: string | undefined = undefined;
                 let sequenceNum: number | null = null;
 
                 if (periodDays.includes(day)) {
