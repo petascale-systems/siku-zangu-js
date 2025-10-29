@@ -14,6 +14,7 @@ import {UpdatingMedicationScreen} from '../screens/UpdatingMedicationScreen';
 import {CalenderScreen } from '../screens/CalenderScreen';
 import {InsightsScreen} from '../screens/InsightsScreen';
 import {HomeScreen} from '../screens/HomeScreen';
+import {LogEntryScreen} from '../screens/LogEntryScreen';
 
 export type RootStackParamList = {
   Language: undefined;
@@ -30,6 +31,7 @@ export type RootStackParamList = {
   Calender: {lang: 'en' | 'sw'; userId: string};
   Insights: {lang: 'en' | 'sw'; userId: string};
   Dashboard: {lang: 'en' | 'sw'; userId: string};
+  AddLog: {lang: 'en' | 'sw'; userId: string};
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -54,6 +56,7 @@ export const AppNavigator = () => {
         <Stack.Screen name="Calender" component={CalenderScreen} />
         <Stack.Screen name="Insights" component={InsightsScreen} />
         <Stack.Screen name="Dashboard" component={HomeScreen}/>
+        <Stack.Screen name="AddLog" component={LogEntryScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

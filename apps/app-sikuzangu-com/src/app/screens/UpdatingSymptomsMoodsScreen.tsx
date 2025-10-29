@@ -20,7 +20,7 @@ type Props = NativeStackScreenProps<RootStackParamList, 'UpdatingSymptomsMoods'>
 export const UpdatingSymptomsMoodsScreen = ({ navigation, route }: Props) => {
   const language = route.params?.lang ?? 'en';
   const userId = route.params?.userId;
-  const { upsertUser, isUpsertingUser } = useUser(userId);
+  const { upsertUser, isUpsertingUser, user } = useUser(userId);
 
   const symptoms = [
     { key: 'cramps', label: language === 'en' ? 'Cramps' : 'Maumivu', icon: 'fitness' },
@@ -82,11 +82,25 @@ export const UpdatingSymptomsMoodsScreen = ({ navigation, route }: Props) => {
     }
 
     try {
-      // @ts-ignore
+      const timestamp = new Date().toISOString();
+      const currentSymptomLogs = user?.kv.symptom_logs || [];
+      const currentMoodLogs = user?.kv.mood_logs || [];
+      const newSymptomLogs = selectedSymptoms.map(symptom => ({
+        symptom,
+        timestamp,
+      }));
+
+      const newMoodLogs = selectedMoods.map(mood => ({
+        mood,
+        timestamp,
+      }));
+
       const updateData: UpdateUser = {
         kv: {
           selected_symptoms: selectedSymptoms,
           selected_moods: selectedMoods,
+          symptom_logs: [...currentSymptomLogs, ...newSymptomLogs],
+          mood_logs: [...currentMoodLogs, ...newMoodLogs],
         },
       };
 
@@ -109,7 +123,7 @@ export const UpdatingSymptomsMoodsScreen = ({ navigation, route }: Props) => {
               navigation.navigate('UpdatingMedication', {
                 lang: language,
                 userId,
-              })
+              });
             },
           },
         ]
@@ -286,7 +300,6 @@ const styles = StyleSheet.create({
     paddingTop: 60,
     paddingBottom: 40,
   },
-
   section: {
     marginBottom: 20,
   },

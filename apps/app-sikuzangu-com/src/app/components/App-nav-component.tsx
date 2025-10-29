@@ -30,15 +30,15 @@ export const NavbarCard: React.FC<Props> = ({ navigation, language, userId }) =>
     });
   };
 
-/*
+
   const handleAddPress = () => {
     // Navigate to Add/Track screen when implemented
-    navigation.navigate('Calender', {
+    navigation.navigate('AddLog', {
       lang: language,
       userId: userId,
     });
   };
-*/
+
   const handleInsightsPress = () => {
     navigation.navigate('Insights', {
       lang: language,
@@ -82,7 +82,7 @@ export const NavbarCard: React.FC<Props> = ({ navigation, language, userId }) =>
         style={styles.navItem}
         accessibilityLabel={language === 'en' ? 'Add' : 'Ongeza'}
         accessibilityRole="button"
-        // onPress={handleAddPress}
+         onPress={handleAddPress}
       >
         <Ionicons name="add-circle" size={26} color="#CE2020" />
       </TouchableOpacity>

@@ -11,9 +11,18 @@ import { Ionicons } from '@expo/vector-icons';
 import Svg, { Circle } from 'react-native-svg';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { useFocusEffect } from '@react-navigation/native';
 import { RootStackParamList } from '../navigation/AppNavigator';
-import { calculateCycleData, MONTH_NAMES_EN } from '../utils/cycleCalculations';
-import { useAccessToken } from '@siku-zangu/react';
+import {
+  calculateCycleMetrics,
+  MONTH_NAMES_EN,
+  getCyclePhaseInsight,
+  getMoodConfig,
+  getSymptomConfig,
+  getMostRecentMood,
+  getRecentSymptoms,
+} from '../utils/cycleCalculations';
+import { useAccessToken, useUser } from '@siku-zangu/react';
 import { NavbarCard } from '../components/App-nav-component';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Dashboard'>;
@@ -25,61 +34,40 @@ export const HomeScreen = ({ navigation, route }: Props) => {
   const language = route.params?.lang ?? 'en';
   const userId = route.params?.userId;
   const { user } = useAccessToken();
+  const { refetchUser } = useUser(userId);
   const insets = useSafeAreaInsets();
 
   const currentDate = new Date();
-  const currentMonth = currentDate.getMonth();
-  const currentYear = currentDate.getFullYear();
 
-  const cycleData = useMemo(() => {
-    if (!user?.kv?.prev_cycle_start_date) {
-      return {
-        daysUntilPeriod: 6,
-        ovulationDate: new Date(2025, 9, 10),
-        nextPeriodDate: new Date(2025, 9, 24),
-        cycleLength: 28,
-        progress: 0.75,
-        daysUntilOvulation: 12,
-        fertileDaysRemaining: 8,
-      };
-    }
-
-    const data = calculateCycleData(
-      user.kv.prev_cycle_start_date,
-      user.kv.avg_cycle_length_days || 28,
-      user.kv.avg_period_length_days || 5,
-      currentMonth,
-      currentYear
-    );
-
-    const cycleLength = user.kv.avg_cycle_length_days || 28;
-    const daysUntilPeriod = data.daysUntilPeriod ?? 0;
-    const daysPassed = Math.max(0, cycleLength - daysUntilPeriod);
-    const progress = Math.min(daysPassed / cycleLength, 1);
-
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const daysUntilOvulation = Math.max(
-      0,
-      Math.ceil(
-        (data.ovulationDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
-      )
-    );
-
-    const fertileDaysRemaining = data.fertilityDays.filter(
-      (day) => day >= today.getDate()
-    ).length;
-
-    return {
-      daysUntilPeriod,
-      ovulationDate: data.ovulationDate,
-      nextPeriodDate: data.nextPeriodDate,
-      cycleLength,
-      progress,
-      daysUntilOvulation,
-      fertileDaysRemaining,
-    };
-  }, [user, currentMonth, currentYear]);
+  useFocusEffect(
+    React.useCallback(() => {
+      if (userId && refetchUser) {
+        refetchUser();
+      }
+    }, [userId, refetchUser])
+  );
+  const MOOD_CONFIG = useMemo(() => getMoodConfig(language), [language]);
+  const SYMPTOM_CONFIG = useMemo(() => getSymptomConfig(language), [language]);
+  const mostRecentMood = useMemo(
+    () => getMostRecentMood(user?.kv?.mood_logs),
+    [user?.kv?.mood_logs]
+  );
+  const recentSymptoms = useMemo(
+    () => getRecentSymptoms(user?.kv?.symptom_logs, 2),
+    [user?.kv?.symptom_logs]
+  );
+  const cycleMetrics = useMemo(
+    () =>
+      calculateCycleMetrics(
+        user?.kv?.prev_cycle_start_date,
+        user?.kv?.avg_cycle_length_days || 28
+      ),
+    [
+      user?.kv?.prev_cycle_start_date,
+      user?.kv?.avg_cycle_length_days,
+      user?.kv?.avg_period_length_days,
+    ]
+  );
 
   const {
     daysUntilPeriod,
@@ -88,11 +76,31 @@ export const HomeScreen = ({ navigation, route }: Props) => {
     daysUntilOvulation,
     fertileDaysRemaining,
     progress,
-  } = cycleData;
+    dayInCycle,
+  } = cycleMetrics;
+
+  const todayInsight = useMemo(
+    () =>
+      getCyclePhaseInsight(
+        dayInCycle,
+        ovulationDate,
+        user?.kv?.avg_period_length_days ?? 6,
+        user?.kv?.avg_cycle_length_days ?? 28,
+        language
+      ),
+    [
+      dayInCycle,
+      ovulationDate,
+      user?.kv?.avg_period_length_days,
+      user?.kv?.avg_cycle_length_days,
+      language,
+    ]
+  );
 
   const formattedNextPeriod = `${MONTH_NAMES_EN[
     nextPeriodDate.getMonth()
   ].slice(0, 3)} ${nextPeriodDate.getDate()}`;
+
   const formattedToday = currentDate.toLocaleDateString('en-US', {
     month: 'short',
     day: 'numeric',
@@ -103,52 +111,87 @@ export const HomeScreen = ({ navigation, route }: Props) => {
   const strokeDashoffset = circumference * (1 - progress);
 
   const handleAddLog = () => {
-    // Navigate to log entry screen
-    // navigation.navigate('AddLog');
+    navigation.navigate('AddLog', { lang: language, userId: userId });
   };
+
+  const moodData = mostRecentMood ? MOOD_CONFIG[mostRecentMood] : null;
+  const remainingSymptoms =
+    recentSymptoms.length > 3 ? recentSymptoms.length - 3 : 0;
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
       <ScrollView showsVerticalScrollIndicator={false}>
         <LinearGradient
-          colors={['#FF5C8D', '#FF7DAA']}
+          colors={['#FD5A7E', '#FF7DAA']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.header}
         >
           <Text style={styles.greeting}>
-            Hi, {user?.kv?.first_name || 'there'}
+            {language === 'sw' ? 'Habari' : 'Hi'},{' '}
+            {user?.kv?.first_name || (language === 'sw' ? 'rafiki' : 'there')}
           </Text>
-          <Text style={styles.subtitle}>Here's your cycle overview</Text>
+          <Text style={styles.subtitle}>
+            {language === 'sw'
+              ? 'Hii ni muhtasari wa mzunguko wako'
+              : "Here's your cycle overview"}
+          </Text>
         </LinearGradient>
-        <View style={styles.statsContainer}>
-          <View style={styles.statBox}>
-            <Text style={[styles.statValue, { color: '#FF5C8D' }]}>
-              {daysUntilPeriod}
-            </Text>
-            <Text style={styles.statLabel}>Next period</Text>
-            <Text style={styles.statSub}>Starts: {formattedNextPeriod}</Text>
-          </View>
-          <View style={styles.statBox}>
-            <Text style={[styles.statValue, { color: '#28C2A0' }]}>
-              {daysUntilOvulation}
-            </Text>
-            <Text style={styles.statLabel}>Ovulation in</Text>
-            <View style={styles.iconRow}>
-              <Ionicons name="moon" color="#555" size={14} />
-              <Text style={styles.statSub}>{fertileDaysRemaining}-days</Text>
+
+        <View style={styles.statsCard}>
+          <Text style={[styles.statTitle]}>
+            {language === 'sw' ? 'Muhtasari wa Mzunguko' : 'Cycle Overview'}
+          </Text>
+
+          <View style={styles.statRow}>
+            <View style={styles.statItem}>
+              <Text style={[styles.statValue, { color: '#FF597D' }]}>
+                {daysUntilPeriod}
+              </Text>
+              <Text style={styles.statLabel}>
+                {language === 'sw' ? 'Hedhi ijayo' : 'Next period'}
+              </Text>
+              <Text style={styles.statSub}>
+                {language === 'sw' ? 'Inaanza' : 'Starts'}:{' '}
+                {formattedNextPeriod}
+              </Text>
+            </View>
+
+            <View style={styles.statItem}>
+              <Text style={[styles.statValue, { color: '#1DA8AD' }]}>
+                {daysUntilOvulation}
+              </Text>
+              <Text style={styles.statLabel}>
+                {language === 'sw' ? 'Uzazi katika' : 'Ovulation in'}
+              </Text>
+              <View style={styles.iconRow}>
+                <Ionicons name="moon" color="#555" size={14} />
+                <Text style={styles.statSub}>
+                  {fertileDaysRemaining}-{language === 'sw' ? 'siku' : 'days'}
+                </Text>
+              </View>
+            </View>
+
+            <View style={styles.statItem}>
+              <Text style={[styles.statValue, { color: '#A855F7' }]}>
+                {fertileDaysRemaining}
+              </Text>
+              <Text style={styles.statLabel}>
+                {language === 'sw' ? 'Dirisha la uzazi' : 'Fertile window'}
+              </Text>
+              <Text style={styles.statSub}>
+                {fertileDaysRemaining > 0
+                  ? language === 'sw'
+                    ? 'Nafasi kubwa'
+                    : 'High chance'
+                  : language === 'sw'
+                  ? 'Imepita'
+                  : 'Passed'}
+              </Text>
             </View>
           </View>
-          <View style={styles.statBox}>
-            <Text style={[styles.statValue, { color: '#A36AFF' }]}>
-              {fertileDaysRemaining}
-            </Text>
-            <Text style={styles.statLabel}>Fertile window</Text>
-            <Text style={styles.statSub}>
-              {fertileDaysRemaining > 0 ? 'High chance' : 'Passed'}
-            </Text>
-          </View>
         </View>
+
         <View style={styles.ringContainer}>
           <Svg height="120" width="120">
             <Circle
@@ -171,20 +214,27 @@ export const HomeScreen = ({ navigation, route }: Props) => {
               fill="none"
             />
           </Svg>
-          <Text style={styles.ringText}>{daysUntilPeriod} days</Text>
+          <Text style={styles.ringText}>
+            {daysUntilPeriod} {language === 'sw' ? 'siku' : 'days'}
+          </Text>
         </View>
+
         <View style={styles.insightCard}>
           <View style={styles.insightHeader}>
             <Ionicons name="bulb-outline" size={22} color="#FFB703" />
-            <Text style={styles.insightTitle}>Today's Insight</Text>
+            <Text style={styles.insightTitle}>
+              {language === 'sw' ? 'Maarifa ya Leo' : "Today's Insight"} -{' '}
+              {todayInsight.phase} {language === 'sw' ? 'Awamu' : 'Phase'}
+            </Text>
           </View>
-          <Text style={styles.insightText}>
-            You're in your luteal phase. Stay hydrated and eat iron-rich foods.
-          </Text>
+          <Text style={styles.insightText}>{todayInsight.text}</Text>
         </View>
+
         <View style={styles.logCard}>
           <View style={styles.logHeader}>
-            <Text style={styles.logTitle}>Today's Log</Text>
+            <Text style={styles.logTitle}>
+              {language === 'sw' ? 'Rekodi ya Leo' : "Today's Log"}
+            </Text>
             <TouchableOpacity onPress={handleAddLog}>
               <Ionicons name="create-outline" size={18} color="#555" />
             </TouchableOpacity>
@@ -192,29 +242,82 @@ export const HomeScreen = ({ navigation, route }: Props) => {
 
           <Text style={styles.logDate}>{formattedToday}</Text>
 
-          <View style={styles.moodRow}>
-            <View style={styles.moodIcon}>
-              <Text style={styles.moodEmoji}>😊</Text>
+          {moodData ? (
+            <View style={styles.moodRow}>
+              <View style={styles.moodIcon}>
+                <Text style={styles.moodEmoji}>{moodData.emoji}</Text>
+              </View>
+              <View>
+                <Text style={styles.moodText}>{moodData.label}</Text>
+                <Text style={styles.moodSub}>
+                  {language === 'sw'
+                    ? 'Hisia ya hivi karibuni'
+                    : 'Most recent mood'}
+                </Text>
+              </View>
             </View>
-            <View>
-              <Text style={styles.moodText}>Happy</Text>
-              <Text style={styles.moodSub}>Logged at 9:20 AM</Text>
-            </View>
-          </View>
-          <Text style={styles.symptomTitle}>Symptoms</Text>
-          <View style={styles.symptomRow}>
-            <View style={styles.symptomCircle}>
-              <Ionicons name="flash-outline" size={18} color="#8B5CF6" />
-              <Text style={styles.symptomLabel}>Fatigue</Text>
-            </View>
-            <View style={styles.symptomCircle}>
-              <Ionicons name="body-outline" size={18} color="#F59E0B" />
-              <Text style={styles.symptomLabel}>Cramps</Text>
-            </View>
-            <TouchableOpacity style={styles.moreCircle} onPress={handleAddLog}>
-              <Text style={styles.moreText}>+2 more</Text>
+          ) : (
+            <TouchableOpacity style={styles.emptyMood} onPress={handleAddLog}>
+              <Ionicons name="happy-outline" size={20} color="#999" />
+              <Text style={styles.emptyText}>
+                {language === 'sw' ? 'Ongeza hisia yako' : 'Add your mood'}
+              </Text>
             </TouchableOpacity>
-          </View>
+          )}
+
+          {recentSymptoms.length > 0 ? (
+            <>
+              <Text style={styles.symptomTitle}>
+                {language === 'sw'
+                  ? 'Dalili za Hivi Karibuni'
+                  : 'Recent Symptoms'}
+              </Text>
+              <View style={styles.symptomRow}>
+                {recentSymptoms.map((symptom) => {
+                  const config = SYMPTOM_CONFIG[symptom];
+                  if (!config) return null;
+
+                  return (
+                    <View key={symptom} style={styles.symptomCircle}>
+                      <Ionicons
+                        name={config.icon}
+                        size={18}
+                        color={config.color}
+                      />
+                      <Text style={styles.symptomLabel}>{config.label}</Text>
+                    </View>
+                  );
+                })}
+
+                {remainingSymptoms > 0 && (
+                  <TouchableOpacity
+                    style={styles.moreCircle}
+                    onPress={handleAddLog}
+                  >
+                    <Text style={styles.moreText}>
+                      +{remainingSymptoms}{' '}
+                      {language === 'sw' ? 'zaidi' : 'more'}
+                    </Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+            </>
+          ) : (
+            <>
+              <Text style={styles.symptomTitle}>
+                {language === 'sw' ? 'Dalili' : 'Symptoms'}
+              </Text>
+              <TouchableOpacity
+                style={styles.emptySymptoms}
+                onPress={handleAddLog}
+              >
+                <Ionicons name="add-circle-outline" size={20} color="#999" />
+                <Text style={styles.emptyText}>
+                  {language === 'sw' ? 'Ongeza dalili' : 'Add symptoms'}
+                </Text>
+              </TouchableOpacity>
+            </>
+          )}
         </View>
       </ScrollView>
       <NavbarCard navigation={navigation} language={language} userId={userId} />
@@ -225,7 +328,7 @@ export const HomeScreen = ({ navigation, route }: Props) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFF7F9',
+    backgroundColor: '#FFF4EC',
   },
   header: {
     paddingVertical: 25,
@@ -234,44 +337,63 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 20,
   },
   greeting: {
-    fontSize: 22,
+    fontSize: 18,
     color: '#fff',
-    fontWeight: '700',
+    fontWeight: '600',
+    fontFamily: 'Poppins',
+    fontStyle: 'normal',
   },
   subtitle: {
     color: '#fff',
     opacity: 0.9,
     marginTop: 4,
+    fontSize: 16,
+    fontFamily: 'inter',
+    fontStyle: 'normal',
+    fontWeight: '500',
   },
-  statsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginHorizontal: 20,
-    marginTop: 20,
-  },
-  statBox: {
+  statsCard: {
     backgroundColor: '#fff',
-    width: '30%',
-    borderRadius: 12,
-    paddingVertical: 12,
+    marginHorizontal: 20,
+    borderRadius: 16,
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+    shadowColor: '#000',
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 4,
+  },
+  statTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#333333',
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  statRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
     alignItems: 'center',
-    elevation: 3,
-    shadowColor: '#FF5C8D',
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
+  },
+  statItem: {
+    alignItems: 'center',
+    width: '30%',
   },
   statValue: {
-    fontSize: 20,
+    fontSize: 30,
     fontWeight: '700',
   },
   statLabel: {
     fontSize: 12,
-    color: '#444',
+    color: '#000',
     marginTop: 2,
+    fontWeight: '500',
+    fontFamily: 'inter',
+    fontStyle: 'normal',
   },
   statSub: {
     fontSize: 11,
-    color: '#777',
+    color: '#6B7280',
     marginTop: 3,
   },
   iconRow: {
@@ -292,9 +414,9 @@ const styles = StyleSheet.create({
     color: '#FF5C8D',
   },
   insightCard: {
-    backgroundColor: '#FFD5E5',
+    backgroundColor: '#F8BBD0',
     marginHorizontal: 20,
-    padding: 15,
+    padding: 16,
     borderRadius: 12,
     marginBottom: 15,
   },
@@ -305,18 +427,24 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   insightTitle: {
-    fontWeight: '700',
-    color: '#444',
-    fontSize: 15,
+    fontWeight: '500',
+    color: '#333333',
+    fontSize: 16,
+    fontStyle: 'normal',
+    flexShrink: 1,
   },
   insightText: {
-    color: '#555',
+    color: '#645F5F',
     lineHeight: 20,
+    fontSize: 14,
+    fontFamily: 'inter',
+    fontStyle: 'normal',
+    fontWeight: '500',
   },
   logCard: {
     backgroundColor: '#fff',
     marginHorizontal: 20,
-    borderRadius: 12,
+    borderRadius: 16,
     padding: 15,
     elevation: 3,
     marginBottom: 30,
@@ -330,12 +458,18 @@ const styles = StyleSheet.create({
   },
   logTitle: {
     fontWeight: '700',
-    fontSize: 15,
+    fontSize: 16,
+    color: '#333333',
+    fontFamily: 'inter',
+    fontStyle: 'normal',
   },
   logDate: {
-    color: '#888',
+    color: '#645F5F',
     marginTop: 4,
-    fontSize: 12,
+    fontSize: 14,
+    fontFamily: 'inter',
+    fontStyle: 'normal',
+    fontWeight: '500',
   },
   moodRow: {
     flexDirection: 'row',
@@ -355,23 +489,47 @@ const styles = StyleSheet.create({
     fontSize: 24,
   },
   moodText: {
-    fontWeight: '600',
+    fontWeight: '500',
     fontSize: 15,
+    color: '#333',
+    fontFamily: 'inter',
+    fontStyle: 'normal',
   },
   moodSub: {
-    color: '#777',
-    fontSize: 12,
+    color: '#645F5F',
+    fontSize: 14,
+    fontStyle: 'normal',
+    fontFamily: 'inter',
+    fontWeight: '400',
+  },
+  emptyMood: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 15,
+    padding: 12,
+    backgroundColor: '#F9F9F9',
+    borderRadius: 8,
+    gap: 8,
+  },
+  emptyText: {
+    color: '#999',
+    fontSize: 14,
+    fontFamily: 'inter',
   },
   symptomTitle: {
+    fontSize: 16,
     marginTop: 15,
-    fontWeight: '600',
-    color: '#555',
+    fontWeight: '500',
+    color: '#E66386',
     marginBottom: 10,
+    fontFamily: 'inter',
+    fontStyle: 'normal',
   },
   symptomRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
+    flexWrap: 'wrap',
   },
   symptomCircle: {
     backgroundColor: '#F6F0FF',
@@ -395,5 +553,13 @@ const styles = StyleSheet.create({
     color: '#444',
     fontSize: 11,
     fontWeight: '600',
+  },
+  emptySymptoms: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 12,
+    backgroundColor: '#F9F9F9',
+    borderRadius: 8,
+    gap: 8,
   },
 });

@@ -19,7 +19,7 @@ type Props = NativeStackScreenProps<RootStackParamList, 'UpdatingMedication'>;
 export const UpdatingMedicationScreen = ({ navigation, route }: Props) => {
   const language = route.params?.lang ?? 'en';
   const userId = route.params?.userId;
-  const { upsertUser, isUpsertingUser } = useUser(userId);
+  const { upsertUser, isUpsertingUser, user } = useUser(userId);
 
   const medications = [
     { key: 'pain_relief', label: 'Pain Relief', icon: 'medkit-outline' },
@@ -50,10 +50,17 @@ export const UpdatingMedicationScreen = ({ navigation, route }: Props) => {
     }
 
     try {
-      // @ts-ignore
+      const timestamp = new Date().toISOString();
+      const currentMedicationLogs = user?.kv.medication_logs || [];
+      const newMedicationLogs = selectedMedications.map(medication => ({
+        medication,
+        timestamp,
+      }));
+
       const updateData: UpdateUser = {
         kv: {
           selected_medications: selectedMedications,
+          medication_logs: [...currentMedicationLogs, ...newMedicationLogs],
         },
       };
 
