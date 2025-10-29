@@ -47,7 +47,7 @@ export const NavbarCard: React.FC<Props> = ({ navigation, language, userId }) =>
   };
 
   const handleProfilePress = () => {
-    navigation.navigate('Insights', {
+    navigation.navigate('Profile', {
       lang: language,
       userId: userId,
     });
