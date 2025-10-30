@@ -45,9 +45,8 @@ export const ProfileScreen = ({ navigation, route }: Props) => {
       icon: '🔄',
       label: 'Change Language',
       labelSw: 'Badilisha Lugha',
-     /* onPress: () =>
-        navigation.navigate('ChangeLanguage', { lang: language, userId }),
-        */
+      onPress: () =>
+        navigation.navigate('Language'),
     },
     {
       id: 'notifications',
@@ -72,20 +71,17 @@ export const ProfileScreen = ({ navigation, route }: Props) => {
       icon: '📅',
       label: 'Update Cycle Info',
       labelSw: 'Sasisha Taarifa za Mzunguko',
-      /* onPress: () =>
-        navigation.navigate('UpdateCycleInfo', { lang: language, userId }),
-
-       */
+       onPress: () =>
+        navigation.navigate('AddLog', { lang: language, userId }),
     },
     {
       id: 'delete',
       icon: '👤',
       label: 'Delete Account',
       labelSw: 'Futa Akaunti',
-     /* onPress: () =>
+      onPress: () =>
         navigation.navigate('DeleteAccount', { lang: language, userId }),
 
-      */
     },
     {
       id: 'logout',

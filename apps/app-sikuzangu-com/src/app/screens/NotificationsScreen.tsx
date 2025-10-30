@@ -45,7 +45,7 @@ export const NotificationsScreen = ({ navigation, route }: Props) => {
       descriptionSw: 'Pata ukumbusho kabla hedhi yako haijaanza.',
       icon: '💧',
       iconBg: '#B3E5FC',
-      enabled: true,
+      enabled: false,
     },
     {
       id: 'fertile',
@@ -55,7 +55,7 @@ export const NotificationsScreen = ({ navigation, route }: Props) => {
       descriptionSw: 'Jua siku zako za juu zaidi za uzazi',
       icon: '🌸',
       iconBg: '#FFE4EC',
-      enabled: true,
+      enabled: false,
     },
     {
       id: 'medication',
@@ -65,7 +65,7 @@ export const NotificationsScreen = ({ navigation, route }: Props) => {
       descriptionSw: 'Endelea kufuatilia dawa au virutubisho.',
       icon: '💊',
       iconBg: '#FFE0E6',
-      enabled: true,
+      enabled: false,
     },
     {
       id: 'insights',
@@ -75,7 +75,7 @@ export const NotificationsScreen = ({ navigation, route }: Props) => {
       descriptionSw: 'Pokea vidokezo vya kila siku au wiki vilivyotengenezwa kwa ajili yako',
       icon: '💡',
       iconBg: '#FFF9C4',
-      enabled: true,
+      enabled: false,
     },
   ]);
   React.useEffect(() => {
