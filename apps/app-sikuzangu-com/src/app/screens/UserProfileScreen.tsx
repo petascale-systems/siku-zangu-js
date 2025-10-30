@@ -22,7 +22,7 @@ interface MenuItem {
   emoji?: string;
   label: string;
   labelSw: string;
- // onPress: () => void;
+  onPress?: () => void;
   isDanger?: boolean;
 }
 
@@ -54,9 +54,9 @@ export const ProfileScreen = ({ navigation, route }: Props) => {
       icon: '🔔',
       label: 'Notifications',
       labelSw: 'Arifa',
-      /* onPress: () =>
+       onPress: () =>
         navigation.navigate('Notifications', { lang: language, userId }),
-        */
+
     },
     {
       id: 'pin',
@@ -140,7 +140,7 @@ export const ProfileScreen = ({ navigation, route }: Props) => {
                 styles.menuItem,
                 index === menuItems.length - 1 && styles.menuItemLast,
               ]}
-             // onPress={item.onPress}
+              onPress={item.onPress}
             >
               <View style={styles.menuLeft}>
                 {item.icon === 'exit-outline' ? (

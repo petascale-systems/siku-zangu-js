@@ -573,13 +573,13 @@ export const LogEntryScreen = ({ navigation, route }: Props) => {
             ]}
             onPress={handleSave}
             disabled={isUpsertingUser}
-            accessibilityLabel={language === 'en' ? 'Next' : 'Ijayo'}
+            accessibilityLabel={language === 'en' ? 'SAVE' : 'HIFADHI'}
           >
             {isUpsertingUser ? (
               <ActivityIndicator size="small" color="#fff" />
             ) : (
               <Text style={styles.saveButtonText}>
-                {language === 'en' ? 'NEXT' : 'IJAYO'}
+                {language === 'en' ? 'SAVE' : 'HIFADHI'}
               </Text>
             )}
           </TouchableOpacity>
