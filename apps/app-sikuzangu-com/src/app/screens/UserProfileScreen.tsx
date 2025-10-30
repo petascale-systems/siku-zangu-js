@@ -5,7 +5,8 @@ import {
   ScrollView,
   StyleSheet,
   TouchableOpacity,
-  Image,
+  ActivityIndicator,
+  Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -29,7 +30,7 @@ interface MenuItem {
 export const ProfileScreen = ({ navigation, route }: Props) => {
   const language = route.params?.lang ?? 'en';
   const userId = route.params?.userId;
-  const { user } = useAccessToken();
+  const { user, logoutUser, isLoggingOut } = useAccessToken();
   const insets = useSafeAreaInsets();
 
   const memberSince = user?.created_at
@@ -39,30 +40,64 @@ export const ProfileScreen = ({ navigation, route }: Props) => {
     })
     : 'Aug 2025';
 
+  function handleLogout() {
+    Alert.alert(
+      language === 'sw' ? 'Thibitisha Kutoka' : 'Confirm Logout',
+      language === 'sw'
+        ? 'Je, una uhakika unataka kutoka?'
+        : 'Are you sure you want to logout?',
+      [
+        {
+          text: language === 'sw' ? 'Ghairi' : 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: language === 'sw' ? 'Ondoka' : 'Logout',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await logoutUser();
+              navigation.reset({
+                index: 0,
+                routes: [{ name: 'Login' }],
+              });
+            } catch (e: any) {
+              Alert.alert(
+                language === 'sw' ? 'Hitilafu' : 'Error',
+                e.message ||
+                (language === 'sw'
+                  ? 'Imeshindwa kutoka. Tafadhali jaribu tena.'
+                  : 'Failed to logout. Please try again.')
+              );
+            }
+          },
+        },
+      ]
+    );
+  }
+
   const menuItems: MenuItem[] = [
     {
       id: 'language',
       icon: '🔄',
       label: 'Change Language',
       labelSw: 'Badilisha Lugha',
-      onPress: () =>
-        navigation.navigate('Language'),
+      onPress: () => navigation.navigate('Language'),
     },
     {
       id: 'notifications',
       icon: '🔔',
       label: 'Notifications',
       labelSw: 'Arifa',
-       onPress: () =>
+      onPress: () =>
         navigation.navigate('Notifications', { lang: language, userId }),
-
     },
     {
       id: 'pin',
       icon: '🔒',
       label: 'Change PIN',
       labelSw: 'Badilisha PIN',
-    /*  onPress: () =>
+      /*  onPress: () =>
         navigation.navigate('ChangePin', { lang: language, userId }),
         */
     },
@@ -71,8 +106,7 @@ export const ProfileScreen = ({ navigation, route }: Props) => {
       icon: '📅',
       label: 'Update Cycle Info',
       labelSw: 'Sasisha Taarifa za Mzunguko',
-       onPress: () =>
-        navigation.navigate('AddLog', { lang: language, userId }),
+      onPress: () => navigation.navigate('AddLog', { lang: language, userId }),
     },
     {
       id: 'delete',
@@ -81,29 +115,20 @@ export const ProfileScreen = ({ navigation, route }: Props) => {
       labelSw: 'Futa Akaunti',
       onPress: () =>
         navigation.navigate('DeleteAccount', { lang: language, userId }),
-
     },
     {
       id: 'logout',
       icon: 'exit-outline',
       label: 'Logout',
       labelSw: 'Ondoka',
-     // onPress: handleLogout,
+      onPress: handleLogout,
       isDanger: true,
     },
   ];
 
-  /* function handleLogout() {
-    // Implement logout logic
-    navigation.reset({
-      index: 0,
-      routes: [{ name: 'Login' }],
-    });
-  }
-  */
   const handleBack = () => navigation.goBack();
-  return (
 
+  return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={handleBack}>
@@ -137,15 +162,20 @@ export const ProfileScreen = ({ navigation, route }: Props) => {
                 index === menuItems.length - 1 && styles.menuItemLast,
               ]}
               onPress={item.onPress}
+              disabled={item.id === 'logout' && isLoggingOut}
             >
               <View style={styles.menuLeft}>
                 {item.icon === 'exit-outline' ? (
                   <View style={styles.iconContainer}>
-                    <Ionicons
-                      name={item.icon as any}
-                      size={22}
-                      color="#FF597D"
-                    />
+                    {isLoggingOut && item.id === 'logout' ? (
+                      <ActivityIndicator size="small" color="#FF597D" />
+                    ) : (
+                      <Ionicons
+                        name={item.icon as any}
+                        size={22}
+                        color="#FF597D"
+                      />
+                    )}
                   </View>
                 ) : (
                   <View style={styles.iconContainer}>
