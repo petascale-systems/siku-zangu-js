@@ -1,5 +1,13 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator, Image } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  ScrollView,
+  ActivityIndicator,
+  Image,
+} from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -7,46 +15,75 @@ import { RootStackParamList } from '../navigation/AppNavigator';
 import { useArticle, ARTICLE_COVER_IMAGE_API_PATH } from '@siku-zangu/react';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'ArticleDetail'>;
-const categoryIcons: Record<string, { icon: string; library: 'Ionicons' | 'MaterialCommunityIcons'; color: string }> = {
-  'body-education': { icon: 'brain', library: 'MaterialCommunityIcons', color: '#FF4C7C' },
-  'birth-control': { icon: 'male-female-outline', library: 'Ionicons', color: '#9C27B0' },
-  'lifestyle': { icon: 'flower-outline', library: 'Ionicons', color: '#FF6B9D' },
-  'nutrition': { icon: 'nutrition-outline', library: 'Ionicons', color: '#4CAF50' },
-  'mental-health': { icon: 'happy-outline', library: 'Ionicons', color: '#2196F3' },
-  'exercise': { icon: 'fitness-outline', library: 'Ionicons', color: '#FF9800' },
-  'default': { icon: 'document-text-outline', library: 'Ionicons', color: '#FF4C7C' },
+const categoryIcons: Record<
+  string,
+  {
+    icon: string;
+    library: 'Ionicons' | 'MaterialCommunityIcons';
+    color: string;
+  }
+> = {
+  'body-education': {
+    icon: 'brain',
+    library: 'MaterialCommunityIcons',
+    color: '#FF4C7C',
+  },
+  'birth-control': {
+    icon: 'male-female-outline',
+    library: 'Ionicons',
+    color: '#9C27B0',
+  },
+  lifestyle: { icon: 'flower-outline', library: 'Ionicons', color: '#FF6B9D' },
+  nutrition: {
+    icon: 'nutrition-outline',
+    library: 'Ionicons',
+    color: '#4CAF50',
+  },
+  'mental-health': {
+    icon: 'happy-outline',
+    library: 'Ionicons',
+    color: '#2196F3',
+  },
+  exercise: { icon: 'fitness-outline', library: 'Ionicons', color: '#FF9800' },
+  default: {
+    icon: 'document-text-outline',
+    library: 'Ionicons',
+    color: '#FF4C7C',
+  },
 };
 
 export const ArticleDetailScreen = ({ navigation, route }: Props) => {
   const { articleId, lang, userId } = route.params;
   const insets = useSafeAreaInsets();
-
-  // Use the existing hook
   const { article, isFetchingArticle } = useArticle(articleId);
-
   const handleBack = () => navigation.goBack();
 
   const getIconForCategory = (category?: string) => {
-    const iconData = categoryIcons[category || 'default'] || categoryIcons['default'];
-    const IconComponent = iconData.library === 'Ionicons' ? Ionicons : MaterialCommunityIcons;
-    return <IconComponent name={iconData.icon as any} size={32} color={iconData.color} />;
+    const iconData =
+      categoryIcons[category || 'default'] || categoryIcons['default'];
+    const IconComponent =
+      iconData.library === 'Ionicons' ? Ionicons : MaterialCommunityIcons;
+    return (
+      <IconComponent
+        name={iconData.icon as any}
+        size={32}
+        color={iconData.color}
+      />
+    );
   };
-
   const getCoverImageUrl = (articleId?: string, hasCoverImage?: boolean) => {
     if (!articleId || !hasCoverImage) return null;
     return ARTICLE_COVER_IMAGE_API_PATH(articleId);
   };
-
   const formatDate = (dateString?: string) => {
     if (!dateString) return '';
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'long',
-      day: 'numeric'
+      day: 'numeric',
     });
   };
-
   if (isFetchingArticle) {
     return (
       <View style={[styles.container, { paddingTop: insets.top }]}>
@@ -63,7 +100,6 @@ export const ArticleDetailScreen = ({ navigation, route }: Props) => {
       </View>
     );
   }
-
   if (!article) {
     return (
       <View style={[styles.container, { paddingTop: insets.top }]}>
@@ -83,12 +119,12 @@ export const ArticleDetailScreen = ({ navigation, route }: Props) => {
       </View>
     );
   }
-
-  const coverImageUrl = getCoverImageUrl(article.article_id, article.kv?.has_cover_image);
-
+  const coverImageUrl = getCoverImageUrl(
+    article.article_id,
+    article.kv?.has_cover_image
+  );
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
-      {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={handleBack}>
           <Ionicons name="arrow-back" size={24} color="#000" />
@@ -102,12 +138,10 @@ export const ArticleDetailScreen = ({ navigation, route }: Props) => {
           </TouchableOpacity>
         </View>
       </View>
-
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
       >
-        {/* Cover Image */}
         {coverImageUrl && (
           <Image
             source={{ uri: coverImageUrl }}
@@ -115,8 +149,6 @@ export const ArticleDetailScreen = ({ navigation, route }: Props) => {
             resizeMode="cover"
           />
         )}
-
-        {/* Article Header */}
         <View style={styles.articleHeader}>
           {/* Category Badge */}
           {article.kv?.category && (
@@ -125,19 +157,16 @@ export const ArticleDetailScreen = ({ navigation, route }: Props) => {
                 {getIconForCategory(article.kv.category)}
               </View>
               <Text style={styles.categoryText}>
-                {article.kv.category.split('-').map(word =>
-                  word.charAt(0).toUpperCase() + word.slice(1)
-                ).join(' ')}
+                {article.kv.category
+                  .split('-')
+                  .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+                  .join(' ')}
               </Text>
             </View>
           )}
-
-          {/* Title */}
           <Text style={styles.articleTitle}>
             {article.kv?.title || 'Untitled Article'}
           </Text>
-
-          {/* Meta Information */}
           <View style={styles.metaContainer}>
             {article.kv?.author && (
               <View style={styles.metaItem}>
@@ -148,43 +177,37 @@ export const ArticleDetailScreen = ({ navigation, route }: Props) => {
             {article.created_at && (
               <View style={styles.metaItem}>
                 <Ionicons name="calendar-outline" size={16} color="#666" />
-                <Text style={styles.metaText}>{formatDate(article.created_at)}</Text>
+                <Text style={styles.metaText}>
+                  {formatDate(article.created_at)}
+                </Text>
               </View>
             )}
           </View>
-
-          {/* Status Badge (if draft or scheduled) */}
           {article.kv?.status && article.kv.status !== 'published' && (
-            <View style={[
-              styles.statusBadge,
-              article.kv.status === 'draft' && styles.draftBadge,
-              article.kv.status === 'scheduled' && styles.scheduledBadge,
-            ]}>
+            <View
+              style={[
+                styles.statusBadge,
+                article.kv.status === 'draft' && styles.draftBadge,
+                article.kv.status === 'scheduled' && styles.scheduledBadge,
+              ]}
+            >
               <Text style={styles.statusText}>
                 {article.kv.status.toUpperCase()}
               </Text>
             </View>
           )}
         </View>
-
-        {/* Divider */}
         <View style={styles.divider} />
-
-        {/* Article Content */}
         <View style={styles.contentContainer}>
           <Text style={styles.articleContent}>
             {article.kv?.content || 'No content available.'}
           </Text>
         </View>
-
-        {/* Footer */}
         <View style={styles.footer}>
           <Text style={styles.footerText}>
             Last updated: {formatDate(article.updated_at || article.created_at)}
           </Text>
         </View>
-
-        {/* Action Buttons */}
         <View style={styles.actionButtons}>
           <TouchableOpacity style={styles.actionButton}>
             <Ionicons name="bookmark-outline" size={20} color="#FF4C7C" />
@@ -192,11 +215,11 @@ export const ArticleDetailScreen = ({ navigation, route }: Props) => {
           </TouchableOpacity>
           <TouchableOpacity style={[styles.actionButton, styles.shareButton]}>
             <Ionicons name="share-social-outline" size={20} color="#fff" />
-            <Text style={[styles.actionButtonText, { color: '#fff' }]}>Share</Text>
+            <Text style={[styles.actionButtonText, { color: '#fff' }]}>
+              Share
+            </Text>
           </TouchableOpacity>
         </View>
-
-        {/* Related Articles Section */}
         <View style={styles.relatedSection}>
           <Text style={styles.relatedTitle}>Related Articles</Text>
           <Text style={styles.relatedSubtext}>Coming soon...</Text>
@@ -205,7 +228,6 @@ export const ArticleDetailScreen = ({ navigation, route }: Props) => {
     </View>
   );
 };
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,

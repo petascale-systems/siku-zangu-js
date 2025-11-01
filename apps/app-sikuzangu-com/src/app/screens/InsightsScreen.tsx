@@ -1,5 +1,13 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator, Image } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  ScrollView,
+  ActivityIndicator,
+  Image,
+} from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -8,18 +16,43 @@ import { NavbarCard } from '../components/App-nav-component';
 import { useArticlesPage } from '@siku-zangu/react';
 import { Article } from '@siku-zangu/core';
 import { ARTICLE_COVER_IMAGE_API_PATH } from '@siku-zangu/react';
-
 type Props = NativeStackScreenProps<RootStackParamList, 'Insights'>;
-const categoryIcons: Record<string, { icon: string; library: 'Ionicons' | 'MaterialCommunityIcons'; color: string }> = {
-  'body-education': { icon: 'brain', library: 'MaterialCommunityIcons', color: '#FF4C7C' },
-  'birth-control': { icon: 'male-female-outline', library: 'Ionicons', color: '#9C27B0' },
-  'lifestyle': { icon: 'flower-outline', library: 'Ionicons', color: '#FF6B9D' },
-  'nutrition': { icon: 'nutrition-outline', library: 'Ionicons', color: '#4CAF50' },
-  'mental-health': { icon: 'happy-outline', library: 'Ionicons', color: '#2196F3' },
-  'exercise': { icon: 'fitness-outline', library: 'Ionicons', color: '#FF9800' },
-  'default': { icon: 'document-text-outline', library: 'Ionicons', color: '#FF4C7C' },
+const categoryIcons: Record<
+  string,
+  {
+    icon: string;
+    library: 'Ionicons' | 'MaterialCommunityIcons';
+    color: string;
+  }
+> = {
+  'body-education': {
+    icon: 'brain',
+    library: 'MaterialCommunityIcons',
+    color: '#FF4C7C',
+  },
+  'birth-control': {
+    icon: 'male-female-outline',
+    library: 'Ionicons',
+    color: '#9C27B0',
+  },
+  lifestyle: { icon: 'flower-outline', library: 'Ionicons', color: '#FF6B9D' },
+  nutrition: {
+    icon: 'nutrition-outline',
+    library: 'Ionicons',
+    color: '#4CAF50',
+  },
+  'mental-health': {
+    icon: 'happy-outline',
+    library: 'Ionicons',
+    color: '#2196F3',
+  },
+  exercise: { icon: 'fitness-outline', library: 'Ionicons', color: '#FF9800' },
+  default: {
+    icon: 'document-text-outline',
+    library: 'Ionicons',
+    color: '#FF4C7C',
+  },
 };
-
 export const InsightsScreen = ({ navigation, route }: Props) => {
   const language = route.params?.lang ?? 'en';
   const userId = route.params?.userId;
@@ -28,7 +61,6 @@ export const InsightsScreen = ({ navigation, route }: Props) => {
   const [page, setPage] = useState(1);
   const pageSize = 20;
 
-  // Use the existing hook
   const { articlesPage, isFetchingArticlesPage } = useArticlesPage({
     page,
     size: pageSize,
@@ -36,30 +68,36 @@ export const InsightsScreen = ({ navigation, route }: Props) => {
   });
 
   const handleBack = () => navigation.goBack();
-
   const handleArticlePress = (article: Article) => {
-    // Navigate to article detail screen
     navigation.navigate('ArticleDetail', {
       articleId: article.article_id,
       lang: language,
-      userId
+      userId,
     });
   };
-
   const getIconForCategory = (category?: string) => {
-    const iconData = categoryIcons[category || 'default'] || categoryIcons['default'];
-    const IconComponent = iconData.library === 'Ionicons' ? Ionicons : MaterialCommunityIcons;
-    return <IconComponent name={iconData.icon as any} size={26} color={iconData.color} />;
+    const iconData =
+      categoryIcons[category || 'default'] || categoryIcons['default'];
+    const IconComponent =
+      iconData.library === 'Ionicons' ? Ionicons : MaterialCommunityIcons;
+    return (
+      <IconComponent
+        name={iconData.icon as any}
+        size={26}
+        color={iconData.color}
+      />
+    );
   };
-
   const getCoverImageUrl = (articleId?: string, hasCoverImage?: boolean) => {
     if (!articleId || !hasCoverImage) return null;
     return ARTICLE_COVER_IMAGE_API_PATH(articleId);
   };
-
   const renderArticleCard = (article: Article, index: number) => {
     const isPink = index % 3 === 1; // Make every 3rd card pink (0-indexed, so 1, 4, 7...)
-    const coverImageUrl = getCoverImageUrl(article.article_id, article.kv?.has_cover_image);
+    const coverImageUrl = getCoverImageUrl(
+      article.article_id,
+      article.kv?.has_cover_image
+    );
 
     return (
       <TouchableOpacity
@@ -75,18 +113,20 @@ export const InsightsScreen = ({ navigation, route }: Props) => {
             resizeMode="cover"
           />
         )}
-
-        <View style={[styles.iconCircle, isPink && { backgroundColor: '#fff' }]}>
+        <View
+          style={[styles.iconCircle, isPink && { backgroundColor: '#fff' }]}
+        >
           {getIconForCategory(article.kv?.category)}
         </View>
-
         <Text style={[styles.title, isPink && { color: '#fff' }]}>
           {article.kv?.title || 'Untitled Article'}
         </Text>
-
         {article.kv?.content && (
           <Text
-            style={[styles.description, isPink && { color: '#fff', opacity: 0.9 }]}
+            style={[
+              styles.description,
+              isPink && { color: '#fff', opacity: 0.9 },
+            ]}
             numberOfLines={3}
           >
             {article.kv.content.substring(0, 150)}...
@@ -94,11 +134,12 @@ export const InsightsScreen = ({ navigation, route }: Props) => {
         )}
 
         {article.kv?.author && (
-          <Text style={[styles.author, isPink && { color: '#fff', opacity: 0.8 }]}>
+          <Text
+            style={[styles.author, isPink && { color: '#fff', opacity: 0.8 }]}
+          >
             By {article.kv.author}
           </Text>
         )}
-
         <View style={[styles.button, isPink && styles.whiteButton]}>
           <Text style={[styles.buttonText, isPink && { color: '#FF4C7C' }]}>
             Read More
@@ -112,10 +153,8 @@ export const InsightsScreen = ({ navigation, route }: Props) => {
       </TouchableOpacity>
     );
   };
-
   const articles = articlesPage?.items || [];
   const totalPages = articlesPage?.totalPages || 1;
-
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
       <View style={styles.header}>
@@ -135,7 +174,9 @@ export const InsightsScreen = ({ navigation, route }: Props) => {
         <View style={styles.centerContent}>
           <Ionicons name="document-text-outline" size={48} color="#CCC" />
           <Text style={styles.emptyText}>No articles available yet</Text>
-          <Text style={styles.emptySubtext}>Check back soon for new content</Text>
+          <Text style={styles.emptySubtext}>
+            Check back soon for new content
+          </Text>
         </View>
       ) : (
         <ScrollView
@@ -147,27 +188,39 @@ export const InsightsScreen = ({ navigation, route }: Props) => {
           {totalPages > 1 && (
             <View style={styles.pagination}>
               <TouchableOpacity
-                style={[styles.pageButton, page === 1 && styles.pageButtonDisabled]}
-                onPress={() => setPage(p => Math.max(1, p - 1))}
+                style={[
+                  styles.pageButton,
+                  page === 1 && styles.pageButtonDisabled,
+                ]}
+                onPress={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page === 1 || isFetchingArticlesPage}
               >
-                <Ionicons name="chevron-back" size={20} color={page === 1 ? '#CCC' : '#FF4C7C'} />
+                <Ionicons
+                  name="chevron-back"
+                  size={20}
+                  color={page === 1 ? '#CCC' : '#FF4C7C'}
+                />
               </TouchableOpacity>
 
               <Text style={styles.pageText}>
                 Page {page} of {totalPages}
               </Text>
-
               <TouchableOpacity
-                style={[styles.pageButton, page === totalPages && styles.pageButtonDisabled]}
-                onPress={() => setPage(p => Math.min(totalPages, p + 1))}
+                style={[
+                  styles.pageButton,
+                  page === totalPages && styles.pageButtonDisabled,
+                ]}
+                onPress={() => setPage((p) => Math.min(totalPages, p + 1))}
                 disabled={page === totalPages || isFetchingArticlesPage}
               >
-                <Ionicons name="chevron-forward" size={20} color={page === totalPages ? '#CCC' : '#FF4C7C'} />
+                <Ionicons
+                  name="chevron-forward"
+                  size={20}
+                  color={page === totalPages ? '#CCC' : '#FF4C7C'}
+                />
               </TouchableOpacity>
             </View>
           )}
-
           {isFetchingArticlesPage && page > 1 && (
             <View style={styles.loadingMore}>
               <ActivityIndicator size="small" color="#FF4C7C" />
@@ -175,12 +228,10 @@ export const InsightsScreen = ({ navigation, route }: Props) => {
           )}
         </ScrollView>
       )}
-
       <NavbarCard navigation={navigation} language={language} userId={userId} />
     </View>
   );
 };
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
