@@ -97,9 +97,8 @@ export const ProfileScreen = ({ navigation, route }: Props) => {
       icon: '🔒',
       label: 'Change PIN',
       labelSw: 'Badilisha PIN',
-      /*  onPress: () =>
+      onPress: () =>
         navigation.navigate('ChangePin', { lang: language, userId }),
-        */
     },
     {
       id: 'cycle',

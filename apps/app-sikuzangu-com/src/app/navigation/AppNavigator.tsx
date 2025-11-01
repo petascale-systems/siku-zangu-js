@@ -18,6 +18,7 @@ import {LogEntryScreen} from '../screens/LogEntryScreen';
 import {ProfileScreen} from '../screens/UserProfileScreen'
 import {NotificationsScreen} from '../screens/NotificationsScreen'
 import {DeleteAccountScreen} from '../screens/DeleteAccountScreen'
+import {ChangePinScreen} from '../screens/ChangePinScreen'
 
 export type RootStackParamList = {
   Language: undefined;
@@ -38,6 +39,7 @@ export type RootStackParamList = {
   Profile: {lang: 'en' | 'sw'; userId: string};
   Notifications: {lang: 'en' | 'sw'; userId: string};
   DeleteAccount: {lang: 'en' | 'sw'; userId: string};
+  ChangePin: {lang: 'en' | 'sw'; userId: string};
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -66,6 +68,7 @@ export const AppNavigator = () => {
         <Stack.Screen name="Profile" component={ProfileScreen}/>
         <Stack.Screen name="Notifications" component={NotificationsScreen} />
         <Stack.Screen name="DeleteAccount" component={DeleteAccountScreen} />
+        <Stack.Screen name="ChangePin" component={ChangePinScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );
