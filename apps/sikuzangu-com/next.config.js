@@ -12,6 +12,9 @@ const nextConfig = {
     output: 'standalone',
     nx: {},
     serverExternalPackages: ["knex", "mysql2"],
+    images: {
+        domains: ['images.pexels.com', 'sikuzangu.org', 'placehold.co']
+    },
     async headers() {
         return [
             {

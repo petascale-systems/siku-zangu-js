@@ -1,10 +1,8 @@
 import {NextRequest} from "next/server";
 import {cookies} from "next/headers";
 import {APIError, handleAPIError} from "@siku-zangu/core";
-import {jwtVerify} from "jose";
 import {selectOneAdminByUserId} from "@siku-zangu/knex";
-
-const _sessionSecretKey = new TextEncoder().encode(process.env.S_JWT_SIGNING_KEY || 'IcAchOsEVerSewAChMarKoHI');
+import {verifyJWT} from "./verify-jwt.function";
 
 export async function GET(req: NextRequest) {
     return handleAPIError(async () => {
@@ -16,7 +14,7 @@ export async function GET(req: NextRequest) {
             });
         }
 
-        const {payload} = await jwtVerify(ausCookie, _sessionSecretKey, {algorithms: ['HS256']})
+        const {payload} = await verifyJWT(ausCookie);
         const admin = await selectOneAdminByUserId(payload.aud as string)
         return Response.json(admin, {status: 200})
     })
