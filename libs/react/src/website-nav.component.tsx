@@ -12,9 +12,9 @@ export function WebsiteNav({logo}: { logo: string | StaticImport }) {
 
   const navLinks = [
     { href: '/', label: 'Home' },
-    { href: '/features', label: 'Features' },
-    { href: '/about', label: 'About' },
-    { href: '/contact', label: 'Contact' },
+    { href: '/publicSite/features', label: 'Features' },
+    { href: '/publicSite/about', label: 'About' },
+    { href: '/publicSite/contact', label: 'Contact' },
   ];
 
   return (
