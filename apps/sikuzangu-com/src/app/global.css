@@ -43,6 +43,8 @@
     --color-tertiary-800: #293d63;
     --color-tertiary-900: #263554;
     --color-tertiary-950: #1a2237;
+    --color-neutral-dark-text: #333333;
+    --color-neutral-placeholder: #888888;
     --font-display: "Inter", sans-serif;
 }
 

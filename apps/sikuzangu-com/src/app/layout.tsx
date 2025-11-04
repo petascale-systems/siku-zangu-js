@@ -1,6 +1,8 @@
 import './global.css';
 import {ReactNode} from "react";
 import {createTheme, ThemeProvider} from 'flowbite-react'
+import { WebsiteFooter, WebsiteNav } from '@siku-zangu/react';
+import logo from '../../public/images/logo.png';
 
 const _sikuZanguOrgTheme = createTheme({
     button: {
@@ -54,9 +56,15 @@ export default function RootLayout({children,}: { children: ReactNode; }) {
     return (
         <ThemeProvider theme={_sikuZanguOrgTheme}>
             <html lang="en">
+
             <body className='w-full h-screen bg-white font-display'>
-            {children}
+            <WebsiteNav logo={logo} />
+           <main className='flex-1 mt-16'>
+             {children}
+           </main>
+            <WebsiteFooter logo={logo} />
             </body>
+
             </html>
         </ThemeProvider>
     );
