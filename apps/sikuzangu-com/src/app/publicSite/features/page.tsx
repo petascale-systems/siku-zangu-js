@@ -12,7 +12,7 @@ export default function FeaturesPage() {
     <div className="bg-primary-base">
       <section className="w-full px-4 sm:px-6 lg:px-8 py-12 sm:py-16 md:py-20">
         <div className="max-w-7xl mx-auto text-center space-y-6">
-          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 leading-tight">
             Your Cycle, Your Health,
             <span className="block text-primary">Your Guide</span>
           </h1>
