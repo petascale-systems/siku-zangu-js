@@ -34,19 +34,19 @@ export function WebsiteFooter({ logo }: { logo: string | StaticImport }) {
         </div>
         <div className='flex flex-col gap-4'>
           <h3 className='text-xl font-bold mb-2'>Company</h3>
-          <Link href={'/about'} className='text-gray-300 hover:text-white transition-colors border-b border-transparent hover:border-white w-fit'>
+          <Link href={'/publicSite/about'} className='text-gray-300 hover:text-white transition-colors border-b border-transparent hover:border-white w-fit'>
             About us
           </Link>
-          <Link href={'/privacy'} className='text-gray-300 hover:text-white transition-colors border-b border-transparent hover:border-white w-fit'>
+          <Link href={'/publicSite/privacy-policy'} className='text-gray-300 hover:text-white transition-colors border-b border-transparent hover:border-white w-fit'>
             Privacy Policy
           </Link>
-          <Link href={'/terms'} className='text-gray-300 hover:text-white transition-colors border-b border-transparent hover:border-white w-fit'>
+          <Link href={'/publicSite/terms-of-service'} className='text-gray-300 hover:text-white transition-colors border-b border-transparent hover:border-white w-fit'>
             Terms of Service
           </Link>
-          <Link href={'/contact'} className='text-gray-300 hover:text-white transition-colors border-b border-transparent hover:border-white w-fit'>
+          <Link href={'/publicSite/contact'} className='text-gray-300 hover:text-white transition-colors border-b border-transparent hover:border-white w-fit'>
             Contact us
           </Link>
-          <Link href={'/delete-account'} className='text-gray-300 hover:text-white transition-colors border-b border-transparent hover:border-white w-fit'>
+          <Link href={'/publicSite/delete-account'} className='text-gray-300 hover:text-white transition-colors border-b border-transparent hover:border-white w-fit'>
             Delete Account
           </Link>
         </div>
