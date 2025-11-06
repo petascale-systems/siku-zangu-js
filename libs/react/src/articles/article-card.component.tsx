@@ -1,5 +1,3 @@
-"use client"
-
 import {Article, ArticleStatus} from "@siku-zangu/core";
 import Link from "next/link";
 import {useEffect, useState} from "react";

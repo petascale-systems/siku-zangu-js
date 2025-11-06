@@ -1,12 +1,8 @@
-"use client"
-
 import {ARTICLES_API_PATH} from './use-articles-page.function'
 import {useEffect, useState} from "react";
 import {APIError, Article} from "@siku-zangu/core";
 import {getJSON} from "../get-json.function";
 import {patchJSON} from "../patch-json.function";
-
-
 import {postJSON} from "../post-json.function";
 
 export const ARTICLE_BY_ID_API_PATH = (id?: string) => `${ARTICLES_API_PATH}/${id}`;

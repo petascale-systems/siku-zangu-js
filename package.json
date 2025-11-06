@@ -36,6 +36,7 @@
     "react-native-svg": "~15.11.2",
     "react-native-svg-transformer": "~1.5.1",
     "react-native-web": "~0.20.0",
+    "recharts": "^3.3.0",
     "zod": "^4.1.11"
   },
   "devDependencies": {
