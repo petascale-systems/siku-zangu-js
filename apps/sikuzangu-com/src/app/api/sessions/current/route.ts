@@ -9,9 +9,7 @@ export async function GET(req: NextRequest) {
         const store = await cookies()
         const ausCookie = store.get('_aus')?.value
         if (!ausCookie) {
-            return Response.json({status: 401, message: 'Unauthorised'} as APIError, {
-                status: 500,
-            });
+            return Response.json({status: 401, message: 'Unauthorised'} as APIError, { status: 401 });
         }
 
         const {payload} = await verifyJWT(ausCookie);

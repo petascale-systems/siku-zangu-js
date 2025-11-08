@@ -1,5 +1,6 @@
-import {FetchParams} from "./fetch-params.model";
+import {UsersFetchParams} from "./users-fetch-params.model";
+import {AdminRole} from "./admin.model";
 
-export type AdminsFetchParams = FetchParams & {
-    q?: string
-}
+export type AdminsFetchParams = UsersFetchParams & {
+    role?: AdminRole
+};

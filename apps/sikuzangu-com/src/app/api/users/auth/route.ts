@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
       throw { status: 401, message: 'Invalid phone number or PIN' } as APIError;
     }
 
-    if (!user.kv.pin) {
+    if (!user?.kv?.pin) {
       throw {
         status: 500,
         message: 'User has no stored PIN',
@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
       } as APIError;
     }
 
-    if (!(await bcrypt.compare(pin, user.kv.pin))) {
+    if (!(await bcrypt.compare(pin, user?.kv?.pin || ''))) {
       throw { status: 401, message: 'Invalid phone number or PIN' } as APIError;
     }
 
@@ -70,7 +70,7 @@ export async function POST(req: NextRequest) {
 
     const tokenPayload = {
       user_id: user.user_id,
-      phone_number: user.kv.phone_number,
+      phone_number: user?.kv?.phone_number,
       iat: Math.floor(Date.now() / 1000),
     };
 

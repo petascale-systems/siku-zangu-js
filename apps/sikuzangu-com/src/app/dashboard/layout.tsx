@@ -1,7 +1,7 @@
 "use client"
 
-import React, {Suspense} from "react";
-import {NavLink} from "@siku-zangu/react";
+import React, {Suspense, useEffect} from "react";
+import {NavLink, useCurrentSessionAdmin} from "@siku-zangu/react";
 import {
     ArrowTrendingUpIcon,
     BellIcon,
@@ -13,6 +13,7 @@ import {
 } from "@heroicons/react/24/outline";
 
 export default function Layout({children}: { children: React.ReactNode }) {
+    const {admin, isFetchingAdmin} = useCurrentSessionAdmin();
     return (
         <div className='bg-inherit h-full flex divide-x divide-gray-200'>
             <nav className='min-w-64 h-full flex flex-col divide-y divide-gray-200'>

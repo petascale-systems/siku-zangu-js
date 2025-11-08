@@ -22,6 +22,8 @@ steps:
         from_secret: _ATLASGO_VAR_DATABASE
       ATLASGO_URL:
         from_secret: _ATLASGO_URL
+      S_BREVO_API_KEY:
+        from_secret: _S_BREVO_API_KEY
     depends_on:
       - docker-build
     commands:
@@ -39,6 +41,7 @@ steps:
         --env=S_DATABASE_NAME=$S_DATABASE_NAME 
         --env=ATLASGO_VAR_DATABASE=$ATLASGO_VAR_DATABASE 
         --env=ATLASGO_URL=$ATLASGO_URL 
+        --env=S_BREVO_API_KEY=$S_BREVO_API_KEY 
         sikuzangu-com:${DRONE_TAG}
 trigger:
   event:
