@@ -18,7 +18,6 @@ export default function LoginPage() {
     const {admin, login, isLoggingIn} = useCurrentSessionAdmin()
 
     const _handleSubmitBtnClick = (e: FormEvent<HTMLFormElement>) => {
-        console.log(_formData)
         e.preventDefault()
         const result = EMAIL_AND_PASSWORD_SCHEMA.safeParse(_formData)
         _setFormError(result.error)
@@ -33,7 +32,7 @@ export default function LoginPage() {
 
     return (
         <div className='h-full overflow-y-auto'>
-            <WebsiteNav logo={logoPNG} />
+            <WebsiteNav logo={logoPNG}/>
             <div className='flex flex-col justify-center items-center gap-6 h-[calc(100%-4rem)] mt-16'>
                 <div className='flex gap-4 items-center'>
                     <Image src={logoPNG} alt={''}/>

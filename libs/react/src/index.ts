@@ -1,6 +1,7 @@
 export * from './users'
 export * from './admins'
 export * from './articles'
+export * from './user-password-changes'
 export {useAccessToken} from './users/use-accessToken'
 export * from './table.component'
 export * from './nav-link.component'

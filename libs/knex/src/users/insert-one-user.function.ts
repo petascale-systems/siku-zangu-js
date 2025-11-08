@@ -92,7 +92,7 @@ export async function insertOneUser(user: User) {
         } as APIError);
     }
 
-    if (parsedUser.data.kv.email) {
+    if (parsedUser.data?.kv?.email) {
         if (await isTakenEmail(parsedUser.data.kv.email)) {
             return Promise.reject({
                 status: 409,
@@ -102,7 +102,7 @@ export async function insertOneUser(user: User) {
         }
     }
 
-    if (parsedUser.data.kv.phone_number) {
+    if (parsedUser.data?.kv?.phone_number) {
         const isTaken = await isTakenPhoneNumber(parsedUser.data.kv.phone_number);
         if (isTaken) {
             return Promise.reject({
