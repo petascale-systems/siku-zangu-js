@@ -9,11 +9,18 @@ export async function GET(req: NextRequest) {
         const store = await cookies()
         const ausCookie = store.get('_aus')?.value
         if (!ausCookie) {
-            return Response.json({status: 401, message: 'Unauthorised'} as APIError, { status: 401 });
+            return Response.json({status: 401, message: 'Unauthorised'} as APIError, {status: 401});
         }
 
         const {payload} = await verifyJWT(ausCookie);
         const admin = await selectOneAdminByUserId(payload.aud as string)
         return Response.json(admin, {status: 200})
+    })
+}
+
+export async function DELETE(req: NextRequest) {
+    return handleAPIError(async () => {
+        const store = await cookies()
+        store.delete('_aus')
     })
 }

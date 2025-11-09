@@ -3,19 +3,17 @@
 import {EMAIL_AND_PASSWORD_SCHEMA, EmailAndPassword} from '@siku-zangu/core'
 import {Field, Input, Label} from '@headlessui/react'
 import {EyeIcon, EyeSlashIcon} from "@heroicons/react/24/outline";
-import {FormEvent, useEffect, useState} from "react";
+import {FormEvent, useState} from "react";
 import logoPNG from '../../../public/images/logo.png'
 import Image from "next/image";
 import {ZodError} from 'zod'
 import {useCurrentSessionAdmin, WebsiteNav} from "@siku-zangu/react";
-import {useRouter} from "next/navigation";
 
 export default function LoginPage() {
-    const _router = useRouter();
     const [_isPassword, _setIsPassword] = useState(true)
     const [_formData, _setFormData] = useState<EmailAndPassword>({email: '', password: ''})
     const [_formError, _setFormError] = useState<ZodError>()
-    const {admin, login, isLoggingIn} = useCurrentSessionAdmin()
+    const {login, isLoggingIn} = useCurrentSessionAdmin()
 
     const _handleSubmitBtnClick = (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault()
@@ -25,10 +23,6 @@ export default function LoginPage() {
 
         login(_formData).catch(() => console.log('Console', e))
     }
-
-    useEffect(() => {
-        if (admin) _router.push('/dashboard')
-    }, [admin]);
 
     return (
         <div className='h-full overflow-y-auto'>
