@@ -1,3 +1,5 @@
+"use client"
+
 import { useEffect, useState } from 'react';
 import { User, UpdateUser, APIError } from '@siku-zangu/core';
 import { getJSON } from '../get-json.function';

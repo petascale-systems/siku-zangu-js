@@ -5,11 +5,14 @@ import symptomImage from '../../../../public/images/symptoms.png';
 import insightImage from '../../../../public/images/insights.png';
 import languageImage from '../../../../public/images/language.png';
 import notificationImage from '../../../../public/images/notifications.png';
+import { WebsiteNav, WebsiteFooter } from '@siku-zangu/react';
+import logoPNG from '../../../../public/images/logo.png';
 
 
 export default function FeaturesPage() {
   return (
     <div className="bg-primary-base">
+      <WebsiteNav logo={logoPNG} />
       <section className="w-full px-4 sm:px-6 lg:px-8 py-12 sm:py-16 md:py-20">
         <div className="max-w-7xl mx-auto text-center space-y-6">
           <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 leading-tight">
@@ -286,6 +289,7 @@ export default function FeaturesPage() {
           </div>
         </div>
       </section>
+      <WebsiteFooter logo={logoPNG} />
     </div>
   );
 }

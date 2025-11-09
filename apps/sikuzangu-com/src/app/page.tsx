@@ -1,10 +1,13 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import homepageImage from '../../public/images/homepage.png';
+import { WebsiteNav, WebsiteFooter } from '@siku-zangu/react';
+import logoPNG from '../../public/images/logo.png';
 
 export default function HomePage() {
   return (
     <div className="bg-primary-base">
+      <WebsiteNav logo={logoPNG} />
       <section className="w-full px-4 sm:px-6 lg:px-8 py-12 sm:py-16 md:py-20">
         <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-10 lg:gap-12 items-center">
           <div className="space-y-4 sm:space-y-6 text-center lg:text-left order-2 lg:order-1">
@@ -164,6 +167,7 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+      <WebsiteFooter logo={logoPNG} />
     </div>
   );
 }

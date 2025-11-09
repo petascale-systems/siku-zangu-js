@@ -50,10 +50,8 @@ interface SymptomStat {
 export default function DashboardPage() {
   const [userFetchParams] = useState({ page: 1, size: 500 });
   const [articleFetchParams] = useState({ page: 1, size: 100 });
-
   const { usersPage, isFetchingUsersPage } = useUsersPage(userFetchParams);
   const { articlesPage, isFetchingArticlesPage } = useArticlesPage(articleFetchParams);
-
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [userActivity, setUserActivity] = useState<ActivityData[]>([]);
   const [symptomData, setSymptomData] = useState<SymptomData[]>([]);
@@ -62,16 +60,12 @@ export default function DashboardPage() {
   const [timeRange, setTimeRange] = useState('7days');
 
   useEffect(() => {
-    // Calculate stats from users and articles data
     if (usersPage?.items) {
       const totalUsers = usersPage.totalItems || usersPage.items.length;
-
-      // Calculate active users (users with active status)
       const activeUsers = usersPage.items.filter(user =>
         user.kv?.status === 'active'
       ).length;
 
-      // Count users who have tracking data as symptom reports
       const symptomReports = usersPage.items.filter(user =>
         user.kv?.prev_cycle_start_date ||
         user.kv?.avg_cycle_length_days ||
@@ -91,7 +85,6 @@ export default function DashboardPage() {
         symptomReportsChange: 3
       });
 
-      // Generate user activity data from actual user registration dates
       const activityByDay: { [key: string]: number } = {
         'Mon': 0, 'Tue': 0, 'Wed': 0, 'Thu': 0, 'Fri': 0, 'Sat': 0, 'Sun': 0
       };
@@ -111,7 +104,6 @@ export default function DashboardPage() {
         }
       });
 
-      // Scale values for better visualization
       const maxValue = Math.max(...Object.values(activityByDay));
       const scaleFactor = maxValue > 0 ? 1000 / maxValue : 1;
 
@@ -125,11 +117,9 @@ export default function DashboardPage() {
         { day: 'Sun', value: Math.round(activityByDay['Sun'] * scaleFactor) }
       ]);
 
-      // Process symptom/alert preferences from all users by month
       const symptomsByMonth: { [key: string]: { period: number; fertile: number; medication: number } } = {};
       const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
-      // Initialize last 6 months
       const currentDate = new Date();
       for (let i = 5; i >= 0; i--) {
         const date = new Date(currentDate.getFullYear(), currentDate.getMonth() - i, 1);
@@ -137,7 +127,6 @@ export default function DashboardPage() {
         symptomsByMonth[monthKey] = { period: 0, fertile: 0, medication: 0 };
       }
 
-      // Count alert preferences by user creation month
       usersPage.items.forEach(user => {
         if (user.created_at) {
           const createdDate = new Date(user.created_at);
@@ -157,7 +146,6 @@ export default function DashboardPage() {
         }
       });
 
-      // Convert to chart format
       const symptomChartData = Object.entries(symptomsByMonth).map(([month, data]) => ({
         month,
         periodAlerts: data.period,
@@ -167,10 +155,8 @@ export default function DashboardPage() {
 
       setSymptomData(symptomChartData);
 
-      // Generate recent activity from users and articles
       const activities: RecentActivity[] = [];
 
-      // Add recent user registrations
       const recentUsers = [...usersPage.items]
         .sort((a, b) => {
           const dateA = new Date(a.created_at || 0).getTime();
@@ -197,8 +183,6 @@ export default function DashboardPage() {
           }) : 'N/A'
         });
       });
-
-      // Add recent articles if available
       if (articlesPage?.items) {
         const recentArticles = [...articlesPage.items]
           .filter(article => article.created_at)
@@ -224,7 +208,6 @@ export default function DashboardPage() {
         });
       }
 
-      // Sort all activities by date
       activities.sort((a, b) => {
         const dateA = new Date(a.date).getTime();
         const dateB = new Date(b.date).getTime();
@@ -233,43 +216,24 @@ export default function DashboardPage() {
 
       setRecentActivity(activities.slice(0, 5));
 
-      // Calculate top logged symptoms
       const symptomCounts: { [key: string]: number } = {};
       let totalSymptomInstances = 0;
 
-      console.log('=== SYMPTOM ANALYSIS START ===');
-      console.log('Total users to process:', usersPage.items.length);
-
       usersPage.items.forEach((user, userIndex) => {
-        // Debug: Log first user's kv structure
         if (userIndex === 0) {
-          console.log('Sample user kv structure:', user.kv);
-          console.log('Sample selected_symptoms:', user.kv?.selected_symptoms);
-          console.log('Sample symptom_logs:', user.kv?.symptom_logs);
         }
-
-        // Count from selected_symptoms (user preferences)
         if (user.kv?.selected_symptoms) {
           try {
             let selectedSymptoms = user.kv.selected_symptoms;
-
-            console.log(`User ${userIndex} selected_symptoms type:`, typeof selectedSymptoms);
-            console.log(`User ${userIndex} selected_symptoms value:`, selectedSymptoms);
-
-            // Handle if it's a string that needs parsing
             if (typeof selectedSymptoms === 'string') {
               selectedSymptoms = JSON.parse(selectedSymptoms);
             }
 
-            console.log(`User ${userIndex} parsed selected_symptoms:`, selectedSymptoms);
-
-            // Now process the array
             if (Array.isArray(selectedSymptoms) && selectedSymptoms.length > 0) {
               selectedSymptoms.forEach((symptom: string) => {
                 if (symptom && typeof symptom === 'string') {
                   symptomCounts[symptom] = (symptomCounts[symptom] || 0) + 1;
                   totalSymptomInstances++;
-                  console.log(`Added symptom: ${symptom}, new count: ${symptomCounts[symptom]}`);
                 }
               });
             }
@@ -277,24 +241,18 @@ export default function DashboardPage() {
             console.error('Error parsing selected_symptoms:', e, user.kv?.selected_symptoms);
           }
         }
-
-        // Count from symptom_logs (actual logged symptoms)
         if (user.kv?.symptom_logs) {
           try {
             let symptomLogs = user.kv.symptom_logs;
 
-            // Handle if it's a string that needs parsing
             if (typeof symptomLogs === 'string') {
               symptomLogs = JSON.parse(symptomLogs);
             }
-
-            // Now process the array
             if (Array.isArray(symptomLogs) && symptomLogs.length > 0) {
               symptomLogs.forEach((log: any) => {
                 if (log && log.symptom && typeof log.symptom === 'string') {
                   symptomCounts[log.symptom] = (symptomCounts[log.symptom] || 0) + 1;
                   totalSymptomInstances++;
-                  console.log(`Added logged symptom: ${log.symptom}, new count: ${symptomCounts[log.symptom]}`);
                 }
               });
             }
@@ -303,10 +261,6 @@ export default function DashboardPage() {
           }
         }
       });
-
-      console.log('=== SYMPTOM ANALYSIS COMPLETE ===');
-      console.log('Total symptom instances found:', totalSymptomInstances);
-      console.log('Symptom counts:', symptomCounts);
 
       // Convert to array and sort by count
       const sortedSymptoms = Object.entries(symptomCounts)
@@ -317,8 +271,6 @@ export default function DashboardPage() {
         }))
         .sort((a, b) => b.count - a.count)
         .slice(0, 5);
-
-      console.log('Top 5 symptoms:', sortedSymptoms);
 
       setTopSymptoms(sortedSymptoms);
     }
@@ -368,9 +320,8 @@ export default function DashboardPage() {
   return (
     <div className="px-5 pb-5">
       <div className="w-full space-y-6 bg-gray-50 py-5">
-        {/* Header */}
         <div className="flex justify-between items-center">
-          <span className="text-xl font-medium">Dashboard Overview</span>
+          <span className="text-xl  text-neutral-dark-text font-medium">Dashboard Overview</span>
           <select
             value={timeRange}
             onChange={(e) => setTimeRange(e.target.value)}
@@ -381,8 +332,6 @@ export default function DashboardPage() {
             <option value="90days">Last 90 days</option>
           </select>
         </div>
-
-        {/* Stats Cards */}
         {stats && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <StatCard
@@ -415,10 +364,7 @@ export default function DashboardPage() {
             />
           </div>
         )}
-
-        {/* Charts and Top Symptoms */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          {/* User Activity Chart */}
           <Card className="shadow-sm lg:col-span-2">
             <h3 className="text-lg font-medium mb-4">User Activity (Last 7 Days)</h3>
             {isFetchingUsersPage ? (
@@ -443,8 +389,6 @@ export default function DashboardPage() {
               </ResponsiveContainer>
             )}
           </Card>
-
-          {/* Top Logged Symptoms */}
           <Card className="shadow-sm">
             <h3 className="text-lg font-medium mb-4">Top Logged Symptoms</h3>
             {isFetchingUsersPage ? (
@@ -482,8 +426,6 @@ export default function DashboardPage() {
             )}
           </Card>
         </div>
-
-        {/* Alert Preferences Chart */}
         <div className="grid grid-cols-1 gap-4">
           <Card className="shadow-sm">
             <h3 className="text-lg font-medium mb-4">User Alert Preferences (Last 6 Months)</h3>
@@ -507,8 +449,6 @@ export default function DashboardPage() {
             )}
           </Card>
         </div>
-
-        {/* Recent Activity */}
         <Card className="shadow-sm">
           <h3 className="text-lg font-medium mb-4">Recent Activity</h3>
           {isFetchingUsersPage || isFetchingArticlesPage ? (

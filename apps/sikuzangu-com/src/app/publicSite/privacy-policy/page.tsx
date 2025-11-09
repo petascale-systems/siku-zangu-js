@@ -1,6 +1,10 @@
+import { WebsiteNav, WebsiteFooter } from '@siku-zangu/react';
+import logoPNG from '../../../../public/images/logo.png';
+
 export default function PrivacyPolicyPage() {
   return (
     <div className="bg-primary-base">
+      <WebsiteNav logo={logoPNG} />
       <section className="w-full px-4 sm:px-6 lg:px-8 py-12 sm:py-16 md:py-20">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-8 sm:mb-12">
@@ -191,6 +195,7 @@ export default function PrivacyPolicyPage() {
           </div>
         </div>
       </section>
+      <WebsiteFooter logo={logoPNG} />
     </div>
   );
 }
