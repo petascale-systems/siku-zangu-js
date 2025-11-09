@@ -13,7 +13,8 @@ import {UpdatingSymptomsMoodsScreen} from '../screens/UpdatingSymptomsMoodsScree
 import {UpdatingMedicationScreen} from '../screens/UpdatingMedicationScreen';
 import {CalenderScreen } from '../screens/CalenderScreen';
 import {InsightsScreen} from '../screens/InsightsScreen';
-import {ArticleDetailScreen} from '../screens/ArticleDetailScreen'
+import {HomeScreen} from '../screens/HomeScreen';
+import {LogEntryScreen} from '../screens/LogEntryScreen';
 
 export type RootStackParamList = {
   Language: undefined;
@@ -29,7 +30,8 @@ export type RootStackParamList = {
   UpdatingMedication: {lang: 'en' | 'sw'; userId: string};
   Calender: {lang: 'en' | 'sw'; userId: string};
   Insights: {lang: 'en' | 'sw'; userId: string};
-  ArticleDetail: { articleId?: string; lang: string; userId?: string };
+  Dashboard: {lang: 'en' | 'sw'; userId: string};
+  AddLog: {lang: 'en' | 'sw'; userId: string};
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -53,7 +55,8 @@ export const AppNavigator = () => {
         <Stack.Screen name="UpdatingMedication" component={UpdatingMedicationScreen}/>
         <Stack.Screen name="Calender" component={CalenderScreen} />
         <Stack.Screen name="Insights" component={InsightsScreen} />
-        <Stack.Screen name="ArticleDetail" component={ArticleDetailScreen} />
+        <Stack.Screen name="Dashboard" component={HomeScreen}/>
+        <Stack.Screen name="AddLog" component={LogEntryScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

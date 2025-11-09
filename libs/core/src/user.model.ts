@@ -24,6 +24,22 @@ export type User = {
         receive_fertile_alerts?: boolean;
         receive_medication_tips?: boolean;
         receive_insights_tips?: boolean;
+        selected_symptoms?: string[];
+        selected_moods?: string[];
+        selected_medications?: string[];
+
+      symptom_logs?: Array<{
+        symptom: string;
+        timestamp: string;
+      }>;
+      mood_logs?: Array<{
+        mood: string;
+        timestamp: string;
+      }>;
+      medication_logs?: Array<{
+        medication: string;
+        timestamp: string;
+      }>;
     };
 };
 
@@ -52,5 +68,21 @@ export const USER_ZOD_SCHEMA = z.object({
         receive_fertile_alerts: z.boolean().optional(),
         receive_medication_tips: z.boolean().optional(),
         receive_insights_tips: z.boolean().optional(),
+        selected_symptoms: z.array(z.string()).optional(),
+        selected_moods: z.array(z.string()).optional(),
+        selected_medications: z.array(z.string()).optional(),
+
+      symptom_logs: z.array(z.object({
+        symptom: z.string(),
+        timestamp: z.string(),
+      })).optional(),
+      mood_logs: z.array(z.object({
+        mood: z.string(),
+        timestamp: z.string(),
+      })).optional(),
+      medication_logs: z.array(z.object({
+        medication: z.string(),
+        timestamp: z.string(),
+      })).optional(),
     }),
 });

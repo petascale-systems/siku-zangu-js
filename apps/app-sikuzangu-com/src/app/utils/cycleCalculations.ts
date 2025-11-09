@@ -8,9 +8,35 @@ export interface CycleData {
   daysUntilPeriod: number;
   daysInMonth: number;
 }
-export const getDaysInMonth = (month: number, year: number): number => {
-  return new Date(year, month + 1, 0).getDate();
-};
+
+export interface CyclePhaseInsight {
+  phase: string;
+  text: string;
+}
+
+export interface CycleMetrics {
+  daysUntilPeriod: number;
+  ovulationDate: Date;
+  nextPeriodDate: Date;
+  cycleLength: number;
+  progress: number;
+  daysUntilOvulation: number;
+  fertileDaysRemaining: number;
+  dayInCycle: number;
+}
+
+export interface MoodConfig {
+  emoji: string;
+  label: string;
+}
+
+export interface SymptomConfig {
+  icon: any;
+  color: string;
+  label: string;
+}
+export const getDaysInMonth = (month: number, year: number): number =>
+  new Date(year, month + 1, 0).getDate();
 
 export const getMostRecentCycleStart = (
   prevCycleStartDate: string,
@@ -23,35 +49,32 @@ export const getMostRecentCycleStart = (
   const refDate = new Date(referenceDate);
   refDate.setHours(0, 0, 0, 0);
 
-  const daysSincePrevCycle = Math.floor(
+  const daysSincePrev = Math.floor(
     (refDate.getTime() - prevStart.getTime()) / (1000 * 60 * 60 * 24)
   );
-  const completeCycles = Math.floor(daysSincePrevCycle / avgCycleLength);
+  const completeCycles = Math.floor(daysSincePrev / avgCycleLength);
 
-  const mostRecentStart = new Date(prevStart);
-  mostRecentStart.setDate(
-    mostRecentStart.getDate() + completeCycles * avgCycleLength
-  );
-
-  return mostRecentStart;
+  const mostRecent = new Date(prevStart);
+  mostRecent.setDate(mostRecent.getDate() + completeCycles * avgCycleLength);
+  return mostRecent;
 };
 
 export const getNextCycleStart = (
   mostRecentCycleStart: Date,
   avgCycleLength: number
 ): Date => {
-  const nextStart = new Date(mostRecentCycleStart);
-  nextStart.setDate(nextStart.getDate() + avgCycleLength);
-  return nextStart;
+  const next = new Date(mostRecentCycleStart);
+  next.setDate(next.getDate() + avgCycleLength);
+  return next;
 };
 
 export const getOvulationDate = (
   nextCycleStart: Date,
   daysBeforePeriod = 14
 ): Date => {
-  const ovulation = new Date(nextCycleStart);
-  ovulation.setDate(ovulation.getDate() - daysBeforePeriod);
-  return ovulation;
+  const ov = new Date(nextCycleStart);
+  ov.setDate(ov.getDate() - daysBeforePeriod);
+  return ov;
 };
 
 export const getFertilityWindow = (
@@ -79,17 +102,12 @@ export const getDaysInRange = (
   const monthStart = new Date(year, month, 1);
   const monthEnd = new Date(year, month, daysInMonth);
 
-  if (startDate > monthEnd || endDate < monthStart) {
-    return days;
-  }
+  if (startDate > monthEnd || endDate < monthStart) return days;
 
-  for (let day = 1; day <= daysInMonth; day++) {
-    const currentDate = new Date(year, month, day);
-    if (currentDate >= startDate && currentDate <= endDate) {
-      days.push(day);
-    }
+  for (let d = 1; d <= daysInMonth; d++) {
+    const current = new Date(year, month, d);
+    if (current >= startDate && current <= endDate) days.push(d);
   }
-
   return days;
 };
 
@@ -99,12 +117,221 @@ export const getDaysUntilPeriod = (
 ): number => {
   const today = new Date(referenceDate);
   today.setHours(0, 0, 0, 0);
-
-  const daysUntil = Math.ceil(
+  const diff = Math.ceil(
     (nextPeriodDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
   );
+  return Math.max(0, diff);
+};
 
-  return Math.max(0, daysUntil);
+export const getMoodConfig = (language = 'en'): Record<string, MoodConfig> => ({
+  happy: { emoji: '😊', label: language === 'en' ? 'Happy' : 'Furaha' },
+  sad: { emoji: '😢', label: language === 'en' ? 'Sad' : 'Huzuni' },
+  tired: { emoji: '😴', label: language === 'en' ? 'Tired' : 'Kuchoka' },
+  angry: { emoji: '😠', label: language === 'en' ? 'Angry' : 'Hasira' },
+  in_love: { emoji: '😍', label: language === 'en' ? 'In Love' : 'Mapenzi' },
+  calm: { emoji: '😌', label: language === 'en' ? 'Calm' : 'Utulivu' },
+  anxious: { emoji: '😰', label: language === 'en' ? 'Anxious' : 'Wasiwasi' },
+  curious: { emoji: '🤔', label: language === 'en' ? 'Curious' : 'Udadisi' },
+});
+
+export const getSymptomConfig = (language = 'en'): Record<string, SymptomConfig> => ({
+  cramps: {
+    icon: 'fitness',
+    color: '#F59E0B',
+    label: language === 'en' ? 'Cramps' : 'Maumivu ya Tumbo',
+  },
+  fatigue: {
+    icon: 'flash-outline',
+    color: '#8B5CF6',
+    label: language === 'en' ? 'Fatigue' : 'Uchovu',
+  },
+  bloating: {
+    icon: 'water',
+    color: '#3B82F6',
+    label: language === 'en' ? 'Bloating' : 'Kuvimba',
+  },
+  tender_breast: {
+    icon: 'female',
+    color: '#EC4899',
+    label: language === 'en' ? 'Tender Breast' : 'Matiti Yanayouma',
+  },
+  backache: {
+    icon: 'body-outline',
+    color: '#EF4444',
+    label: language === 'en' ? 'Backache' : 'Maumivu ya Mgongo',
+  },
+  headache: {
+    icon: 'medkit',
+    color: '#10B981',
+    label: language === 'en' ? 'Headache' : 'Maumivu ya Kichwa',
+  },
+});
+
+export const getMostRecentMood = (
+  moodLogs: Array<{ mood: string; timestamp: string }> | undefined
+): string | null => {
+  if (!moodLogs || !Array.isArray(moodLogs) || moodLogs.length === 0) {
+    return null;
+  }
+
+  const sortedMoods = [...moodLogs].sort((a, b) => {
+    const timeA = new Date(a.timestamp).getTime();
+    const timeB = new Date(b.timestamp).getTime();
+    return timeB - timeA;
+  });
+
+  return sortedMoods[0]?.mood || null;
+};
+
+export const getRecentSymptoms = (
+  symptomLogs:
+    | Array<{
+        symptom: string;
+        timestamp: string;
+      }>
+    | undefined,
+  limit = 3
+): string[] => {
+  if (!symptomLogs || !Array.isArray(symptomLogs) || symptomLogs.length === 0) {
+    return [];
+  }
+
+  const sortedSymptoms = [...symptomLogs].sort((a, b) => {
+    const timeA = new Date(a.timestamp).getTime();
+    const timeB = new Date(b.timestamp).getTime();
+    return timeB - timeA;
+  });
+
+  const uniqueSymptoms: string[] = [];
+  const seen = new Set<string>();
+
+  for (const log of sortedSymptoms) {
+    if (!seen.has(log.symptom)) {
+      uniqueSymptoms.push(log.symptom);
+      seen.add(log.symptom);
+      if (uniqueSymptoms.length === limit) break;
+    }
+  }
+
+  return uniqueSymptoms;
+};
+
+export const calculateCycleMetrics = (
+  prevCycleStartDate: string | undefined,
+  avgCycleLength = 28
+): CycleMetrics => {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  if (!prevCycleStartDate) {
+    return {
+      daysUntilPeriod: 6,
+      ovulationDate: new Date(2025, 9, 10),
+      nextPeriodDate: new Date(2025, 9, 24),
+      cycleLength: 28,
+      progress: 0.75,
+      daysUntilOvulation: 12,
+      fertileDaysRemaining: 8,
+      dayInCycle: 18,
+    };
+  }
+
+  const mostRecentStart = getMostRecentCycleStart(
+    prevCycleStartDate,
+    avgCycleLength,
+    today
+  );
+
+  const nextPeriodDate = getNextCycleStart(mostRecentStart, avgCycleLength);
+  const ovulationDate = getOvulationDate(nextPeriodDate);
+  const { end: fertilityEnd } = getFertilityWindow(ovulationDate);
+  const daysUntilPeriod = getDaysUntilPeriod(nextPeriodDate, today);
+
+  const daysSinceCycleStart = Math.floor(
+    (today.getTime() - mostRecentStart.getTime()) / (1000 * 60 * 60 * 24)
+  );
+  const progress = Math.min(daysSinceCycleStart / avgCycleLength, 1);
+
+  const daysUntilOvulation = Math.max(
+    0,
+    Math.ceil(
+      (ovulationDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
+    )
+  );
+
+  const fertileDaysRemaining = Math.max(
+    0,
+    Math.ceil(
+      (fertilityEnd.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
+    )
+  );
+
+  const dayInCycle = (daysSinceCycleStart % avgCycleLength) + 1;
+
+  return {
+    daysUntilPeriod,
+    ovulationDate,
+    nextPeriodDate,
+    cycleLength: avgCycleLength,
+    progress,
+    daysUntilOvulation,
+    fertileDaysRemaining,
+    dayInCycle,
+  };
+};
+export const getCyclePhaseInsight = (
+  dayInCycle: number,
+  ovulationDate: Date,
+  avgPeriodLength = 6,
+  _avgCycleLength = 28,
+  language = 'en'
+): CyclePhaseInsight => {
+  const isSw = language === 'sw';
+
+  if (dayInCycle <= avgPeriodLength) {
+    return {
+      phase: isSw ? 'Hedhi' : 'Menstrual',
+      text: isSw
+        ? 'Siku za hedhi. Pumzika, nywa maji mengi, tumia kibanio cha joto.'
+        : 'Period days. Rest, hydrate, use a heating pad for cramps.',
+    };
+  }
+
+  const ovDay = ovulationDate.getDate();
+  const fertStart = ovDay - 5;
+  const fertEnd = ovDay + 1;
+
+  if (dayInCycle >= fertStart && dayInCycle <= fertEnd) {
+    if (dayInCycle === ovDay) {
+      return {
+        phase: isSw ? 'Uzazi' : 'Ovulation',
+        text: isSw
+          ? 'Leo unatoa yai! Kipindi cha juu cha uzazi.'
+          : "You're ovulating today! Peak fertility.",
+      };
+    }
+    return {
+      phase: isSw ? 'Dirisha la Uzazi' : 'Fertile Window',
+      text: isSw
+        ? 'Kipindi cha uzazi. Unaweza kuhisi na nguvu zaidi.'
+        : 'Fertile days. You may feel more energetic.',
+    };
+  }
+
+  if (dayInCycle <= ovDay - 6) {
+    return {
+      phase: isSw ? 'Folikula' : 'Follicular',
+      text: isSw
+        ? 'Nguvu zinaongezeka. Wakati mzuri wa mazoezi!'
+        : 'Energy rising. Great time for workouts!',
+    };
+  }
+
+  return {
+    phase: isSw ? 'Luteal' : 'Luteal',
+    text: isSw
+      ? 'Awamu ya luteal. Kula vyakula vya chuma. PMS inaweza kuja.'
+      : 'Luteal phase. Eat iron-rich foods. PMS may start.',
+  };
 };
 
 export const calculateCycleData = (
@@ -118,95 +345,55 @@ export const calculateCycleData = (
   today.setHours(0, 0, 0, 0);
 
   const daysInMonth = getDaysInMonth(currentMonth, currentYear);
-
-  const mostRecentCycleStart = getMostRecentCycleStart(
+  const mostRecentStart = getMostRecentCycleStart(
     prevCycleStartDate,
     avgCycleLength,
     today
   );
 
-  const nextCycleStart = getNextCycleStart(
-    mostRecentCycleStart,
-    avgCycleLength
-  );
+  const nextPeriod = getNextCycleStart(mostRecentStart, avgCycleLength);
+  const ovulation = getOvulationDate(nextPeriod);
+  const { start: fertStart, end: fertEnd } = getFertilityWindow(ovulation);
 
-  const followingCycleStart = getNextCycleStart(nextCycleStart, avgCycleLength);
-
-  const ovulationDate = getOvulationDate(nextCycleStart);
-
-  const { start: fertilityStart, end: fertilityEnd } =
-    getFertilityWindow(ovulationDate);
-
-  const periodDays: number[] = [];
-  const fertilityDays: number[] = [];
-  const ovulationDays: number[] = [];
-  const predictedDays: number[] = [];
-
-  const currentPeriodEnd = new Date(mostRecentCycleStart);
+  const currentPeriodEnd = new Date(mostRecentStart);
   currentPeriodEnd.setDate(currentPeriodEnd.getDate() + avgPeriodLength - 1);
 
-  periodDays.push(
-    ...getDaysInRange(
-      mostRecentCycleStart,
-      currentPeriodEnd,
-      currentMonth,
-      currentYear
-    )
+  const periodDays = getDaysInRange(
+    mostRecentStart,
+    currentPeriodEnd,
+    currentMonth,
+    currentYear
   );
 
-  const nextPeriodEnd = new Date(nextCycleStart);
+  const predictedDays: number[] = [];
+  const nextPeriodEnd = new Date(nextPeriod);
   nextPeriodEnd.setDate(nextPeriodEnd.getDate() + avgPeriodLength - 1);
 
-  if (nextCycleStart > today) {
+  if (nextPeriod > today) {
     predictedDays.push(
-      ...getDaysInRange(
-        nextCycleStart,
-        nextPeriodEnd,
-        currentMonth,
-        currentYear
-      )
+      ...getDaysInRange(nextPeriod, nextPeriodEnd, currentMonth, currentYear)
     );
   }
-
-  const followingPeriodEnd = new Date(followingCycleStart);
-  followingPeriodEnd.setDate(
-    followingPeriodEnd.getDate() + avgPeriodLength - 1
-  );
-
-  if (followingCycleStart > today) {
-    const followingDays = getDaysInRange(
-      followingCycleStart,
-      followingPeriodEnd,
-      currentMonth,
-      currentYear
-    );
-    followingDays.forEach((day) => {
-      if (!predictedDays.includes(day)) {
-        predictedDays.push(day);
-      }
-    });
+  const followingCycle = getNextCycleStart(nextPeriod, avgCycleLength);
+  if (followingCycle.getFullYear() === currentYear && followingCycle.getMonth() === currentMonth) {
+    const followingEnd = new Date(followingCycle);
+    followingEnd.setDate(followingEnd.getDate() + avgPeriodLength - 1);
+    const extra = getDaysInRange(followingCycle, followingEnd, currentMonth, currentYear);
+    extra.forEach(d => !predictedDays.includes(d) && predictedDays.push(d));
   }
 
-  fertilityDays.push(
-    ...getDaysInRange(fertilityStart, fertilityEnd, currentMonth, currentYear)
-  );
+  const fertilityDays = getDaysInRange(fertStart, fertEnd, currentMonth, currentYear);
+  const ovulationDays = getDaysInRange(ovulation, ovulation, currentMonth, currentYear);
 
-  const ovulationEnd = new Date(ovulationDate);
-  ovulationEnd.setDate(ovulationEnd.getDate() + 1);
-
-  ovulationDays.push(
-    ...getDaysInRange(ovulationDate, ovulationEnd, currentMonth, currentYear)
-  );
-
-  const daysUntilPeriod = getDaysUntilPeriod(nextCycleStart, today);
+  const daysUntilPeriod = getDaysUntilPeriod(nextPeriod, today);
 
   return {
     periodDays,
     fertilityDays,
     ovulationDays,
     predictedDays,
-    nextPeriodDate: nextCycleStart,
-    ovulationDate,
+    nextPeriodDate: nextPeriod,
+    ovulationDate: ovulation,
     daysUntilPeriod,
     daysInMonth,
   };
@@ -217,27 +404,19 @@ export const formatDate = (
   monthNames: string[],
   includeYear = false
 ): string => {
-  const monthName = monthNames[date.getMonth()];
-  const day = date.getDate();
-
-  if (includeYear) {
-    return `${monthName} ${day}, ${date.getFullYear()}`;
-  }
-
-  return `${monthName} ${day}`;
+  const m = monthNames[date.getMonth()];
+  const d = date.getDate();
+  return includeYear ? `${m} ${d}, ${date.getFullYear()}` : `${m} ${d}`;
 };
 
 export const formatDateRange = (
-  startDate: Date,
-  endDate: Date,
+  start: Date,
+  end: Date,
   monthNames: string[]
 ): string => {
-  const startMonth = monthNames[startDate.getMonth()].slice(0, 3);
-  const endMonth = monthNames[endDate.getMonth()].slice(0, 3);
-  const startDay = startDate.getDate();
-  const endDay = endDate.getDate();
-
-  return `${startMonth} ${startDay} – ${endMonth} ${endDay}`;
+  const sM = monthNames[start.getMonth()].slice(0, 3);
+  const eM = monthNames[end.getMonth()].slice(0, 3);
+  return `${sM} ${start.getDate()} – ${eM} ${end.getDate()}`;
 };
 
 export const getCircularCoordinates = (
@@ -248,37 +427,19 @@ export const getCircularCoordinates = (
   centerY: number
 ): { x: number; y: number; angle: number } => {
   const angle = ((day - 1) / totalDays) * (2 * Math.PI) - Math.PI / 2;
-  const x = centerX + radius * Math.cos(angle);
-  const y = centerY + radius * Math.sin(angle);
-
-  return { x, y, angle };
+  return {
+    x: centerX + radius * Math.cos(angle),
+    y: centerY + radius * Math.sin(angle),
+    angle,
+  };
 };
 
 export const MONTH_NAMES_EN = [
-  'January',
-  'February',
-  'March',
-  'April',
-  'May',
-  'June',
-  'July',
-  'August',
-  'September',
-  'October',
-  'November',
-  'December',
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December',
 ];
+
 export const MONTH_NAMES_SW = [
-  'Januari',
-  'Februari',
-  'Machi',
-  'Aprili',
-  'Mei',
-  'Juni',
-  'Julai',
-  'Agosti',
-  'Septemba',
-  'Oktoba',
-  'Novemba',
-  'Desemba',
+  'Januari', 'Februari', 'Machi', 'Aprili', 'Mei', 'Juni',
+  'Julai', 'Agosti', 'Septemba', 'Oktoba', 'Novemba', 'Desemba',
 ];

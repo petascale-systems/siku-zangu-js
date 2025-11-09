@@ -11,17 +11,12 @@
     "@react-native-picker/picker": "^2.11.2",
     "@react-navigation/native": "^7.1.17",
     "@react-navigation/native-stack": "^7.3.26",
-    "@tiptap/pm": "^3.8.0",
-    "@tiptap/react": "^3.8.0",
-    "@tiptap/starter-kit": "^3.8.0",
     "bcrypt-ts": "^7.1.0",
     "bcryptjs": "^3.0.2",
     "expo": "~53.0.10",
-    "expo-build-properties": "~0.14.8",
     "expo-splash-screen": "~0.30.9",
     "expo-status-bar": "~2.2.3",
     "expo-system-ui": "~5.0.8",
-    "flowbite-react": "^0.12.9",
     "jose": "^6.1.0",
     "jsonwebtoken": "^9.0.2",
     "knex": "^3.1.0",
@@ -36,7 +31,6 @@
     "react-native-svg": "~15.11.2",
     "react-native-svg-transformer": "~1.5.1",
     "react-native-web": "~0.20.0",
-    "recharts": "^3.3.0",
     "zod": "^4.1.11"
   },
   "devDependencies": {
@@ -114,10 +108,5 @@
     "vite": "^7.0.0",
     "vite-plugin-dts": "~4.5.0",
     "vitest": "^3.0.0"
-  },
-  "scripts": {
-    "postinstall": "flowbite-react register",
-    "android": "expo run:android",
-    "ios": "expo run:ios"
   }
 }
