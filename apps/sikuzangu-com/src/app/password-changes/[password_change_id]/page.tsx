@@ -9,12 +9,12 @@ import {ZodError} from 'zod'
 import {useUserPasswordChange, WebsiteNav} from "@siku-zangu/react";
 import {useParams} from "next/navigation";
 
-export default function LoginPage() {
+export default function PasswordChangeByLinkPage() {
     const {password_change_id: passwordChangeId} = useParams<{ password_change_id: string }>()
     const [_isPassword, _setIsPassword] = useState(true)
     const [_formData, _setFormData] = useState<Password>({password: '', confirm_password: ''})
     const [_formError, _setFormError] = useState<ZodError>()
-    const {changePassword, isFetchingPasswordChange} = useUserPasswordChange(passwordChangeId)
+    const {changePassword, isFetchingPasswordChange, isChangingPassword} = useUserPasswordChange(passwordChangeId)
 
     const _handleSubmitBtnClick = (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault()
@@ -84,7 +84,7 @@ export default function LoginPage() {
                             </div>
                         </Field>
 
-                        <button disabled={isFetchingPasswordChange} type='submit'
+                        <button disabled={isFetchingPasswordChange || isChangingPassword} type='submit'
                                 className='bg-primary text-white rounded-full w-full text-center py-2.5 text-sm font-medium'>
                             {'Submit'}
                         </button>
