@@ -12,16 +12,15 @@ async function fetchUserById(id: string): Promise<User> {
   return getJSON<User>(USER_BY_ID_API_PATH(id));
 }
 
-async function createUser(user: User): Promise<User> {
+export async function createUser(user: User): Promise<User> {
   return postJSON<User, User>(USERS_API_PATH, user);
 }
 
-async function updateUser(userId: string, user: UpdateUser): Promise<User> {
-  // @ts-ignore
+export async function updateUser(userId: string, user: UpdateUser) {
   return patchJSON<UpdateUser, User>(USER_BY_ID_API_PATH(userId), user);
 }
 
-async function deleteUserById(userId: string): Promise<undefined | User> {
+export async function deleteUserById(userId: string): Promise<undefined | User> {
   return deleteJSON<User>(USER_BY_ID_API_PATH(userId));
 }
 
@@ -32,11 +31,11 @@ export function useUser(userId?: string) {
   const [isDeletingUser, setIsDeletingUser] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  async function upsertUser(userData: User | UpdateUser): Promise<User | undefined> {
+  async function upsertUser(userData: User | UpdateUser): Promise<User | void> {
     setIsUpsertingUser(true);
     setError(null);
     try {
-      let upsertedUser: User;
+      let upsertedUser: User | void;
 
       if (userId) {
         upsertedUser = await updateUser(userId, userData);

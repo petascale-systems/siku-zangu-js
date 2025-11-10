@@ -3,7 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import {usePathname} from "next/navigation";
 
-export default function WebsiteNav({logo}: { logo: string | StaticImport }) {
+export function WebsiteNav({logo}: { logo: string | StaticImport }) {
     const pathname = usePathname();
     return (
         <nav className='flex justify-between items-center px-4 border-b border-gray-200 shadow-xs fixed top-0 z-5 bg-white w-full text-base h-16'>
