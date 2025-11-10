@@ -10,7 +10,7 @@
 
 # https://atlasgo.io/declarative/apply
 export ATLASGO_VAR_DATABASE=siku_zangu
-export ATLASGO_URL=maria://{USER}:{PWD}@{HOST}:3306/$ATLASGO_VAR_DATABASE
+export ATLASGO_URL=mysql://root:PetaPlay%40%23%246yty@localhost:33006/$ATLASGO_VAR_DATABASE
 atlas schema apply --url="$ATLASGO_URL" \
   --to=file://atlasgo/hcl \
   --var=database="$ATLASGO_VAR_DATABASE" \
