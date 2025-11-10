@@ -1,10 +1,12 @@
 'use server'
 
-import {APIError} from "libs/core/src";
+import {APIError} from "./api-error.model";
 
-export async function handleAPIError(fn: () => Promise<Response>) {
+export async function handleAPIError(fn: () => Promise<Response | void>) {
     try {
-        return await fn();
+        const response = await fn();
+        if (response) return response;
+        return new Response(null, {status: 204});
     } catch (e: any) {
         if (!e.status || !e.message) console.error(e);
         return Response.json(
