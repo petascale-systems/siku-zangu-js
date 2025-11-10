@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
 
         const {payload} = await verifyJWT(ausCookie);
         const admin = await selectOneAdminByUserId(payload.aud as string)
-        if (body.kv) body.kv.author = `${admin.kv.first_name} ${admin.kv.last_name}`;
+        if (body.kv) body.kv.author = `${admin?.kv?.first_name} ${admin?.kv?.last_name}`;
         const user = await insertOneArticle(body);
         return Response.json(user, {status: 201});
     })

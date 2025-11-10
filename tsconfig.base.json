@@ -18,7 +18,8 @@
       "@siku-zangu/core": ["libs/core/src/index.ts"],
       "@siku-zangu/knex": ["libs/knex/src/index.ts"],
       "@siku-zangu/react": ["libs/react/src/index.ts"],
-      "@siku-zangu/react-native": ["libs/react-native/src/index.ts"]
+      "@siku-zangu/react-native": ["libs/react-native/src/index.ts"],
+      "@siku-zangu/brevo": ["libs/brevo/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]

@@ -1,8 +1,9 @@
 import './global.css';
 import {ReactNode} from "react";
-import {createTheme, ThemeProvider} from 'flowbite-react'
+import {createTheme, theme, ThemeProvider} from 'flowbite-react'
 
 const _sikuZanguOrgTheme = createTheme({
+    ...theme,
     button: {
         base: 'hover:cursor-pointer font-normal rounded-md',
         color: {
@@ -47,10 +48,10 @@ const _sikuZanguOrgTheme = createTheme({
             "xl": "h-10 w-10",
             "2xl": "size-16",
         }
-    }
+    },
 })
 
-export default function RootLayout({children,}: { children: ReactNode; }) {
+export default function RootLayout({children}: { children: ReactNode; }) {
     return (
         <ThemeProvider theme={_sikuZanguOrgTheme}>
             <html lang="en">
