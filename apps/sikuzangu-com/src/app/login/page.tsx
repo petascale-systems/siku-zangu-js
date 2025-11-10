@@ -3,22 +3,19 @@
 import {EMAIL_AND_PASSWORD_SCHEMA, EmailAndPassword} from '@siku-zangu/core'
 import {Field, Input, Label} from '@headlessui/react'
 import {EyeIcon, EyeSlashIcon} from "@heroicons/react/24/outline";
-import {FormEvent, useEffect, useState} from "react";
+import {FormEvent, useState} from "react";
 import logoPNG from '../../../public/images/logo.png'
 import Image from "next/image";
 import {ZodError} from 'zod'
 import {useCurrentSessionAdmin, WebsiteNav} from "@siku-zangu/react";
-import {useRouter} from "next/navigation";
 
 export default function LoginPage() {
-    const _router = useRouter();
     const [_isPassword, _setIsPassword] = useState(true)
     const [_formData, _setFormData] = useState<EmailAndPassword>({email: '', password: ''})
     const [_formError, _setFormError] = useState<ZodError>()
-    const {admin, login, isLoggingIn} = useCurrentSessionAdmin()
+    const {login, isLoggingIn} = useCurrentSessionAdmin()
 
     const _handleSubmitBtnClick = (e: FormEvent<HTMLFormElement>) => {
-        console.log(_formData)
         e.preventDefault()
         const result = EMAIL_AND_PASSWORD_SCHEMA.safeParse(_formData)
         _setFormError(result.error)
@@ -27,13 +24,9 @@ export default function LoginPage() {
         login(_formData).catch(() => console.log('Console', e))
     }
 
-    useEffect(() => {
-        if (admin) _router.push('/dashboard')
-    }, [admin]);
-
     return (
         <div className='h-full overflow-y-auto'>
-            <WebsiteNav logo={logoPNG} />
+            <WebsiteNav logo={logoPNG}/>
             <div className='flex flex-col justify-center items-center gap-6 h-[calc(100%-4rem)] mt-16'>
                 <div className='flex gap-4 items-center'>
                     <Image src={logoPNG} alt={''}/>

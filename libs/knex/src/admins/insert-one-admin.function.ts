@@ -1,10 +1,14 @@
-import {Admin} from "@siku-zangu/core";
+import {Admin, ADMIN_ZOD_SCHEMA, APIError, zodErrorToApiError} from "@siku-zangu/core";
 import {DATABASE} from "../create-database.function";
 import {Knex} from "knex";
+import {isTakenEmail, isTakenPhoneNumber, userToKv} from "../users";
+import {randomUUID} from "node:crypto";
+import {TABLE_NAME_S_ADMIN, TABLE_NAME_S_USER_KV} from "../table-names";
 
 export const ADMIN_TABLE_COLUMN_ALIASES = {
     user_id: DATABASE.raw('lower(hex(_a.id_user))'),
     a_status: '_a.status',
+    role: '_a.role',
     created_at: '_u.created_at',
     updated_at: '_u.updated_at',
     first_name: '_first_name.v',
@@ -27,6 +31,7 @@ export function rowToAdmin(row: any) {
     return {
         user_id: row.user_id,
         status: row.a_status,
+        role: row.role,
         created_at: row.created_at,
         updated_at: row.updated_at,
         kv: {
@@ -67,6 +72,72 @@ export function buildAdminTableJoins(db: Knex | Knex.Transaction) {
         .leftJoin('s_user_kv as _receive_insights_tips', DATABASE.raw('_receive_insights_tips.id_user=_u.id_user and _receive_insights_tips.k="receive_insights_tips"'))
 }
 
-export function insertOneAdmin(admin: Admin): Admin {
-    return {} as Admin;
+export async function insertOneAdmin(admin: Admin) {
+    const parsedAdmin = ADMIN_ZOD_SCHEMA.safeParse(admin);
+    if (!parsedAdmin.success) {
+        return Promise.reject(zodErrorToApiError(parsedAdmin.error));
+    }
+
+    const adminKv = parsedAdmin.data.kv;
+    const kvArray = userToKv(parsedAdmin.data);
+    if (!adminKv?.email) {
+        return Promise.reject({
+            status: 400,
+            message: 'Bad request',
+            issues: [{path: ['kv', 'email'], error: 'E-mail is required'}]
+        });
+    }
+
+    if (!adminKv?.first_name) {
+        return Promise.reject({
+            status: 400,
+            message: 'Bad request',
+            issues: [{path: ['kv', 'first_name'], error: 'First name is required'}]
+        });
+    }
+
+    if (!adminKv?.last_name) {
+        return Promise.reject({
+            status: 400,
+            message: 'Bad request',
+            issues: [{path: ['kv', 'last_name'], error: 'Last name is required'}]
+        });
+    }
+
+    if (await isTakenEmail(adminKv.email)) {
+        return Promise.reject({
+            status: 409,
+            message: 'E-mail is taken',
+            issues: [{path: ['kv', 'email'], error: 'E-mail is taken'}],
+        });
+    }
+
+    if (adminKv?.phone_number && await isTakenPhoneNumber(adminKv.phone_number)) {
+        return Promise.reject({
+            status: 409,
+            message: 'Phone number is taken',
+            issues: [{path: ['kv', 'phone_number'], error: 'Phone number is taken'}],
+        })
+    }
+
+    const tx = await DATABASE.transaction();
+    const userId = DATABASE.fn.uuidToBin(randomUUID());
+
+    try {
+        await tx.insert({id_user: userId}).into('s_user');
+        await tx.insert(kvArray.map(kv => ({...kv, id_user: userId}))).into(TABLE_NAME_S_USER_KV);
+        await tx.insert({
+            id_user: userId,
+            status: parsedAdmin.data.status ?? 'active',
+            role: parsedAdmin.data.role ?? 'member'
+        }).into(TABLE_NAME_S_ADMIN);
+
+        const row = await buildAdminTableJoins(tx).where('_a.id_user', userId).first(ADMIN_TABLE_COLUMN_ALIASES);
+        await tx.commit();
+        return rowToAdmin(row);
+    } catch (e: any) {
+        console.error('insertOneAdmin: Error:', e);
+        await tx.rollback();
+        return Promise.reject({status: 500, message: 'Admin creation failed', details: e.message} as APIError);
+    }
 }
