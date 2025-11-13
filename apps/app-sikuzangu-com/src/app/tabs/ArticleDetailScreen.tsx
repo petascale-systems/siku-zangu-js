@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -10,11 +10,50 @@ import {
 } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../navigation/AppNavigator';
 import { useArticle, ARTICLE_COVER_IMAGE_API_PATH } from '@siku-zangu/react';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 
-type Props = NativeStackScreenProps<RootStackParamList, 'ArticleDetail'>;
+const translations = {
+  en: {
+    loadingArticle: 'Loading article...',
+    articleNotFound: 'Article not found',
+    goBack: 'Go Back',
+    saveArticle: 'Save Article',
+    share: 'Share',
+    relatedArticles: 'Related Articles',
+    comingSoon: 'Coming soon...',
+    lastUpdated: 'Last updated:',
+    noContent: 'No content available.',
+    categories: {
+      'body-education': 'Body Education',
+      'birth-control': 'Birth Control',
+      'lifestyle': 'Lifestyle',
+      'nutrition': 'Nutrition',
+      'mental-health': 'Mental Health',
+      'exercise': 'Exercise',
+    },
+  },
+  sw: {
+    loadingArticle: 'Inapakia makala...',
+    articleNotFound: 'Makala haijapatikana',
+    goBack: 'Rudi Nyuma',
+    saveArticle: 'Hifadhi Makala',
+    share: 'Shiriki',
+    relatedArticles: 'Makala Zinazohusiana',
+    comingSoon: 'Inakuja hivi karibuni...',
+    lastUpdated: 'Imesasishwa mwisho:',
+    noContent: 'Hakuna maudhui yanayopatikana.',
+    categories: {
+      'body-education': 'Elimu ya Mwili',
+      'birth-control': 'Uzazi wa Mpango',
+      'lifestyle': 'Mtindo wa Maisha',
+      'nutrition': 'Lishe',
+      'mental-health': 'Afya ya Akili',
+      'exercise': 'Mazoezi',
+    },
+  },
+};
+
 const categoryIcons: Record<
   string,
   {
@@ -52,13 +91,21 @@ const categoryIcons: Record<
   },
 };
 
-export const ArticleDetailScreen = ({ navigation, route }: Props) => {
-  const { articleId, lang, userId } = route.params;
+export default function ArticleDetailScreen() {
+  const router = useRouter();
+  const params = useLocalSearchParams();
   const insets = useSafeAreaInsets();
-  const { article, isFetchingArticle } = useArticle(articleId);
-  const handleBack = () => navigation.goBack();
 
-  const getIconForCategory = (category?: string) => {
+  const language = (params.lang as 'en' | 'sw') ?? 'en';
+  const userId = params.userId as string;
+  const articleId = params.articleId as string;
+
+  const { article, isFetchingArticle } = useArticle(articleId);
+  const t = translations[language];
+
+  const handleBack = useCallback(() => router.back(), [router]);
+
+  const getIconForCategory = useCallback((category?: string) => {
     const iconData =
       categoryIcons[category || 'default'] || categoryIcons['default'];
     const IconComponent =
@@ -70,74 +117,123 @@ export const ArticleDetailScreen = ({ navigation, route }: Props) => {
         color={iconData.color}
       />
     );
-  };
-  const getCoverImageUrl = (articleId?: string, hasCoverImage?: boolean) => {
-    if (!articleId || !hasCoverImage) return null;
-    return ARTICLE_COVER_IMAGE_API_PATH(articleId);
-  };
-  const formatDate = (dateString?: string) => {
-    if (!dateString) return '';
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    });
-  };
+  }, []);
+
+  const getCoverImageUrl = useCallback(
+    (articleId?: string, hasCoverImage?: boolean) => {
+      if (!articleId || !hasCoverImage) return null;
+      return ARTICLE_COVER_IMAGE_API_PATH(articleId);
+    },
+    []
+  );
+
+  const formatDate = useCallback(
+    (dateString?: string) => {
+      if (!dateString) return '';
+      const date = new Date(dateString);
+      const locale = language === 'sw' ? 'sw-KE' : 'en-US';
+      return date.toLocaleDateString(locale, {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+      });
+    },
+    [language]
+  );
+
+  const getCategoryName = useCallback(
+    (category: string) => {
+      return t.categories[category as keyof typeof t.categories] || category;
+    },
+    [t]
+  );
+
+  const coverImageUrl = useMemo(
+    () => getCoverImageUrl(article?.article_id, article?.kv?.has_cover_image),
+    [article, getCoverImageUrl]
+  );
   if (isFetchingArticle) {
     return (
       <View style={[styles.container, { paddingTop: insets.top }]}>
         <View style={styles.header}>
-          <TouchableOpacity style={styles.backButton} onPress={handleBack}>
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={handleBack}
+            accessibilityRole="button"
+            accessibilityLabel={t.goBack}
+          >
             <Ionicons name="arrow-back" size={24} color="#000" />
           </TouchableOpacity>
           <View style={{ width: 32 }} />
         </View>
         <View style={styles.centerContent}>
           <ActivityIndicator size="large" color="#FF4C7C" />
-          <Text style={styles.loadingText}>Loading article...</Text>
+          <Text style={styles.loadingText}>{t.loadingArticle}</Text>
         </View>
       </View>
     );
   }
+
   if (!article) {
     return (
       <View style={[styles.container, { paddingTop: insets.top }]}>
         <View style={styles.header}>
-          <TouchableOpacity style={styles.backButton} onPress={handleBack}>
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={handleBack}
+            accessibilityRole="button"
+            accessibilityLabel={t.goBack}
+          >
             <Ionicons name="arrow-back" size={24} color="#000" />
           </TouchableOpacity>
           <View style={{ width: 32 }} />
         </View>
         <View style={styles.centerContent}>
           <Ionicons name="alert-circle-outline" size={64} color="#FF4C7C" />
-          <Text style={styles.errorText}>Article not found</Text>
-          <TouchableOpacity style={styles.retryButton} onPress={handleBack}>
-            <Text style={styles.retryButtonText}>Go Back</Text>
+          <Text style={styles.errorText}>{t.articleNotFound}</Text>
+          <TouchableOpacity
+            style={styles.retryButton}
+            onPress={handleBack}
+            accessibilityRole="button"
+            accessibilityLabel={t.goBack}
+          >
+            <Text style={styles.retryButtonText}>{t.goBack}</Text>
           </TouchableOpacity>
         </View>
       </View>
     );
   }
-  const coverImageUrl = getCoverImageUrl(
-    article.article_id,
-    article.kv?.has_cover_image
-  );
+
+  // Main Content
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
       <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={handleBack}>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={handleBack}
+          accessibilityRole="button"
+          accessibilityLabel={t.goBack}
+        >
           <Ionicons name="arrow-back" size={24} color="#000" />
         </TouchableOpacity>
         <View style={styles.headerRight}>
-          <TouchableOpacity style={styles.iconButton}>
+          <TouchableOpacity
+            style={styles.iconButton}
+            accessibilityRole="button"
+            accessibilityLabel={t.saveArticle}
+          >
             <Ionicons name="bookmark-outline" size={22} color="#FF4C7C" />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.iconButton}>
+          <TouchableOpacity
+            style={styles.iconButton}
+            accessibilityRole="button"
+            accessibilityLabel={t.share}
+          >
             <Ionicons name="share-social-outline" size={22} color="#FF4C7C" />
           </TouchableOpacity>
         </View>
       </View>
+
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
@@ -147,26 +243,26 @@ export const ArticleDetailScreen = ({ navigation, route }: Props) => {
             source={{ uri: coverImageUrl }}
             style={styles.coverImage}
             resizeMode="cover"
+            accessibilityLabel={`${article.kv?.title} cover image`}
           />
         )}
+
         <View style={styles.articleHeader}>
-          {/* Category Badge */}
           {article.kv?.category && (
             <View style={styles.categoryBadge}>
               <View style={styles.categoryIcon}>
                 {getIconForCategory(article.kv.category)}
               </View>
               <Text style={styles.categoryText}>
-                {article.kv.category
-                  .split('-')
-                  .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-                  .join(' ')}
+                {getCategoryName(article.kv.category)}
               </Text>
             </View>
           )}
+
           <Text style={styles.articleTitle}>
             {article.kv?.title || 'Untitled Article'}
           </Text>
+
           <View style={styles.metaContainer}>
             {article.kv?.author && (
               <View style={styles.metaItem}>
@@ -183,6 +279,7 @@ export const ArticleDetailScreen = ({ navigation, route }: Props) => {
               </View>
             )}
           </View>
+
           {article.kv?.status && article.kv.status !== 'published' && (
             <View
               style={[
@@ -197,37 +294,51 @@ export const ArticleDetailScreen = ({ navigation, route }: Props) => {
             </View>
           )}
         </View>
+
         <View style={styles.divider} />
+
         <View style={styles.contentContainer}>
           <Text style={styles.articleContent}>
-            {article.kv?.content || 'No content available.'}
+            {article.kv?.content || t.noContent}
           </Text>
         </View>
+
         <View style={styles.footer}>
           <Text style={styles.footerText}>
-            Last updated: {formatDate(article.updated_at || article.created_at)}
+            {t.lastUpdated} {formatDate(article.updated_at || article.created_at)}
           </Text>
         </View>
+
         <View style={styles.actionButtons}>
-          <TouchableOpacity style={styles.actionButton}>
+          <TouchableOpacity
+            style={styles.actionButton}
+            accessibilityRole="button"
+            accessibilityLabel={t.saveArticle}
+          >
             <Ionicons name="bookmark-outline" size={20} color="#FF4C7C" />
-            <Text style={styles.actionButtonText}>Save Article</Text>
+            <Text style={styles.actionButtonText}>{t.saveArticle}</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={[styles.actionButton, styles.shareButton]}>
+          <TouchableOpacity
+            style={[styles.actionButton, styles.shareButton]}
+            accessibilityRole="button"
+            accessibilityLabel={t.share}
+          >
             <Ionicons name="share-social-outline" size={20} color="#fff" />
             <Text style={[styles.actionButtonText, { color: '#fff' }]}>
-              Share
+              {t.share}
             </Text>
           </TouchableOpacity>
         </View>
+
         <View style={styles.relatedSection}>
-          <Text style={styles.relatedTitle}>Related Articles</Text>
-          <Text style={styles.relatedSubtext}>Coming soon...</Text>
+          <Text style={styles.relatedTitle}>{t.relatedArticles}</Text>
+          <Text style={styles.relatedSubtext}>{t.comingSoon}</Text>
         </View>
       </ScrollView>
     </View>
   );
-};
+}
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -270,6 +381,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: '#666',
     fontWeight: '600',
+    textAlign: 'center',
   },
   retryButton: {
     marginTop: 20,

@@ -1,15 +1,14 @@
-import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../navigation/AppNavigator';
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
-import { PrimaryButton } from '../components/PrimaryButton';
+import { useRouter, useLocalSearchParams } from 'expo-router';
+import { PrimaryButton } from '@siku-zangu/react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAccessToken } from '@siku-zangu/react';
 import { APIError } from '@siku-zangu/core';
 
-type Props = NativeStackScreenProps<RootStackParamList, 'Login'>;
-
-export const LoginScreen = ({ navigation, route }: Props) => {
+export default function LoginScreen() {
+  const router = useRouter();
+  const params = useLocalSearchParams();
   const { loginUser, isLoggingIn, error } = useAccessToken();
 
   const [phone, setPhone] = useState('');
@@ -18,7 +17,7 @@ export const LoginScreen = ({ navigation, route }: Props) => {
   const [phoneError, setPhoneError] = useState('');
   const [pinError, setPinError] = useState('');
 
-  const language = route.params?.lang ?? 'en';
+  const language = (params.lang as 'en' | 'sw') ?? 'en';
   const displayCountryCode = '+255';
   const storageCountryCode = 'TZ';
 
@@ -87,14 +86,20 @@ export const LoginScreen = ({ navigation, route }: Props) => {
 
       Alert.alert(
         language === 'en' ? 'Success' : 'Mafanikio',
-        language === 'en' ? 'Logged in successfully!' : 'Umeingia kwa mafanikio!',
+        language === 'en'
+          ? 'Logged in successfully!'
+          : 'Umeingia kwa mafanikio!',
         [
           {
             text: language === 'en' ? 'OK' : 'Sawa',
-            onPress: () => navigation.navigate('Calender', {
-              lang: language,
-              userId: userId
-            }),
+            onPress: () =>
+              router.replace({
+                pathname: '/tabs/InsightsScreen',
+                params: {
+                  lang: language,
+                  userId: userId,
+                },
+              }),
           },
         ]
       );
@@ -115,6 +120,13 @@ export const LoginScreen = ({ navigation, route }: Props) => {
               : 'Kuingia kumeshindwa');
       Alert.alert(language === 'en' ? 'Error' : 'Hitilafu', errorMessage);
     }
+  };
+
+  const goToRegister = () => {
+    router.push({
+      pathname: '/auth/RegisterScreen',
+      params: { lang: language }
+    });
   };
 
   return (
@@ -188,13 +200,13 @@ export const LoginScreen = ({ navigation, route }: Props) => {
       </View>
       <Text style={styles.footer}>
         {language === 'en' ? "Don't have an Account? " : 'Huna akaunti? '}
-        <TouchableOpacity onPress={() => navigation.navigate('Register', { lang: language })}>
+        <TouchableOpacity onPress={goToRegister}>
           <Text style={styles.loginLink}>{language === 'en' ? 'Register' : 'Jisajili'}</Text>
         </TouchableOpacity>
       </Text>
     </View>
   );
-};
+}
 
 const styles = StyleSheet.create({
   container: {

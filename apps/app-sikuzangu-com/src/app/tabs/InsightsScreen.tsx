@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -10,13 +10,53 @@ import {
 } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../navigation/AppNavigator';
-import { NavbarCard } from '../components/App-nav-component';
+import { NavbarCard } from '@siku-zangu/react-native';
 import { useArticlesPage } from '@siku-zangu/react';
 import { Article } from '@siku-zangu/core';
 import { ARTICLE_COVER_IMAGE_API_PATH } from '@siku-zangu/react';
-type Props = NativeStackScreenProps<RootStackParamList, 'Insights'>;
+import { useLocalSearchParams, useRouter } from 'expo-router';
+
+const translations = {
+  en: {
+    title: 'Insights and Tips',
+    loadingArticles: 'Loading articles...',
+    noArticles: 'No articles available yet',
+    checkBackSoon: 'Check back soon for new content',
+    readMore: 'Read More',
+    by: 'By',
+    page: 'Page',
+    of: 'of',
+    untitledArticle: 'Untitled Article',
+    categories: {
+      'body-education': 'Body Education',
+      'birth-control': 'Birth Control',
+      'lifestyle': 'Lifestyle',
+      'nutrition': 'Nutrition',
+      'mental-health': 'Mental Health',
+      'exercise': 'Exercise',
+    },
+  },
+  sw: {
+    title: 'Maarifa na Vidokezo',
+    loadingArticles: 'Inapakia makala...',
+    noArticles: 'Hakuna makala bado',
+    checkBackSoon: 'Rudi tena hivi karibuni kwa maudhui mapya',
+    readMore: 'Soma Zaidi',
+    by: 'Na',
+    page: 'Ukurasa',
+    of: 'wa',
+    untitledArticle: 'Makala Bila Kichwa',
+    categories: {
+      'body-education': 'Elimu ya Mwili',
+      'birth-control': 'Uzazi wa Mpango',
+      'lifestyle': 'Mtindo wa Maisha',
+      'nutrition': 'Lishe',
+      'mental-health': 'Afya ya Akili',
+      'exercise': 'Mazoezi',
+    },
+  },
+};
+
 const categoryIcons: Record<
   string,
   {
@@ -53,10 +93,14 @@ const categoryIcons: Record<
     color: '#FF4C7C',
   },
 };
-export const InsightsScreen = ({ navigation, route }: Props) => {
-  const language = route.params?.lang ?? 'en';
-  const userId = route.params?.userId;
+
+export default function InsightsScreen() {
+  const router = useRouter();
+  const params = useLocalSearchParams();
   const insets = useSafeAreaInsets();
+
+  const language = (params.lang as 'en' | 'sw') ?? 'en';
+  const userId = params.userId as string;
 
   const [page, setPage] = useState(1);
   const pageSize = 20;
@@ -67,15 +111,21 @@ export const InsightsScreen = ({ navigation, route }: Props) => {
     status: 'published',
   });
 
-  const handleBack = () => navigation.goBack();
-  const handleArticlePress = (article: Article) => {
-    navigation.navigate('ArticleDetail', {
-      articleId: article.article_id,
-      lang: language,
-      userId,
-    });
-  };
-  const getIconForCategory = (category?: string) => {
+  const t = translations[language];
+
+  const handleBack = useCallback(() => router.back(), [router]);
+
+  const handleArticlePress = useCallback(
+    (article: Article) => {
+      router.push({
+        pathname: '/article-detail',
+        params: { articleId: article.article_id, lang: language, userId },
+      });
+    },
+    [router, language, userId]
+  );
+
+  const getIconForCategory = useCallback((category?: string) => {
     const iconData =
       categoryIcons[category || 'default'] || categoryIcons['default'];
     const IconComponent =
@@ -87,96 +137,134 @@ export const InsightsScreen = ({ navigation, route }: Props) => {
         color={iconData.color}
       />
     );
-  };
-  const getCoverImageUrl = (articleId?: string, hasCoverImage?: boolean) => {
-    if (!articleId || !hasCoverImage) return null;
-    return ARTICLE_COVER_IMAGE_API_PATH(articleId);
-  };
-  const renderArticleCard = (article: Article, index: number) => {
-    const isPink = index % 3 === 1; // Make every 3rd card pink (0-indexed, so 1, 4, 7...)
-    const coverImageUrl = getCoverImageUrl(
-      article.article_id,
-      article.kv?.has_cover_image
-    );
+  }, []);
 
-    return (
-      <TouchableOpacity
-        key={article.article_id}
-        style={[styles.card, isPink && styles.pinkCard]}
-        onPress={() => handleArticlePress(article)}
-        activeOpacity={0.7}
-      >
-        {coverImageUrl && (
-          <Image
-            source={{ uri: coverImageUrl }}
-            style={styles.coverImage}
-            resizeMode="cover"
-          />
-        )}
-        <View
-          style={[styles.iconCircle, isPink && { backgroundColor: '#fff' }]}
+  const getCoverImageUrl = useCallback(
+    (articleId?: string, hasCoverImage?: boolean) => {
+      if (!articleId || !hasCoverImage) return null;
+      return ARTICLE_COVER_IMAGE_API_PATH(articleId);
+    },
+    []
+  );
+
+  const getCategoryName = useCallback(
+    (category?: string) => {
+      if (!category) return '';
+      return t.categories[category as keyof typeof t.categories] || category;
+    },
+    [t]
+  );
+
+  const renderArticleCard = useCallback(
+    (article: Article, index: number) => {
+      const isPink = index % 3 === 1;
+      const coverImageUrl = getCoverImageUrl(
+        article.article_id,
+        article.kv?.has_cover_image
+      );
+
+      return (
+        <TouchableOpacity
+          key={article.article_id}
+          style={[styles.card, isPink && styles.pinkCard]}
+          onPress={() => handleArticlePress(article)}
+          activeOpacity={0.7}
+          accessibilityRole="button"
+          accessibilityLabel={`${t.readMore}: ${article.kv?.title || t.untitledArticle}`}
         >
-          {getIconForCategory(article.kv?.category)}
-        </View>
-        <Text style={[styles.title, isPink && { color: '#fff' }]}>
-          {article.kv?.title || 'Untitled Article'}
-        </Text>
-        {article.kv?.content && (
-          <Text
-            style={[
-              styles.description,
-              isPink && { color: '#fff', opacity: 0.9 },
-            ]}
-            numberOfLines={3}
+          {coverImageUrl && (
+            <Image
+              source={{ uri: coverImageUrl }}
+              style={styles.coverImage}
+              resizeMode="cover"
+              accessibilityLabel={`${article.kv?.title} cover image`}
+            />
+          )}
+          <View
+            style={[styles.iconCircle, isPink && { backgroundColor: '#fff' }]}
           >
-            {article.kv.content.substring(0, 150)}...
+            {getIconForCategory(article.kv?.category)}
+          </View>
+          <Text style={[styles.title, isPink && { color: '#fff' }]}>
+            {article.kv?.title || t.untitledArticle}
           </Text>
-        )}
+          {article.kv?.content && (
+            <Text
+              style={[
+                styles.description,
+                isPink && { color: '#fff', opacity: 0.9 },
+              ]}
+              numberOfLines={3}
+            >
+              {article.kv.content.substring(0, 150)}...
+            </Text>
+          )}
 
-        {article.kv?.author && (
-          <Text
-            style={[styles.author, isPink && { color: '#fff', opacity: 0.8 }]}
-          >
-            By {article.kv.author}
-          </Text>
-        )}
-        <View style={[styles.button, isPink && styles.whiteButton]}>
-          <Text style={[styles.buttonText, isPink && { color: '#FF4C7C' }]}>
-            Read More
-          </Text>
-          <Ionicons
-            name="arrow-forward"
-            size={16}
-            color={isPink ? '#FF4C7C' : '#fff'}
-          />
-        </View>
-      </TouchableOpacity>
-    );
-  };
-  const articles = articlesPage?.items || [];
-  const totalPages = articlesPage?.totalPages || 1;
+          {article.kv?.author && (
+            <Text
+              style={[styles.author, isPink && { color: '#fff', opacity: 0.8 }]}
+            >
+              {t.by} {article.kv.author}
+            </Text>
+          )}
+          <View style={[styles.button, isPink && styles.whiteButton]}>
+            <Text style={[styles.buttonText, isPink && { color: '#FF4C7C' }]}>
+              {t.readMore}
+            </Text>
+            <Ionicons
+              name="arrow-forward"
+              size={16}
+              color={isPink ? '#FF4C7C' : '#fff'}
+            />
+          </View>
+        </TouchableOpacity>
+      );
+    },
+    [handleArticlePress, getCoverImageUrl, getIconForCategory, t]
+  );
+
+  const articles = useMemo(
+    () => articlesPage?.items || [],
+    [articlesPage?.items]
+  );
+  const totalPages = useMemo(
+    () => articlesPage?.totalPages || 1,
+    [articlesPage?.totalPages]
+  );
+
+  const handlePreviousPage = useCallback(() => {
+    setPage((p) => Math.max(1, p - 1));
+  }, []);
+
+  const handleNextPage = useCallback(() => {
+    setPage((p) => Math.min(totalPages, p + 1));
+  }, [totalPages]);
+
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
       <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={handleBack}>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={handleBack}
+          accessibilityRole="button"
+          accessibilityLabel="Go back"
+        >
           <Ionicons name="arrow-back" size={24} color="#000" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Insights and Tips</Text>
+        <Text style={styles.headerTitle}>{t.title}</Text>
         <View style={{ width: 32 }} />
       </View>
 
       {isFetchingArticlesPage && page === 1 ? (
         <View style={styles.centerContent}>
           <ActivityIndicator size="large" color="#FF4C7C" />
-          <Text style={styles.loadingText}>Loading articles...</Text>
+          <Text style={styles.loadingText}>{t.loadingArticles}</Text>
         </View>
       ) : articles.length === 0 ? (
         <View style={styles.centerContent}>
           <Ionicons name="document-text-outline" size={48} color="#CCC" />
-          <Text style={styles.emptyText}>No articles available yet</Text>
-          <Text style={styles.emptySubtext}>
-            Check back soon for new content
-          </Text>
+          <Text style={styles.emptyText}>{t.noArticles}</Text>
+          <Text style={styles.emptySubtext}>{t.checkBackSoon}</Text>
         </View>
       ) : (
         <ScrollView
@@ -192,8 +280,11 @@ export const InsightsScreen = ({ navigation, route }: Props) => {
                   styles.pageButton,
                   page === 1 && styles.pageButtonDisabled,
                 ]}
-                onPress={() => setPage((p) => Math.max(1, p - 1))}
+                onPress={handlePreviousPage}
                 disabled={page === 1 || isFetchingArticlesPage}
+                accessibilityRole="button"
+                accessibilityLabel={`${t.page} ${page - 1}`}
+                accessibilityState={{ disabled: page === 1 }}
               >
                 <Ionicons
                   name="chevron-back"
@@ -203,15 +294,19 @@ export const InsightsScreen = ({ navigation, route }: Props) => {
               </TouchableOpacity>
 
               <Text style={styles.pageText}>
-                Page {page} of {totalPages}
+                {t.page} {page} {t.of} {totalPages}
               </Text>
+
               <TouchableOpacity
                 style={[
                   styles.pageButton,
                   page === totalPages && styles.pageButtonDisabled,
                 ]}
-                onPress={() => setPage((p) => Math.min(totalPages, p + 1))}
+                onPress={handleNextPage}
                 disabled={page === totalPages || isFetchingArticlesPage}
+                accessibilityRole="button"
+                accessibilityLabel={`${t.page} ${page + 1}`}
+                accessibilityState={{ disabled: page === totalPages }}
               >
                 <Ionicons
                   name="chevron-forward"
@@ -221,6 +316,7 @@ export const InsightsScreen = ({ navigation, route }: Props) => {
               </TouchableOpacity>
             </View>
           )}
+
           {isFetchingArticlesPage && page > 1 && (
             <View style={styles.loadingMore}>
               <ActivityIndicator size="small" color="#FF4C7C" />
@@ -228,10 +324,12 @@ export const InsightsScreen = ({ navigation, route }: Props) => {
           )}
         </ScrollView>
       )}
-      <NavbarCard navigation={navigation} language={language} userId={userId} />
+
+      <NavbarCard language={language} userId={userId} />
     </View>
   );
-};
+}
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -272,11 +370,13 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#999',
     fontWeight: '600',
+    textAlign: 'center',
   },
   emptySubtext: {
     marginTop: 8,
     fontSize: 14,
     color: '#BBB',
+    textAlign: 'center',
   },
   loadingMore: {
     paddingVertical: 20,
