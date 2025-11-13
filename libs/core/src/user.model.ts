@@ -2,19 +2,20 @@ import {z} from 'zod';
 
 export type Language = 'en' | 'sw';
 export type UserStatus = 'active' | 'inactive';
+
 export type User = {
-    user_id?: string;
-    created_at?: string;
-    updated_at?: string;
-    kv?: {
+    readonly user_id?: string;
+    readonly created_at?: string;
+    readonly updated_at?: string;
+    kv: {
         first_name?: string;
         last_name?: string;
         status?: UserStatus;
-        phone_number?: string;
+        phone_number: string;
         date_of_birth?: string;
         pin?: string;
         password?: string;
-        language?: Language;
+        language: Language;
         email?: string;
         avg_cycle_length_days?: number;
         avg_period_length_days?: number;
@@ -23,6 +24,22 @@ export type User = {
         receive_fertile_alerts?: boolean;
         receive_medication_tips?: boolean;
         receive_insights_tips?: boolean;
+        selected_symptoms?: string[];
+        selected_moods?: string[];
+        selected_medications?: string[];
+
+      symptom_logs?: Array<{
+        symptom: string;
+        timestamp: string;
+      }>;
+      mood_logs?: Array<{
+        mood: string;
+        timestamp: string;
+      }>;
+      medication_logs?: Array<{
+        medication: string;
+        timestamp: string;
+      }>;
     };
 };
 
@@ -31,6 +48,9 @@ export type UpdateUser = Omit<User, 'kv'> & {
 };
 
 export const USER_ZOD_SCHEMA = z.object({
+    user_id: z.string().optional(),
+    created_at: z.string().optional(),
+    updated_at: z.string().optional(),
     kv: z.object({
         first_name: z.string().max(64, {message: 'First name is too long'}).optional(),
         last_name: z.string().max(64, {message: 'Last name is too long'}).optional(),
@@ -48,5 +68,21 @@ export const USER_ZOD_SCHEMA = z.object({
         receive_fertile_alerts: z.boolean().optional(),
         receive_medication_tips: z.boolean().optional(),
         receive_insights_tips: z.boolean().optional(),
-    }).optional(),
+        selected_symptoms: z.array(z.string()).optional(),
+        selected_moods: z.array(z.string()).optional(),
+        selected_medications: z.array(z.string()).optional(),
+
+      symptom_logs: z.array(z.object({
+        symptom: z.string(),
+        timestamp: z.string(),
+      })).optional(),
+      mood_logs: z.array(z.object({
+        mood: z.string(),
+        timestamp: z.string(),
+      })).optional(),
+      medication_logs: z.array(z.object({
+        medication: z.string(),
+        timestamp: z.string(),
+      })).optional(),
+    }),
 });
