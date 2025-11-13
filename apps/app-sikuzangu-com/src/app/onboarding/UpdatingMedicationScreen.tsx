@@ -1,5 +1,4 @@
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../navigation/AppNavigator';
 import React, { useState } from 'react';
 import {
   View,
@@ -13,12 +12,18 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useUser } from '@siku-zangu/react';
 import { UpdateUser } from '@siku-zangu/core';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-type Props = NativeStackScreenProps<RootStackParamList, 'UpdatingMedication'>;
 
-export const UpdatingMedicationScreen = ({ navigation, route }: Props) => {
-  const language = route.params?.lang ?? 'en';
-  const userId = route.params?.userId;
+
+export default function UpdatingMedicationScreen  () {
+  const router = useRouter();
+  const params = useLocalSearchParams();
+  const insets = useSafeAreaInsets();
+
+  const language = (params.lang as 'en' | 'sw') ?? 'en';
+  const userId = params.userId as string;
   const { upsertUser, isUpsertingUser, user } = useUser(userId);
 
   const medications = [
@@ -79,12 +84,14 @@ export const UpdatingMedicationScreen = ({ navigation, route }: Props) => {
         [
           {
             text: language === 'en' ? 'OK' : 'Sawa',
-            onPress: () => {
-              navigation.navigate('Calender', {
-                lang: language,
-                userId,
-              })
-            },
+            onPress: () =>
+              router.replace({
+                pathname: '/tabs/HomeScreen',
+                params: {
+                  lang: language,
+                  userId: userId,
+                },
+              }),
           },
         ]
       );
@@ -101,7 +108,7 @@ export const UpdatingMedicationScreen = ({ navigation, route }: Props) => {
   return (
     <View style={styles.container}>
       {/* Back button */}
-      <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+      <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
         <Ionicons name="arrow-back" size={24} color="black" />
       </TouchableOpacity>
 

@@ -1,18 +1,17 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useCallback, useEffect } from 'react';
 import {
   View,
   Text,
   ScrollView,
   StyleSheet,
   TouchableOpacity,
+  RefreshControl,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import Svg, { Circle } from 'react-native-svg';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { useFocusEffect } from '@react-navigation/native';
-import { RootStackParamList } from '../navigation/AppNavigator';
+import { useRouter, useLocalSearchParams, useFocusEffect } from 'expo-router';
 import {
   calculateCycleMetrics,
   MONTH_NAMES_EN,
@@ -21,39 +20,49 @@ import {
   getSymptomConfig,
   getMostRecentMood,
   getRecentSymptoms,
-} from '../utils/cycleCalculations';
-import { useAccessToken, useUser } from '@siku-zangu/react';
-import { NavbarCard } from '../components/App-nav-component';
-
-type Props = NativeStackScreenProps<RootStackParamList, 'Dashboard'>;
+} from '@siku-zangu/react-native';
+import { useUser } from '@siku-zangu/react';
+import { NavbarCard } from '@siku-zangu/react-native';
 
 const RING_RADIUS = 50;
 const RING_STROKE = 10;
 
-export const HomeScreen = ({ navigation, route }: Props) => {
-  const language = route.params?.lang ?? 'en';
-  const userId = route.params?.userId;
-  const { user } = useAccessToken();
-  const { refetchUser } = useUser(userId);
+export default function Dashboard() {
+  const router = useRouter();
+  const params = useLocalSearchParams();
   const insets = useSafeAreaInsets();
+
+  const language = (params.lang as 'en' | 'sw') ?? 'en';
+  const userId = params.userId as string;
+
+  const { user, refetchUser, isFetchingUser } = useUser(userId);
 
   const currentDate = new Date();
 
   useFocusEffect(
-    React.useCallback(() => {
+    useCallback(() => {
       if (userId && refetchUser) {
         refetchUser();
       }
     }, [userId, refetchUser])
   );
+
+  useEffect(() => {
+    if (userId && refetchUser) {
+      refetchUser();
+    }
+  }, [userId]);
+
   const MOOD_CONFIG = useMemo(() => getMoodConfig(language), [language]);
   const SYMPTOM_CONFIG = useMemo(() => getSymptomConfig(language), [language]);
+
   const mostRecentMood = useMemo(
     () => getMostRecentMood(user?.kv?.mood_logs),
     [user?.kv?.mood_logs]
   );
+
   const recentSymptoms = useMemo(
-    () => getRecentSymptoms(user?.kv?.symptom_logs, 2),
+    () => getRecentSymptoms(user?.kv?.symptom_logs, 3),
     [user?.kv?.symptom_logs]
   );
   const cycleMetrics = useMemo(
@@ -99,7 +108,7 @@ export const HomeScreen = ({ navigation, route }: Props) => {
 
   const formattedNextPeriod = `${MONTH_NAMES_EN[
     nextPeriodDate.getMonth()
-  ].slice(0, 3)} ${nextPeriodDate.getDate()}`;
+    ].slice(0, 3)} ${nextPeriodDate.getDate()}`;
 
   const formattedToday = currentDate.toLocaleDateString('en-US', {
     month: 'short',
@@ -111,8 +120,17 @@ export const HomeScreen = ({ navigation, route }: Props) => {
   const strokeDashoffset = circumference * (1 - progress);
 
   const handleAddLog = () => {
-    navigation.navigate('AddLog', { lang: language, userId: userId });
+    router.push({
+      pathname: '/tabs/LogEntryScreen',
+      params: { lang: language, userId: userId }
+    });
   };
+
+  const handleRefresh = useCallback(async () => {
+    if (refetchUser) {
+      await refetchUser();
+    }
+  }, [refetchUser]);
 
   const moodData = mostRecentMood ? MOOD_CONFIG[mostRecentMood] : null;
   const remainingSymptoms =
@@ -120,7 +138,17 @@ export const HomeScreen = ({ navigation, route }: Props) => {
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={isFetchingUser}
+            onRefresh={handleRefresh}
+            tintColor="#FF5C8D"
+            colors={["#FF5C8D"]}
+          />
+        }
+      >
         <LinearGradient
           colors={['#FD5A7E', '#FF7DAA']}
           start={{ x: 0, y: 0 }}
@@ -149,10 +177,12 @@ export const HomeScreen = ({ navigation, route }: Props) => {
                 {daysUntilPeriod}
               </Text>
               <Text style={styles.statLabel}>
-                {language === 'sw' ? 'Hedhi ijayo' : 'Next period'}
+                {language === 'sw' ? 'Siku' : 'days'}
               </Text>
               <Text style={styles.statSub}>
-                {language === 'sw' ? 'Inaanza' : 'Starts'}:{' '}
+                {language === 'sw' ? 'Hedhi ijayo' : 'Next period'}
+              </Text>
+              <Text style={styles.statDate}>
                 {formattedNextPeriod}
               </Text>
             </View>
@@ -162,12 +192,15 @@ export const HomeScreen = ({ navigation, route }: Props) => {
                 {daysUntilOvulation}
               </Text>
               <Text style={styles.statLabel}>
-                {language === 'sw' ? 'Uzazi katika' : 'Ovulation in'}
+                {language === 'sw' ? 'Siku' : 'days'}
+              </Text>
+              <Text style={styles.statSub}>
+                {language === 'sw' ? 'Uzazi' : 'Ovulation'}
               </Text>
               <View style={styles.iconRow}>
-                <Ionicons name="moon" color="#555" size={14} />
-                <Text style={styles.statSub}>
-                  {fertileDaysRemaining}-{language === 'sw' ? 'siku' : 'days'}
+                <Ionicons name="moon" color="#555" size={12} />
+                <Text style={styles.statDate}>
+                  {language === 'sw' ? 'Karibu' : 'Coming'}
                 </Text>
               </View>
             </View>
@@ -177,16 +210,19 @@ export const HomeScreen = ({ navigation, route }: Props) => {
                 {fertileDaysRemaining}
               </Text>
               <Text style={styles.statLabel}>
-                {language === 'sw' ? 'Dirisha la uzazi' : 'Fertile window'}
+                {language === 'sw' ? 'Siku' : 'days'}
               </Text>
               <Text style={styles.statSub}>
+                {language === 'sw' ? 'Dirisha' : 'Fertile'}
+              </Text>
+              <Text style={styles.statDate}>
                 {fertileDaysRemaining > 0
                   ? language === 'sw'
-                    ? 'Nafasi kubwa'
-                    : 'High chance'
+                    ? 'Nafasi'
+                    : 'Active'
                   : language === 'sw'
-                  ? 'Imepita'
-                  : 'Passed'}
+                    ? 'Imepita'
+                    : 'Passed'}
               </Text>
             </View>
           </View>
@@ -212,10 +248,14 @@ export const HomeScreen = ({ navigation, route }: Props) => {
               strokeDashoffset={strokeDashoffset}
               strokeLinecap="round"
               fill="none"
+              transform={`rotate(-90 60 60)`}
             />
           </Svg>
           <Text style={styles.ringText}>
-            {daysUntilPeriod} {language === 'sw' ? 'siku' : 'days'}
+            {daysUntilPeriod}
+          </Text>
+          <Text style={styles.ringSubtext}>
+            {language === 'sw' ? 'siku' : 'days'}
           </Text>
         </View>
 
@@ -228,6 +268,9 @@ export const HomeScreen = ({ navigation, route }: Props) => {
             </Text>
           </View>
           <Text style={styles.insightText}>{todayInsight.text}</Text>
+          <Text style={styles.cycleDayText}>
+            {language === 'sw' ? 'Siku' : 'Day'} {dayInCycle} {language === 'sw' ? 'ya mzunguko' : 'of cycle'}
+          </Text>
         </View>
 
         <View style={styles.logCard}>
@@ -273,7 +316,7 @@ export const HomeScreen = ({ navigation, route }: Props) => {
                   : 'Recent Symptoms'}
               </Text>
               <View style={styles.symptomRow}>
-                {recentSymptoms.map((symptom) => {
+                {recentSymptoms.slice(0, 3).map((symptom) => {
                   const config = SYMPTOM_CONFIG[symptom];
                   if (!config) return null;
 
@@ -320,10 +363,10 @@ export const HomeScreen = ({ navigation, route }: Props) => {
           )}
         </View>
       </ScrollView>
-      <NavbarCard navigation={navigation} language={language} userId={userId} />
+      <NavbarCard language={language} userId={userId} />
     </View>
   );
-};
+}
 
 const styles = StyleSheet.create({
   container: {
@@ -355,8 +398,9 @@ const styles = StyleSheet.create({
   statsCard: {
     backgroundColor: '#fff',
     marginHorizontal: 20,
+    marginTop: 20,
     borderRadius: 16,
-    paddingVertical: 16,
+    paddingVertical: 20,
     paddingHorizontal: 16,
     shadowColor: '#000',
     shadowOpacity: 0.08,
@@ -367,50 +411,64 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '700',
     color: '#333333',
-    marginBottom: 12,
+    marginBottom: 16,
     textAlign: 'center',
   },
   statRow: {
     flexDirection: 'row',
     justifyContent: 'space-around',
-    alignItems: 'center',
+    alignItems: 'flex-start',
   },
   statItem: {
     alignItems: 'center',
     width: '30%',
   },
   statValue: {
-    fontSize: 30,
+    fontSize: 32,
     fontWeight: '700',
+    marginBottom: 4,
   },
   statLabel: {
-    fontSize: 12,
-    color: '#000',
-    marginTop: 2,
+    fontSize: 11,
+    color: '#666',
     fontWeight: '500',
     fontFamily: 'inter',
-    fontStyle: 'normal',
   },
   statSub: {
-    fontSize: 11,
+    fontSize: 12,
+    color: '#000',
+    marginTop: 4,
+    fontWeight: '600',
+    fontFamily: 'inter',
+  },
+  statDate: {
+    fontSize: 10,
     color: '#6B7280',
-    marginTop: 3,
+    marginTop: 2,
   },
   iconRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: 3,
+    marginTop: 2,
   },
   ringContainer: {
     alignSelf: 'center',
-    marginVertical: 20,
+    marginVertical: 24,
     alignItems: 'center',
     justifyContent: 'center',
   },
   ringText: {
     position: 'absolute',
     fontWeight: '700',
-    fontSize: 16,
+    fontSize: 22,
+    color: '#FF5C8D',
+  },
+  ringSubtext: {
+    position: 'absolute',
+    top: 70,
+    fontWeight: '500',
+    fontSize: 12,
     color: '#FF5C8D',
   },
   insightCard: {
@@ -427,9 +485,9 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   insightTitle: {
-    fontWeight: '500',
+    fontWeight: '600',
     color: '#333333',
-    fontSize: 16,
+    fontSize: 15,
     fontStyle: 'normal',
     flexShrink: 1,
   },
@@ -441,13 +499,20 @@ const styles = StyleSheet.create({
     fontStyle: 'normal',
     fontWeight: '500',
   },
+  cycleDayText: {
+    color: '#333',
+    fontSize: 12,
+    fontWeight: '600',
+    marginTop: 8,
+    fontFamily: 'inter',
+  },
   logCard: {
     backgroundColor: '#fff',
     marginHorizontal: 20,
     borderRadius: 16,
     padding: 15,
     elevation: 3,
-    marginBottom: 30,
+    marginBottom: 100,
     shadowColor: '#FF5C8D',
     shadowOpacity: 0.1,
     shadowRadius: 8,
