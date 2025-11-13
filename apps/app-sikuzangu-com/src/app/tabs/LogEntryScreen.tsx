@@ -1,6 +1,4 @@
-import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../navigation/AppNavigator';
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import {
   View,
   Text,
@@ -14,16 +12,19 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useUser } from '@siku-zangu/react';
 import { UpdateUser } from '@siku-zangu/core';
-import { NavbarCard } from '../components/App-nav-component';
+import { NavbarCard } from '@siku-zangu/react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useLocalSearchParams, useRouter, useFocusEffect } from 'expo-router';
 
-type Props = NativeStackScreenProps<RootStackParamList, 'AddLog'>;
 
-export const LogEntryScreen = ({ navigation, route }: Props) => {
-  const language = route.params?.lang ?? 'en';
-  const userId = route.params?.userId;
-  const { upsertUser, isUpsertingUser, user } = useUser(userId);
+export default function LogEntry() {
+  const router = useRouter();
+  const params = useLocalSearchParams();
   const insets = useSafeAreaInsets();
+
+  const language = (params.lang as 'en' | 'sw') ?? 'en';
+  const userId = params.userId as string;
+  const { upsertUser, isUpsertingUser, user, refetchUser } = useUser(userId);
 
   const symptoms = [
     {
@@ -64,7 +65,6 @@ export const LogEntryScreen = ({ navigation, route }: Props) => {
     },
   ];
 
-
   const moods = [
     { key: 'happy', label: language === 'en' ? 'Happy' : 'Furaha', emoji: '😊', color: '#FFF9C4' },
     { key: 'sad', label: language === 'en' ? 'Sad' : 'Huzuni', emoji: '😢', color: '#E1F5FE' },
@@ -104,6 +104,7 @@ export const LogEntryScreen = ({ navigation, route }: Props) => {
   const [selectedSymptoms, setSelectedSymptoms] = useState<string[]>([]);
   const [selectedMoods, setSelectedMoods] = useState<string[]>([]);
   const [selectedMedications, setSelectedMedications] = useState<string[]>([]);
+
   const [lastPeriodDays, setLastPeriodDays] = useState<number | null>(null);
   const [avgCycleDays, setAvgCycleDays] = useState<number | null>(null);
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
@@ -113,22 +114,21 @@ export const LogEntryScreen = ({ navigation, route }: Props) => {
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(50)).current;
 
-  React.useEffect(() => {
+  useFocusEffect(
+    useCallback(() => {
+      if (userId && refetchUser) {
+        refetchUser();
+      }
+    }, [userId, refetchUser])
+  );
+
+  useEffect(() => {
     if (!user?.kv) return;
-
-    const savedSymptoms = user.kv.selected_symptoms ?? [];
-    const savedMoods = user.kv.selected_moods ?? [];
-    const savedMeds = user.kv.selected_medications ?? [];
-
-    setSelectedSymptoms(savedSymptoms);
-    setSelectedMoods(savedMoods);
-    setSelectedMedications(savedMeds);
     const periodDays = user.kv.avg_period_length_days ?? null;
     const cycleDays = user.kv.avg_cycle_length_days ?? null;
 
     setLastPeriodDays(periodDays);
     setAvgCycleDays(cycleDays);
-
     setInitialLastPeriodDays(periodDays);
     setInitialAvgCycleDays(cycleDays);
 
@@ -145,7 +145,12 @@ export const LogEntryScreen = ({ navigation, route }: Props) => {
       setInitialMonth(month);
       setInitialYear(year);
     }
+
+    setSelectedSymptoms([]);
+    setSelectedMoods([]);
+    setSelectedMedications([]);
   }, [user]);
+
   const getDaysInMonth = (month: number | null, year: number | null) => {
     if (month === null || !year) return 31;
     return new Date(year, month + 1, 0).getDate();
@@ -159,7 +164,7 @@ export const LogEntryScreen = ({ navigation, route }: Props) => {
   const currentYear = new Date().getFullYear();
   const years = Array.from({ length: 3 }, (_, i) => currentYear - 1 + i);
 
-  React.useEffect(() => {
+  useEffect(() => {
     Animated.parallel([
       Animated.timing(fadeAnim, {
         toValue: 1,
@@ -292,13 +297,28 @@ export const LogEntryScreen = ({ navigation, route }: Props) => {
 
     const updates: Partial<UpdateUser['kv']> = {};
     if (selectedSymptoms.length > 0) {
-      updates.selected_symptoms = selectedSymptoms;
+      const existingLogs = user?.kv?.symptom_logs || [];
+      const newLogs = selectedSymptoms.map(symptom => ({
+        symptom,
+        timestamp: new Date().toISOString()
+      }));
+      updates.symptom_logs = [...existingLogs, ...newLogs];
     }
     if (selectedMoods.length > 0) {
-      updates.selected_moods = selectedMoods;
+      const existingLogs = user?.kv?.mood_logs || [];
+      const newLogs = selectedMoods.map(mood => ({
+        mood,
+        timestamp: new Date().toISOString()
+      }));
+      updates.mood_logs = [...existingLogs, ...newLogs];
     }
     if (selectedMedications.length > 0) {
-      updates.selected_medications = selectedMedications;
+      const existingLogs = user?.kv?.medication_logs || [];
+      const newLogs = selectedMedications.map(medication => ({
+        medication,
+        timestamp: new Date().toISOString()
+      }));
+      updates.medication_logs = [...existingLogs, ...newLogs];
     }
     if (lastPeriodDays !== initialLastPeriodDays) {
       updates.avg_period_length_days = lastPeriodDays;
@@ -330,10 +350,10 @@ export const LogEntryScreen = ({ navigation, route }: Props) => {
         language === 'en' ? 'Log saved successfully!' : 'Rekodi imehifadhiwa!',
         [{ text: 'OK' }]
       );
+
       setSelectedSymptoms([]);
       setSelectedMoods([]);
       setSelectedMedications([]);
-
       if (updates.avg_period_length_days !== undefined) {
         setInitialLastPeriodDays(lastPeriodDays);
       }
@@ -345,18 +365,25 @@ export const LogEntryScreen = ({ navigation, route }: Props) => {
         setInitialMonth(selectedMonth);
         setInitialYear(selectedYear);
       }
+      if (refetchUser) {
+        await refetchUser();
+      }
     } catch (e: any) {
       Alert.alert('Error', e.message || 'Failed to save');
     }
   };
-  const handleBack = () => navigation.goBack();
+
+  const handleBack = () => router.back();
+
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={handleBack}>
           <Ionicons name="arrow-back" size={24} color="#000" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Log Entry</Text>
+        <Text style={styles.headerTitle}>
+          {language === 'en' ? 'Log Entry' : 'Rekodi'}
+        </Text>
         <View style={{ width: 32 }} />
       </View>
 
@@ -389,11 +416,11 @@ export const LogEntryScreen = ({ navigation, route }: Props) => {
                       toggleSelection(selectedSymptoms, setSelectedSymptoms, item.key)
                     }
                   >
-                    <Text style={styles.symptomIcon}>   <Ionicons
-                      name={item.icon}
+                    <Ionicons
+                      name={item.icon as any}
                       size={24}
                       color={item.color}
-                    /></Text>
+                    />
                     <Text style={[styles.symptomLabel, isSelected && styles.symptomLabelSelected]}>
                       {item.label}
                     </Text>
@@ -573,274 +600,273 @@ export const LogEntryScreen = ({ navigation, route }: Props) => {
             ]}
             onPress={handleSave}
             disabled={isUpsertingUser}
-            accessibilityLabel={language === 'en' ? 'Next' : 'Ijayo'}
+            accessibilityLabel={language === 'en' ? 'SAVE' : 'HIFADHI'}
           >
             {isUpsertingUser ? (
               <ActivityIndicator size="small" color="#fff" />
             ) : (
               <Text style={styles.saveButtonText}>
-                {language === 'en' ? 'NEXT' : 'IJAYO'}
+                {language === 'en' ? 'SAVE' : 'HIFADHI'}
               </Text>
             )}
           </TouchableOpacity>
         </Animated.View>
       </ScrollView>
 
-      <NavbarCard navigation={navigation} language={language} userId={userId} />
+      <NavbarCard language={language} userId={userId} />
     </View>
   );
-};
+}
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: '#FFF5F2',
+    },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: 16,
+      marginBottom: 8,
+    },
+    backButton: {
+      padding: 6,
+    },
+    headerTitle: {
+      fontSize: 20,
+      fontWeight: '700',
+      color: '#FD5A7E',
+    },
+    scrollContent: {
+      paddingHorizontal: 20,
+      paddingTop: 20,
+      paddingBottom: 100,
+    },
+    section: {
+      marginBottom: 30,
+    },
+    sectionTitle: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: '#333333',
+      fontFamily: 'Inter',
+      fontStyle: 'normal',
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#FFF5F2',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    marginBottom: 8,
-  },
-  backButton: {
-    padding: 6,
-  },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#FD5A7E',
-  },
-  scrollContent: {
-    paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 100,
-  },
-  section: {
-    marginBottom: 30,
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#333333',
-    fontFamily: 'Inter',
-    fontStyle: 'normal',
-
-    marginBottom: 15,
-  },
-  symptomsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-  },
-  symptomCard: {
-    width: '30%',
-    aspectRatio: 1,
-    borderRadius: 16,
-    padding: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 12,
-    position: 'relative',
-    backgroundColor: '#F6F0FF',
-  },
-  symptomCardSelected: {
-    borderWidth: 2,
-    borderColor: '#FD5A7E',
-  },
-  symptomIcon: {
-    fontSize: 28,
-    marginBottom: 8,
-  },
-  symptomLabel: {
-    fontSize: 11,
-    color: '#555',
-    textAlign: 'center',
-  },
-  symptomLabelSelected: {
-    fontWeight: '600',
-    color: '#FD5A7E',
-  },
-  checkmark: {
-    position: 'absolute',
-    top: 8,
-    right: 8,
-  },
-  cycleDetailCard: {
-    backgroundColor: '#fff',
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 12,
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  cycleDetailLabel: {
-    fontSize: 14,
-    color: '#645F5F',
-    fontFamily: 'Inter',
-    fontStyle: 'normal',
-    fontWeight: '500',
-    marginBottom: 12,
-  },
-  daysSelector: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-  },
-  dayCircle: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: '#F5F5F5',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  dayCircleSelected: {
-    backgroundColor: '#FFD5E5',
-  },
-  dayText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#999',
-  },
-  dayTextSelected: {
-    color: '#FD5A7E',
-  },
-  medicationList: {
-    gap: 12,
-  },
-  medicationCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderRadius: 16,
-    padding: 16,
-    position: 'relative',
-  },
-  medicationCardSelected: {
-    borderWidth: 2,
-    borderColor: '#FD5A7E',
-  },
-  medicationIcon: {
-    fontSize: 24,
-    marginRight: 12,
-  },
-  medicationLabel: {
-    fontSize: 14,
-    color: '#555',
-    flex: 1,
-  },
-  medicationCheck: {
-    position: 'absolute',
-    right: 12,
-  },
-  moodsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-  },
-  moodCard: {
-    width: '30%',
-    aspectRatio: 1,
-    borderRadius: 16,
-    padding: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 12,
-  },
-  moodCardSelected: {
-    borderWidth: 2,
-    borderColor: '#FD5A7E',
-  },
-  moodEmoji: {
-    fontSize: 32,
-    marginBottom: 8,
-  },
-  moodLabel: {
-    fontSize: 11,
-    color: '#555',
-    textAlign: 'center',
-  },
-  moodLabelSelected: {
-    fontWeight: '600',
-    color: '#FD5A7E',
-  },
-  datePreview: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#fff',
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 12,
-    marginBottom: 16,
-    gap: 8,
-  },
-  datePreviewText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#FF6B9D',
-  },
-  datePickerRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    gap: 10,
-  },
-  pickerContainer: {
-    flex: 1,
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 12,
-    maxHeight: 200,
-  },
-  pickerLabel: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#999',
-    marginBottom: 8,
-    textAlign: 'center',
-  },
-  pickerScroll: {
-    maxHeight: 150,
-  },
-  pickerOption: {
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    alignItems: 'center',
-    borderRadius: 8,
-    marginBottom: 4,
-    height: 40,
-  },
-  pickerOptionSelected: {
-    backgroundColor: '#FFD5E5',
-  },
-  pickerOptionText: {
-    fontSize: 14,
-    color: '#666',
-  },
-  pickerOptionTextSelected: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#FD5A7E',
-  },
-  saveButton: {
-    backgroundColor: '#FD5A7E',
-    fontFamily: 'Inter',
-    fontStyle: 'normal',
-    fontWeight: '600',
-    paddingVertical: 15,
-    borderRadius: 24,
-    alignItems: 'center',
-    marginTop: 10,
-  },
-  saveButtonDisabled: {
-    backgroundColor: '#FFB6C1',
-    opacity: 0.6,
-  },
-  saveButtonText: {
-    color: '#fff',
-    fontWeight: '600',
-    fontSize: 16,
-    fontStyle: 'normal',
-  },
-});
+      marginBottom: 15,
+    },
+    symptomsGrid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      justifyContent: 'space-between',
+    },
+    symptomCard: {
+      width: '30%',
+      aspectRatio: 1,
+      borderRadius: 16,
+      padding: 12,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginBottom: 12,
+      position: 'relative',
+      backgroundColor: '#F6F0FF',
+    },
+    symptomCardSelected: {
+      borderWidth: 2,
+      borderColor: '#FD5A7E',
+    },
+    symptomIcon: {
+      fontSize: 28,
+      marginBottom: 8,
+    },
+    symptomLabel: {
+      fontSize: 11,
+      color: '#555',
+      textAlign: 'center',
+    },
+    symptomLabelSelected: {
+      fontWeight: '600',
+      color: '#FD5A7E',
+    },
+    checkmark: {
+      position: 'absolute',
+      top: 8,
+      right: 8,
+    },
+    cycleDetailCard: {
+      backgroundColor: '#fff',
+      borderRadius: 16,
+      padding: 16,
+      marginBottom: 12,
+      shadowColor: '#000',
+      shadowOpacity: 0.05,
+      shadowRadius: 8,
+      elevation: 2,
+    },
+    cycleDetailLabel: {
+      fontSize: 14,
+      color: '#645F5F',
+      fontFamily: 'Inter',
+      fontStyle: 'normal',
+      fontWeight: '500',
+      marginBottom: 12,
+    },
+    daysSelector: {
+      flexDirection: 'row',
+      justifyContent: 'space-around',
+    },
+    dayCircle: {
+      width: 50,
+      height: 50,
+      borderRadius: 25,
+      backgroundColor: '#F5F5F5',
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    dayCircleSelected: {
+      backgroundColor: '#FFD5E5',
+    },
+    dayText: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: '#999',
+    },
+    dayTextSelected: {
+      color: '#FD5A7E',
+    },
+    medicationList: {
+      gap: 12,
+    },
+    medicationCard: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      borderRadius: 16,
+      padding: 16,
+      position: 'relative',
+    },
+    medicationCardSelected: {
+      borderWidth: 2,
+      borderColor: '#FD5A7E',
+    },
+    medicationIcon: {
+      fontSize: 24,
+      marginRight: 12,
+    },
+    medicationLabel: {
+      fontSize: 14,
+      color: '#555',
+      flex: 1,
+    },
+    medicationCheck: {
+      position: 'absolute',
+      right: 12,
+    },
+    moodsGrid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      justifyContent: 'space-between',
+    },
+    moodCard: {
+      width: '30%',
+      aspectRatio: 1,
+      borderRadius: 16,
+      padding: 12,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginBottom: 12,
+    },
+    moodCardSelected: {
+      borderWidth: 2,
+      borderColor: '#FD5A7E',
+    },
+    moodEmoji: {
+      fontSize: 32,
+      marginBottom: 8,
+    },
+    moodLabel: {
+      fontSize: 11,
+      color: '#555',
+      textAlign: 'center',
+    },
+    moodLabelSelected: {
+      fontWeight: '600',
+      color: '#FD5A7E',
+    },
+    datePreview: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: '#fff',
+      paddingVertical: 12,
+      paddingHorizontal: 20,
+      borderRadius: 12,
+      marginBottom: 16,
+      gap: 8,
+    },
+    datePreviewText: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: '#FF6B9D',
+    },
+    datePickerRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      gap: 10,
+    },
+    pickerContainer: {
+      flex: 1,
+      backgroundColor: '#fff',
+      borderRadius: 12,
+      padding: 12,
+      maxHeight: 200,
+    },
+    pickerLabel: {
+      fontSize: 12,
+      fontWeight: '600',
+      color: '#999',
+      marginBottom: 8,
+      textAlign: 'center',
+    },
+    pickerScroll: {
+      maxHeight: 150,
+    },
+    pickerOption: {
+      paddingVertical: 10,
+      paddingHorizontal: 12,
+      alignItems: 'center',
+      borderRadius: 8,
+      marginBottom: 4,
+      height: 40,
+    },
+    pickerOptionSelected: {
+      backgroundColor: '#FFD5E5',
+    },
+    pickerOptionText: {
+      fontSize: 14,
+      color: '#666',
+    },
+    pickerOptionTextSelected: {
+      fontSize: 14,
+      fontWeight: '600',
+      color: '#FD5A7E',
+    },
+    saveButton: {
+      backgroundColor: '#FD5A7E',
+      fontFamily: 'Inter',
+      fontStyle: 'normal',
+      fontWeight: '600',
+      paddingVertical: 15,
+      borderRadius: 24,
+      alignItems: 'center',
+      marginTop: 10,
+    },
+    saveButtonDisabled: {
+      backgroundColor: '#FFB6C1',
+      opacity: 0.6,
+    },
+    saveButtonText: {
+      color: '#fff',
+      fontWeight: '600',
+      fontSize: 16,
+      fontStyle: 'normal',
+    },
+  });
