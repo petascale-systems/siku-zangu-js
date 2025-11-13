@@ -23,7 +23,7 @@ const nextConfig = {
                 headers: [
                     {
                         key: "Access-Control-Allow-Origin",
-                        value: "http://localhost:8081,http://localhost:3000,https://sikuzangu.org",
+                        value: "http://localhost:8081",
                     },
                     {
                         key: "Access-Control-Allow-Credentials",

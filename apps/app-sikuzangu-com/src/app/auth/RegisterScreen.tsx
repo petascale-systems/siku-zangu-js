@@ -1,5 +1,5 @@
-import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../navigation/AppNavigator';
+
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import React, { useState, useEffect } from 'react';
 import {
   View,
@@ -9,13 +9,14 @@ import {
   StyleSheet,
   Alert,
 } from 'react-native';
-import { PrimaryButton } from '../components/PrimaryButton';
+import { PrimaryButton } from '@siku-zangu/react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useUser } from '@siku-zangu/react';
 
-type Props = NativeStackScreenProps<RootStackParamList, 'Register'>;
 
-export const RegisterScreen = ({ navigation, route }: Props) => {
+export default  function RegisterScreen()    {
+  const router = useRouter();
+  const params = useLocalSearchParams();
   const { upsertUser, isUpsertingUser, error } = useUser();
   const [phone, setPhone] = useState('');
   const [pin, setPin] = useState('');
@@ -23,7 +24,7 @@ export const RegisterScreen = ({ navigation, route }: Props) => {
   const [phoneError, setPhoneError] = useState('');
   const [pinError, setPinError] = useState('');
 
-  const language = (route.params?.lang === 'en' ? 'en' : 'sw') as 'en' | 'sw';
+  const language = (params.lang as 'en' | 'sw') ?? 'en';
   const displayCountryCode = '+255';
   const storageCountryCode = 'TZ';
 
@@ -120,7 +121,12 @@ export const RegisterScreen = ({ navigation, route }: Props) => {
         [
           {
             text: language === 'en' ? 'OK' : 'Sawa',
-            onPress: () => navigation.navigate('Login', { lang: language }),
+            onPress: () => router.replace({
+              pathname: '/auth/LoginScreen',
+              params: {
+                lang: language,
+              }
+          })
           },
         ]
       );
@@ -141,6 +147,13 @@ export const RegisterScreen = ({ navigation, route }: Props) => {
           : 'Usajili umeshindwa');
       Alert.alert(language === 'en' ? 'Error' : 'Hitilafu', errorMessage);
     }
+  };
+
+  const goToLogin = () => {
+    router.push({
+      pathname: '/auth/LoginScreen',
+      params: { lang: language }
+    });
   };
 
   return (
@@ -242,7 +255,7 @@ export const RegisterScreen = ({ navigation, route }: Props) => {
           ? 'Already have an Account? '
           : 'Tayari una Akaunti? '}
         <TouchableOpacity
-          onPress={() => navigation.navigate('Login', { lang: language })}
+          onPress={goToLogin}
         >
           <Text style={styles.loginLink}>
             {language === 'en' ? 'Log in' : 'Ingia'}

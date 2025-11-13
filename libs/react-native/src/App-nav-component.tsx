@@ -2,56 +2,70 @@ import React from 'react';
 import { View, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../navigation/AppNavigator';
+import { useRouter, usePathname } from 'expo-router';
 
 interface Props {
-  navigation: NativeStackNavigationProp<RootStackParamList, any>;
   language: 'en' | 'sw';
   userId: string;
 }
 
-export const NavbarCard: React.FC<Props> = ({ navigation, language, userId }) => {
+export const NavbarCard: React.FC<Props> = ({ language, userId }) => {
   const insets = useSafeAreaInsets();
-
+  const router = useRouter();
+  const pathname = usePathname();
 
   const handleHomePress = () => {
-    navigation.navigate('Dashboard', {
-      lang: language,
-      userId: userId,
+    router.push({
+      pathname: '/tabs/HomeScreen',
+      params: {
+        lang: language,
+        userId: userId,
+      },
     });
   };
-
 
   const handleCalendarPress = () => {
-    navigation.navigate('Calender', {
-      lang: language,
-      userId: userId,
+    router.push({
+      pathname: '/tabs/CalenderScreen',
+      params: {
+        lang: language,
+        userId: userId,
+      },
     });
   };
 
-
   const handleAddPress = () => {
-    // Navigate to Add/Track screen when implemented
-    navigation.navigate('AddLog', {
-      lang: language,
-      userId: userId,
+    router.push({
+      pathname: '/tabs/LogEntryScreen',
+      params: {
+        lang: language,
+        userId: userId,
+      },
     });
   };
 
   const handleInsightsPress = () => {
-    navigation.navigate('Insights', {
-      lang: language,
-      userId: userId,
+    router.push({
+      pathname: '/tabs/InsightsScreen',
+      params: {
+        lang: language,
+        userId: userId,
+      },
     });
   };
 
   const handleProfilePress = () => {
-    navigation.navigate('Profile', {
-      lang: language,
-      userId: userId,
+    router.push({
+      pathname: '/tabs/UserProfileScreen',
+      params: {
+        lang: language,
+        userId: userId,
+      },
     });
   };
+
+  // Helper function to check if a route is active
+  const isActive = (route: string) => pathname?.includes(route);
 
   return (
     <View
@@ -64,7 +78,7 @@ export const NavbarCard: React.FC<Props> = ({ navigation, language, userId }) =>
         style={styles.navItem}
         accessibilityLabel={language === 'en' ? 'Home' : 'Nyumbani'}
         accessibilityRole="button"
-       onPress={handleHomePress}
+        onPress={handleHomePress}
       >
         <Ionicons name="home" size={26} color="#FF4C7C" />
       </TouchableOpacity>
@@ -82,7 +96,7 @@ export const NavbarCard: React.FC<Props> = ({ navigation, language, userId }) =>
         style={styles.navItem}
         accessibilityLabel={language === 'en' ? 'Add' : 'Ongeza'}
         accessibilityRole="button"
-         onPress={handleAddPress}
+        onPress={handleAddPress}
       >
         <Ionicons name="add-circle" size={26} color="#CE2020" />
       </TouchableOpacity>

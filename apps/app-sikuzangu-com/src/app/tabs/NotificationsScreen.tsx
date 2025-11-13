@@ -12,11 +12,11 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../navigation/AppNavigator';
 import { useUser } from '@siku-zangu/react';
 import { UpdateUser } from '@siku-zangu/core';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 
-type Props = NativeStackScreenProps<RootStackParamList, 'Notifications'>;
+
 
 interface NotificationSetting {
   id: string;
@@ -29,11 +29,14 @@ interface NotificationSetting {
   enabled: boolean;
 }
 
-export const NotificationsScreen = ({ navigation, route }: Props) => {
-  const language = route.params?.lang ?? 'en';
-  const userId = route.params?.userId;
-  const { user, upsertUser, isUpsertingUser } = useUser(userId);
+export default function NotificationsScreen  () {
+  const router = useRouter();
+  const params = useLocalSearchParams();
   const insets = useSafeAreaInsets();
+
+  const language = (params.lang as 'en' | 'sw') ?? 'en';
+  const userId = params.userId as string;
+  const { user, upsertUser, isUpsertingUser } = useUser(userId);
 
   const [initialNotifications, setInitialNotifications] = useState<NotificationSetting[]>([]);
   const [notifications, setNotifications] = useState<NotificationSetting[]>([
@@ -168,7 +171,7 @@ export const NotificationsScreen = ({ navigation, route }: Props) => {
     }
   };
 
-  const handleBack = () => navigation.goBack();
+  const handleBack = () => router.back();
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>

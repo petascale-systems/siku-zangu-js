@@ -10,12 +10,9 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../navigation/AppNavigator';
 import { useAccessToken } from '@siku-zangu/react';
-import { NavbarCard } from '../components/App-nav-component';
-
-type Props = NativeStackScreenProps<RootStackParamList, 'Profile'>;
+import { NavbarCard } from '@siku-zangu/react-native';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 
 interface MenuItem {
   id: string;
@@ -27,11 +24,14 @@ interface MenuItem {
   isDanger?: boolean;
 }
 
-export const ProfileScreen = ({ navigation, route }: Props) => {
-  const language = route.params?.lang ?? 'en';
-  const userId = route.params?.userId;
-  const { user, logoutUser, isLoggingOut } = useAccessToken();
+export default function Profile() {
+  const router = useRouter();
+  const params = useLocalSearchParams();
   const insets = useSafeAreaInsets();
+
+  const language = (params.lang as 'en' | 'sw') ?? 'en';
+  const userId = params.userId as string;
+  const { user, logoutUser, isLoggingOut } = useAccessToken();
 
   const memberSince = user?.created_at
     ? new Date(user.created_at).toLocaleDateString('en-US', {
@@ -57,10 +57,8 @@ export const ProfileScreen = ({ navigation, route }: Props) => {
           onPress: async () => {
             try {
               await logoutUser();
-              navigation.reset({
-                index: 0,
-                routes: [{ name: 'Login' }],
-              });
+              // Use replace instead of reset for Expo Router
+              router.replace('/login');
             } catch (e: any) {
               Alert.alert(
                 language === 'sw' ? 'Hitilafu' : 'Error',
@@ -82,7 +80,7 @@ export const ProfileScreen = ({ navigation, route }: Props) => {
       icon: '🔄',
       label: 'Change Language',
       labelSw: 'Badilisha Lugha',
-      onPress: () => navigation.navigate('Language'),
+      onPress: () => router.push('/language'),
     },
     {
       id: 'notifications',
@@ -90,23 +88,32 @@ export const ProfileScreen = ({ navigation, route }: Props) => {
       label: 'Notifications',
       labelSw: 'Arifa',
       onPress: () =>
-        navigation.navigate('Notifications', { lang: language, userId }),
+        router.push({
+          pathname: '/notifications',
+          params: { lang: language, userId },
+        }),
     },
     {
       id: 'pin',
       icon: '🔒',
       label: 'Change PIN',
       labelSw: 'Badilisha PIN',
-      /*  onPress: () =>
-        navigation.navigate('ChangePin', { lang: language, userId }),
-        */
+      onPress: () =>
+        router.push({
+          pathname: '/change-pin',
+          params: { lang: language, userId },
+        }),
     },
     {
       id: 'cycle',
       icon: '📅',
       label: 'Update Cycle Info',
       labelSw: 'Sasisha Taarifa za Mzunguko',
-      onPress: () => navigation.navigate('AddLog', { lang: language, userId }),
+      onPress: () =>
+        router.push({
+          pathname: '/log-entry',
+          params: { lang: language, userId },
+        }),
     },
     {
       id: 'delete',
@@ -114,7 +121,10 @@ export const ProfileScreen = ({ navigation, route }: Props) => {
       label: 'Delete Account',
       labelSw: 'Futa Akaunti',
       onPress: () =>
-        navigation.navigate('DeleteAccount', { lang: language, userId }),
+        router.push({
+          pathname: '/delete-account',
+          params: { lang: language, userId },
+        }),
     },
     {
       id: 'logout',
@@ -126,7 +136,7 @@ export const ProfileScreen = ({ navigation, route }: Props) => {
     },
   ];
 
-  const handleBack = () => navigation.goBack();
+  const handleBack = () => router.back();
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
@@ -146,7 +156,7 @@ export const ProfileScreen = ({ navigation, route }: Props) => {
             </View>
           </View>
           <Text style={styles.userName}>
-            {user?.kv?.first_name || 'Guest'} {user?.kv?.last_name || 'Guest'}
+            {user?.kv?.first_name || 'Guest'} {user?.kv?.last_name || ''}
           </Text>
           <Text style={styles.memberSince}>
             {language === 'sw' ? 'Mwanachama tangu' : 'Member since'}{' '}
@@ -197,10 +207,10 @@ export const ProfileScreen = ({ navigation, route }: Props) => {
         </View>
       </ScrollView>
 
-      <NavbarCard navigation={navigation} language={language} userId={userId} />
+      <NavbarCard language={language} userId={userId} />
     </View>
   );
-};
+}
 
 const styles = StyleSheet.create({
   container: {

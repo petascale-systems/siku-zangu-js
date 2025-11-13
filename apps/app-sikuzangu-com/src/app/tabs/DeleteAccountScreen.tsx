@@ -11,20 +11,22 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../navigation/AppNavigator';
 import { useUser } from '@siku-zangu/react';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 
-type Props = NativeStackScreenProps<RootStackParamList, 'DeleteAccount'>;
 
-export const DeleteAccountScreen = ({ navigation, route }: Props) => {
-  const language = route.params?.lang ?? 'en';
-  const userId = route.params?.userId;
-  const { deleteUser, isDeletingUser } = useUser(userId);
+export default function DeleteAccountScreen  ()  {
+  const router = useRouter();
+  const params = useLocalSearchParams();
   const insets = useSafeAreaInsets();
+
+  const language = (params.lang as 'en' | 'sw') ?? 'en';
+  const userId = params.userId as string;
+  const { deleteUser, isDeletingUser } = useUser(userId);
 
   const [selectedReason] = useState<string | null>(null);
 
-  const handleBack = () => navigation.goBack();
+  const handleBack = () => router.back();
 
   const handleDeleteAccount = async () => {
 
@@ -53,13 +55,13 @@ export const DeleteAccountScreen = ({ navigation, route }: Props) => {
                 [
                   {
                     text: 'OK',
-                    onPress: () => {
-                      navigation.reset({
-                        index: 0,
-                        routes: [{ name: 'Login' as any }],
-                      });
+
+                      onPress: () =>
+                        router.replace({
+                          pathname: '/auth/LoginScreen',
+
+                        }),
                     },
-                  },
                 ]
               );
             } catch (e: any) {
