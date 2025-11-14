@@ -57,8 +57,7 @@ export default function Profile() {
           onPress: async () => {
             try {
               await logoutUser();
-              // Use replace instead of reset for Expo Router
-              router.replace('/login');
+              router.replace('/auth/LoginScreen');
             } catch (e: any) {
               Alert.alert(
                 language === 'sw' ? 'Hitilafu' : 'Error',
@@ -80,7 +79,7 @@ export default function Profile() {
       icon: '🔄',
       label: 'Change Language',
       labelSw: 'Badilisha Lugha',
-      onPress: () => router.push('/language'),
+      onPress: () => router.push('/auth/LanguageScreen'),
     },
     {
       id: 'notifications',
@@ -89,7 +88,7 @@ export default function Profile() {
       labelSw: 'Arifa',
       onPress: () =>
         router.push({
-          pathname: '/notifications',
+          pathname: 'tabs/NotificationsScreen',
           params: { lang: language, userId },
         }),
     },
@@ -111,7 +110,7 @@ export default function Profile() {
       labelSw: 'Sasisha Taarifa za Mzunguko',
       onPress: () =>
         router.push({
-          pathname: '/log-entry',
+          pathname: 'tabs/LogEntryScreen',
           params: { lang: language, userId },
         }),
     },
