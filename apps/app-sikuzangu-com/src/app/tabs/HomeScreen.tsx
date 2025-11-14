@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useCallback } from 'react';
 import {
   View,
   Text,
@@ -10,9 +10,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import Svg, { Circle } from 'react-native-svg';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { useFocusEffect } from '@react-navigation/native';
-import { RootStackParamList } from '../navigation/AppNavigator';
+import { useRouter, useLocalSearchParams, useFocusEffect } from 'expo-router';
 import {
   calculateCycleMetrics,
   MONTH_NAMES_EN,
@@ -21,31 +19,34 @@ import {
   getSymptomConfig,
   getMostRecentMood,
   getRecentSymptoms,
-} from '../utils/cycleCalculations';
+} from '@siku-zangu/react-native';
 import { useAccessToken, useUser } from '@siku-zangu/react';
-import { NavbarCard } from '../components/App-nav-component';
-
-type Props = NativeStackScreenProps<RootStackParamList, 'Dashboard'>;
+import { NavbarCard } from '@siku-zangu/react-native';
 
 const RING_RADIUS = 50;
 const RING_STROKE = 10;
 
-export const HomeScreen = ({ navigation, route }: Props) => {
-  const language = route.params?.lang ?? 'en';
-  const userId = route.params?.userId;
+export default function Dashboard() {
+  const router = useRouter();
+  const params = useLocalSearchParams();
+  const insets = useSafeAreaInsets();
+
+  const language = (params.lang as 'en' | 'sw') ?? 'en';
+  const userId = params.userId as string;
+
   const { user } = useAccessToken();
   const { refetchUser } = useUser(userId);
-  const insets = useSafeAreaInsets();
 
   const currentDate = new Date();
 
   useFocusEffect(
-    React.useCallback(() => {
+    useCallback(() => {
       if (userId && refetchUser) {
         refetchUser();
       }
     }, [userId, refetchUser])
   );
+
   const MOOD_CONFIG = useMemo(() => getMoodConfig(language), [language]);
   const SYMPTOM_CONFIG = useMemo(() => getSymptomConfig(language), [language]);
   const mostRecentMood = useMemo(
@@ -99,7 +100,7 @@ export const HomeScreen = ({ navigation, route }: Props) => {
 
   const formattedNextPeriod = `${MONTH_NAMES_EN[
     nextPeriodDate.getMonth()
-  ].slice(0, 3)} ${nextPeriodDate.getDate()}`;
+    ].slice(0, 3)} ${nextPeriodDate.getDate()}`;
 
   const formattedToday = currentDate.toLocaleDateString('en-US', {
     month: 'short',
@@ -111,7 +112,10 @@ export const HomeScreen = ({ navigation, route }: Props) => {
   const strokeDashoffset = circumference * (1 - progress);
 
   const handleAddLog = () => {
-    navigation.navigate('AddLog', { lang: language, userId: userId });
+    router.push({
+      pathname: '/tabs/add-log',
+      params: { lang: language, userId: userId }
+    });
   };
 
   const moodData = mostRecentMood ? MOOD_CONFIG[mostRecentMood] : null;
@@ -185,8 +189,8 @@ export const HomeScreen = ({ navigation, route }: Props) => {
                     ? 'Nafasi kubwa'
                     : 'High chance'
                   : language === 'sw'
-                  ? 'Imepita'
-                  : 'Passed'}
+                    ? 'Imepita'
+                    : 'Passed'}
               </Text>
             </View>
           </View>
@@ -320,10 +324,10 @@ export const HomeScreen = ({ navigation, route }: Props) => {
           )}
         </View>
       </ScrollView>
-      <NavbarCard navigation={navigation} language={language} userId={userId} />
+      <NavbarCard language={language} userId={userId} />
     </View>
   );
-};
+}
 
 const styles = StyleSheet.create({
   container: {

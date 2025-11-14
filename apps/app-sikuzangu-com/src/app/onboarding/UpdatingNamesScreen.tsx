@@ -1,5 +1,4 @@
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../navigation/AppNavigator';
 import React, { useState, useEffect } from 'react';
 import {
   View,
@@ -14,13 +13,17 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useUser } from '@siku-zangu/react';
 import { UpdateUser } from '@siku-zangu/core';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-type Props = NativeStackScreenProps<RootStackParamList, 'UpdatingNames'>;
 
-export const UpdatingNamesScreen = ({ navigation, route }: Props) => {
-  const language = route.params?.lang ?? 'en';
-  const userId = route.params?.userId;
+export default function UpdatingNamesScreen ()  {
+  const router = useRouter();
+  const params = useLocalSearchParams();
+  const insets = useSafeAreaInsets();
 
+  const language = (params.lang as 'en' | 'sw') ?? 'en';
+  const userId = params.userId as string;
   const { upsertUser, isUpsertingUser, error, user, isFetchingUser } =
     useUser(userId);
 
@@ -141,7 +144,13 @@ export const UpdatingNamesScreen = ({ navigation, route }: Props) => {
           {
             text: language === 'en' ? 'OK' : 'Sawa',
             onPress: () =>
-              navigation.navigate('UpdatingDOB', { lang: language, userId }),
+              router.replace({
+                pathname: '/UpdatingDOBScreen',
+                params: {
+                  lang: language,
+                  userId: userId,
+                },
+              }),
           },
         ]
       );
@@ -173,7 +182,7 @@ export const UpdatingNamesScreen = ({ navigation, route }: Props) => {
     <ScrollView contentContainerStyle={styles.container}>
       <TouchableOpacity
         style={styles.backButton}
-        onPress={() => navigation.goBack()}
+        onPress={() => router.back()}
         accessibilityLabel={language === 'en' ? 'Go back' : 'Rudi nyuma'}
       >
         <Ionicons name="arrow-back" size={24} color="black" />

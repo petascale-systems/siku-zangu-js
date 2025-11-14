@@ -5,16 +5,14 @@ import {
   ScrollView,
   StyleSheet,
   TouchableOpacity,
-  Image,
+  ActivityIndicator,
+  Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../navigation/AppNavigator';
 import { useAccessToken } from '@siku-zangu/react';
-import { NavbarCard } from '../components/App-nav-component';
-
-type Props = NativeStackScreenProps<RootStackParamList, 'Profile'>;
+import { NavbarCard } from '@siku-zangu/react-native';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 
 interface MenuItem {
   id: string;
@@ -26,11 +24,14 @@ interface MenuItem {
   isDanger?: boolean;
 }
 
-export const ProfileScreen = ({ navigation, route }: Props) => {
-  const language = route.params?.lang ?? 'en';
-  const userId = route.params?.userId;
-  const { user } = useAccessToken();
+export default function Profile() {
+  const router = useRouter();
+  const params = useLocalSearchParams();
   const insets = useSafeAreaInsets();
+
+  const language = (params.lang as 'en' | 'sw') ?? 'en';
+  const userId = params.userId as string;
+  const { user, logoutUser, isLoggingOut } = useAccessToken();
 
   const memberSince = user?.created_at
     ? new Date(user.created_at).toLocaleDateString('en-US', {
@@ -39,75 +40,105 @@ export const ProfileScreen = ({ navigation, route }: Props) => {
     })
     : 'Aug 2025';
 
+  function handleLogout() {
+    Alert.alert(
+      language === 'sw' ? 'Thibitisha Kutoka' : 'Confirm Logout',
+      language === 'sw'
+        ? 'Je, una uhakika unataka kutoka?'
+        : 'Are you sure you want to logout?',
+      [
+        {
+          text: language === 'sw' ? 'Ghairi' : 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: language === 'sw' ? 'Ondoka' : 'Logout',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await logoutUser();
+              // Use replace instead of reset for Expo Router
+              router.replace('/login');
+            } catch (e: any) {
+              Alert.alert(
+                language === 'sw' ? 'Hitilafu' : 'Error',
+                e.message ||
+                (language === 'sw'
+                  ? 'Imeshindwa kutoka. Tafadhali jaribu tena.'
+                  : 'Failed to logout. Please try again.')
+              );
+            }
+          },
+        },
+      ]
+    );
+  }
+
   const menuItems: MenuItem[] = [
     {
       id: 'language',
       icon: '🔄',
       label: 'Change Language',
       labelSw: 'Badilisha Lugha',
-     /* onPress: () =>
-        navigation.navigate('ChangeLanguage', { lang: language, userId }),
-        */
+      onPress: () => router.push('/language'),
     },
     {
       id: 'notifications',
       icon: '🔔',
       label: 'Notifications',
       labelSw: 'Arifa',
-       onPress: () =>
-        navigation.navigate('Notifications', { lang: language, userId }),
-
+      onPress: () =>
+        router.push({
+          pathname: '/notifications',
+          params: { lang: language, userId },
+        }),
     },
     {
       id: 'pin',
       icon: '🔒',
       label: 'Change PIN',
       labelSw: 'Badilisha PIN',
-    /*  onPress: () =>
-        navigation.navigate('ChangePin', { lang: language, userId }),
-        */
+      onPress: () =>
+        router.push({
+          pathname: '/change-pin',
+          params: { lang: language, userId },
+        }),
     },
     {
       id: 'cycle',
       icon: '📅',
       label: 'Update Cycle Info',
       labelSw: 'Sasisha Taarifa za Mzunguko',
-      /* onPress: () =>
-        navigation.navigate('UpdateCycleInfo', { lang: language, userId }),
-
-       */
+      onPress: () =>
+        router.push({
+          pathname: '/log-entry',
+          params: { lang: language, userId },
+        }),
     },
     {
       id: 'delete',
       icon: '👤',
       label: 'Delete Account',
       labelSw: 'Futa Akaunti',
-     /* onPress: () =>
-        navigation.navigate('DeleteAccount', { lang: language, userId }),
-
-      */
+      onPress: () =>
+        router.push({
+          pathname: '/delete-account',
+          params: { lang: language, userId },
+        }),
     },
     {
       id: 'logout',
       icon: 'exit-outline',
       label: 'Logout',
       labelSw: 'Ondoka',
-     // onPress: handleLogout,
+      onPress: handleLogout,
       isDanger: true,
     },
   ];
 
-  /* function handleLogout() {
-    // Implement logout logic
-    navigation.reset({
-      index: 0,
-      routes: [{ name: 'Login' }],
-    });
-  }
-  */
-  const handleBack = () => navigation.goBack();
-  return (
+  const handleBack = () => router.back();
 
+  return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={handleBack}>
@@ -125,7 +156,7 @@ export const ProfileScreen = ({ navigation, route }: Props) => {
             </View>
           </View>
           <Text style={styles.userName}>
-            {user?.kv?.first_name || 'Guest'} {user?.kv?.last_name || 'Guest'}
+            {user?.kv?.first_name || 'Guest'} {user?.kv?.last_name || ''}
           </Text>
           <Text style={styles.memberSince}>
             {language === 'sw' ? 'Mwanachama tangu' : 'Member since'}{' '}
@@ -141,15 +172,20 @@ export const ProfileScreen = ({ navigation, route }: Props) => {
                 index === menuItems.length - 1 && styles.menuItemLast,
               ]}
               onPress={item.onPress}
+              disabled={item.id === 'logout' && isLoggingOut}
             >
               <View style={styles.menuLeft}>
                 {item.icon === 'exit-outline' ? (
                   <View style={styles.iconContainer}>
-                    <Ionicons
-                      name={item.icon as any}
-                      size={22}
-                      color="#FF597D"
-                    />
+                    {isLoggingOut && item.id === 'logout' ? (
+                      <ActivityIndicator size="small" color="#FF597D" />
+                    ) : (
+                      <Ionicons
+                        name={item.icon as any}
+                        size={22}
+                        color="#FF597D"
+                      />
+                    )}
                   </View>
                 ) : (
                   <View style={styles.iconContainer}>
@@ -171,10 +207,10 @@ export const ProfileScreen = ({ navigation, route }: Props) => {
         </View>
       </ScrollView>
 
-      <NavbarCard navigation={navigation} language={language} userId={userId} />
+      <NavbarCard language={language} userId={userId} />
     </View>
   );
-};
+}
 
 const styles = StyleSheet.create({
   container: {

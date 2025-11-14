@@ -3,17 +3,20 @@ import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-nati
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../navigation/AppNavigator';
-import { NavbarCard } from '../components/App-nav-component';
+import { NavbarCard } from '@siku-zangu/react-native';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 
-type Props = NativeStackScreenProps<RootStackParamList, 'Insights'>;
 
-export const InsightsScreen = ({ navigation, route }: Props) => {
-  const language = route.params?.lang ?? 'en';
-  const userId = route.params?.userId;
+export default  function Insights ()  {
+  const router = useRouter();
+  const params = useLocalSearchParams();
   const insets = useSafeAreaInsets();
 
-  const handleBack = () => navigation.goBack();
+
+  const language = (params.lang as 'en' | 'sw') ?? 'en';
+  const userId = params.userId as string;
+
+  const handleBack = () => router.back();
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
@@ -71,7 +74,7 @@ export const InsightsScreen = ({ navigation, route }: Props) => {
           </TouchableOpacity>
         </View>
       </ScrollView>
-      <NavbarCard navigation={navigation} language={language} userId={userId} />
+      <NavbarCard  language={language} userId={userId} />
     </View>
   );
 };
