@@ -12,15 +12,17 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../navigation/AppNavigator';
 import { useUser } from '@siku-zangu/react';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 
-type Props = NativeStackScreenProps<RootStackParamList, 'ChangePin'>;
 
-export const ChangePinScreen = ({ navigation, route }: Props) => {
-  const language = route.params?.lang ?? 'en';
-  const userId = route.params?.userId;
+export default  function ChangePinScreen  ()  {
+  const router = useRouter();
+  const params = useLocalSearchParams();
   const insets = useSafeAreaInsets();
+
+  const language = (params.lang as 'en' | 'sw') ?? 'en';
+  const userId = params.userId as string;
   const { changePin, isChangingPin } = useUser(userId);
   const [currentPin, setCurrentPin] = useState('');
   const [newPin, setNewPin] = useState('');
@@ -28,7 +30,7 @@ export const ChangePinScreen = ({ navigation, route }: Props) => {
   const [showCurrentPin, setShowCurrentPin] = useState(false);
   const [showNewPin, setShowNewPin] = useState(false);
   const [showConfirmPin, setShowConfirmPin] = useState(false);
-  const handleBack = () => navigation.goBack();
+  const handleBack = () => router.back();
   const validatePin = (pin: string): boolean => {
     return /^\d{4}$/.test(pin);
   };
@@ -85,9 +87,7 @@ export const ChangePinScreen = ({ navigation, route }: Props) => {
               setNewPin('');
               setConfirmPin('');
 
-              navigation.navigate('Login', {
-                lang: language,
-              });
+              router.replace('/auth/LoginScreen');
             },
           },
         ]
