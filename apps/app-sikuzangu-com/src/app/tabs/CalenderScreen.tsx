@@ -4,8 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import Svg, { Circle, Text as SvgText } from 'react-native-svg';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../navigation/AppNavigator';
-import { NavbarCard } from '../components/App-nav-component';
+import { NavbarCard } from '@siku-zangu/react-native';
 import { useAccessToken } from '@siku-zangu/react';
 import {
   calculateCycleData,
@@ -15,20 +14,23 @@ import {
   getDaysInMonth,
   MONTH_NAMES_EN,
   MONTH_NAMES_SW
-} from '../utils/cycleCalculations';
+} from '@siku-zangu/react-native';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 
-type Props = NativeStackScreenProps<RootStackParamList, 'Calender'>;
 
 const RADIUS = 120;
 const CENTER_X = 180;
 const CENTER_Y = 180;
 
-export const CalenderScreen = ({ navigation, route }: Props) => {
-  const language = route.params?.lang ?? 'en';
-  const userId = route.params?.userId;
+export default function Calender () {
+  const router = useRouter();
+  const params = useLocalSearchParams();
+  const insets = useSafeAreaInsets();
+
+  const language = (params.lang as 'en' | 'sw') ?? 'en';
+  const userId = params.userId as string;
   const { user } = useAccessToken();
   const [selectedDay] = useState<number | null>(null);
-  const insets = useSafeAreaInsets();
 
   const currentDate = new Date();
   const currentMonth = currentDate.getMonth();
@@ -68,7 +70,7 @@ export const CalenderScreen = ({ navigation, route }: Props) => {
     daysInMonth,
   } = cycleData;
 
-  const handleBack = () => navigation.goBack();
+  const handleBack = () => router.back();
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
@@ -288,7 +290,7 @@ export const CalenderScreen = ({ navigation, route }: Props) => {
         </TouchableOpacity>
       </ScrollView>
 
-      <NavbarCard navigation={navigation} language={language} userId={userId} />
+      <NavbarCard language={language} userId={userId} />
     </View>
   );
 };

@@ -1,7 +1,7 @@
 import {Animated} from "react-native";
 
-export const  NUIUserNames = () => {
-    return (
-        <Animated.View/>
-    )
+export default function NUIUserNames() {
+  return (
+    <Animated.View/>
+  )
 }
