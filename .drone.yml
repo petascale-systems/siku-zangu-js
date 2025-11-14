@@ -1,17 +1,14 @@
 ---
 kind: pipeline
 type: exec
-name: Deploy https://sikuzangu.org
+name: release
 steps:
   - name: docker-build
-    image: node:20.9.0-alpine
-    privileged: true
     commands:
       - npm install
       - npx nx build sikuzangu-com --skip-nx-cache
-      - docker build -t sikuzangu-com -f ./sikuzangu-com-Dockerfile .
+      - docker build -t sikuzangu-com:${DRONE_TAG} -f ./sikuzangu-com-Dockerfile .
   - name: docker-run
-    privileged: true
     environment:
       S_DATABASE_HOST:
         from_secret: _S_DATABASE_HOST
@@ -25,29 +22,27 @@ steps:
         from_secret: _ATLASGO_VAR_DATABASE
       ATLASGO_URL:
         from_secret: _ATLASGO_URL
+      S_BREVO_API_KEY:
+        from_secret: _S_BREVO_API_KEY
     depends_on:
       - docker-build
     commands:
       - docker stop sikuzangu-com || true && docker rm sikuzangu-com || true
       - >-
-        docker \
-        run \
-        --publish 40001:3000 \                             
-        --network petascale.systems \
-        --env S_DATABASE_HOST=$S_DATABASE_HOST \
-        --env S_DATABASE_USER=$S_DATABASE_USER \
-        --env S_DATABASE_PASSWORD==$S_DATABASE_PASSWORD \
-        --env S_DATABASE_NAME=$S_DATABASE_NAME \
-        --env ATLASGO_VAR_DATABASE=$ATLASGO_VAR_DATABASE \
-        --env ATLASGO_URL=$ATLASGO_URL \
-        sikuzangu-com
+        docker 
+        run 
+        --detach
+        --name=sikuzangu-com 
+        --publish=40001:3000                           
+        --network=petascale.systems 
+        --env=S_DATABASE_HOST=$S_DATABASE_HOST 
+        --env=S_DATABASE_USER=$S_DATABASE_USER 
+        --env=S_DATABASE_PASSWORD=$S_DATABASE_PASSWORD 
+        --env=S_DATABASE_NAME=$S_DATABASE_NAME 
+        --env=ATLASGO_VAR_DATABASE=$ATLASGO_VAR_DATABASE 
+        --env=ATLASGO_URL=$ATLASGO_URL 
+        --env=S_BREVO_API_KEY=$S_BREVO_API_KEY 
+        sikuzangu-com:${DRONE_TAG}
 trigger:
-  branch:
-    include:
-      - main
-    exclude:
-      - releases/*
-      - issues/*
   event:
-    include:
-      - push
+    - tag

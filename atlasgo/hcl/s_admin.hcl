@@ -8,7 +8,14 @@ table "s_admin" {
 
   column "status" {
     type = varchar(8)
-    null = false
+    null    = false
+    default = "active"
+  }
+
+  column "role" {
+    type = varchar(8)
+    null    = false
+    default = "member"
   }
 
   primary_key {

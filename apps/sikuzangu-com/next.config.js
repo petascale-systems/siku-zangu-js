@@ -12,32 +12,35 @@ const nextConfig = {
     output: 'standalone',
     nx: {},
     serverExternalPackages: ["knex", "mysql2"],
-  async headers() {
-    return [
-      {
-        // Applies to all API routes
-        source: "/api/:path*",
-        headers: [
-          {
-            key: "Access-Control-Allow-Origin",
-            value: "http://localhost:8081",
-          },
-          {
-            key:"Access-Control-Allow-Credentials",
-            value: "true"
-          },
-          {
-            key: "Access-Control-Allow-Methods",
-            value: "GET, POST, PUT, DELETE, OPTIONS",
-          },
-          {
-            key: "Access-Control-Allow-Headers",
-            value: "Content-Type, Authorization",
-          },
-        ],
-      },
-    ];
-  },
+    images: {
+        domains: ['images.pexels.com', 'sikuzangu.org', 'placehold.co']
+    },
+    async headers() {
+        return [
+            {
+                // Applies to all API routes
+                source: "/api/:path*",
+                headers: [
+                    {
+                        key: "Access-Control-Allow-Origin",
+                        value: "http://localhost:8081",
+                    },
+                    {
+                        key: "Access-Control-Allow-Credentials",
+                        value: "true"
+                    },
+                    {
+                        key: "Access-Control-Allow-Methods",
+                        value: "GET,OPTIONS,PATCH,DELETE,POST,PUT",
+                    },
+                    {
+                        key: "Access-Control-Allow-Headers",
+                        value: "Authorization,X-CSRF-Token,X-Requested-With,Accept,Accept-Version,Content-Length,Content-MD5,Content-Type,Date,X-Api-Version",
+                    },
+                ],
+            },
+        ];
+    },
 };
 
 const plugins = [
