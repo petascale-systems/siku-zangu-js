@@ -122,7 +122,7 @@ export default function Profile() {
       labelSw: 'Futa Akaunti',
       onPress: () =>
         router.push({
-          pathname: '/delete-account',
+          pathname: 'tabs/DeleteAccountScreen',
           params: { lang: language, userId },
         }),
     },
