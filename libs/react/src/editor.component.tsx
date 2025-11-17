@@ -1,3 +1,5 @@
+"use client"
+
 import {EditorContent, useEditor, useEditorState} from "@tiptap/react";
 import StarterKit from '@tiptap/starter-kit'
 import {

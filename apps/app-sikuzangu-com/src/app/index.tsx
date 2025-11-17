@@ -1,22 +1,23 @@
-import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../navigation/AppNavigator';
-import { LanguageCard } from '../components/LanguageCard';
-import { PrimaryButton } from '../components/PrimaryButton';
 import { useState } from 'react';
 import { View, Text, StyleSheet, Alert } from 'react-native';
+import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { LanguageCard } from '@siku-zangu/react-native';
+import { PrimaryButton } from '@siku-zangu/react-native';
 
-type Props = NativeStackScreenProps<RootStackParamList, 'Language'>;
-
-export const LanguageScreen = ({ navigation }: Props) => {
+export default function Language() {
   const [selectedLang, setSelectedLang] = useState<'en' | 'sw'>('en');
   const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
 
   const handleContinue = async () => {
     setIsLoading(true);
     try {
       await AsyncStorage.setItem('language', selectedLang);
-      navigation.navigate('Register', { lang: selectedLang });
+      router.push({
+        pathname: '/auth/RegisterScreen',
+        params: { lang: selectedLang }
+      });
     } catch (error) {
       Alert.alert('Error', 'Failed to save language preference');
     } finally {
@@ -32,14 +33,14 @@ export const LanguageScreen = ({ navigation }: Props) => {
           : 'Mzunguko Wako. Afya Yako. Lugha Yako'}
       </Text>
       <LanguageCard
-        flag={require('../../../assets/images/uk.png')}
+        flag={require('../../assets/images/uk.png')}
         title="English"
         subtitle="Welcome"
         selected={selectedLang === 'en'}
         onPress={() => setSelectedLang('en')}
       />
       <LanguageCard
-        flag={require('../../../assets/images/tz.png')}
+        flag={require('../../assets/images/tz.png')}
         title="Kiswahili"
         subtitle="Karibu"
         selected={selectedLang === 'sw'}
@@ -52,7 +53,7 @@ export const LanguageScreen = ({ navigation }: Props) => {
       />
     </View>
   );
-};
+}
 
 const styles = StyleSheet.create({
   container: {
