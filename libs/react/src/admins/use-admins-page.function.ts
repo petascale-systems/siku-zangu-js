@@ -1,3 +1,4 @@
+"use client"
 import {Admin, AdminsFetchParams, Page, User} from "@siku-zangu/core";
 import {useEffect, useState} from "react";
 import {getJSON} from "../get-json.function";
