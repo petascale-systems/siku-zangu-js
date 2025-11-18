@@ -1,5 +1,4 @@
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../navigation/AppNavigator';
 import React, { useState, useRef } from 'react';
 import {
   View,
@@ -14,13 +13,19 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useUser } from '@siku-zangu/react';
 import { UpdateUser } from '@siku-zangu/core';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-type Props = NativeStackScreenProps<RootStackParamList, 'UpdatingSymptomsMoods'>;
 
-export const UpdatingSymptomsMoodsScreen = ({ navigation, route }: Props) => {
-  const language = route.params?.lang ?? 'en';
-  const userId = route.params?.userId;
-  const { upsertUser, isUpsertingUser } = useUser(userId);
+
+export default  function UpdatingSymptomsMoodsScreen ()  {
+  const router = useRouter();
+  const params = useLocalSearchParams();
+  const insets = useSafeAreaInsets();
+
+  const language = (params.lang as 'en' | 'sw') ?? 'en';
+  const userId = params.userId as string;
+  const { upsertUser, isUpsertingUser, user } = useUser(userId);
 
   const symptoms = [
     { key: 'cramps', label: language === 'en' ? 'Cramps' : 'Maumivu', icon: 'fitness' },
@@ -82,11 +87,25 @@ export const UpdatingSymptomsMoodsScreen = ({ navigation, route }: Props) => {
     }
 
     try {
-      // @ts-ignore
+      const timestamp = new Date().toISOString();
+      const currentSymptomLogs = user?.kv.symptom_logs || [];
+      const currentMoodLogs = user?.kv.mood_logs || [];
+      const newSymptomLogs = selectedSymptoms.map(symptom => ({
+        symptom,
+        timestamp,
+      }));
+
+      const newMoodLogs = selectedMoods.map(mood => ({
+        mood,
+        timestamp,
+      }));
+
       const updateData: UpdateUser = {
         kv: {
           selected_symptoms: selectedSymptoms,
           selected_moods: selectedMoods,
+          symptom_logs: [...currentSymptomLogs, ...newSymptomLogs],
+          mood_logs: [...currentMoodLogs, ...newMoodLogs],
         },
       };
 
@@ -105,12 +124,14 @@ export const UpdatingSymptomsMoodsScreen = ({ navigation, route }: Props) => {
         [
           {
             text: language === 'en' ? 'OK' : 'Sawa',
-            onPress: () => {
-              navigation.navigate('UpdatingMedication', {
-                lang: language,
-                userId,
-              })
-            },
+              onPress: () =>
+                router.replace({
+                  pathname: '/UpdatingMedicationScreen',
+                  params: {
+                    lang: language,
+                    userId: userId,
+                  },
+                }),
           },
         ]
       );
@@ -128,7 +149,7 @@ export const UpdatingSymptomsMoodsScreen = ({ navigation, route }: Props) => {
     <View style={styles.container}>
       <TouchableOpacity
         style={styles.backButton}
-        onPress={() => navigation.goBack()}
+        onPress={() => router.back()}
         accessibilityLabel={language === 'en' ? 'Go back' : 'Rudi nyuma'}
       >
         <Ionicons name="arrow-back" size={24} color="black" />
@@ -286,7 +307,6 @@ const styles = StyleSheet.create({
     paddingTop: 60,
     paddingBottom: 40,
   },
-
   section: {
     marginBottom: 20,
   },
