@@ -1,4 +1,6 @@
-import { useEffect, useState, useCallback, useRef } from 'react';
+"use client"
+
+import { useEffect, useState } from 'react';
 import { User, UpdateUser, APIError } from '@siku-zangu/core';
 import { getJSON } from '../get-json.function';
 import { postJSON } from '../post-json.function';
@@ -7,6 +9,7 @@ import { deleteJSON } from '../delete-json.function';
 
 export const USERS_API_PATH = '/api/users';
 export const USER_BY_ID_API_PATH = (id: string) => `/api/users/${id}`;
+export const CHANGE_PIN_API_PATH = (id: string) => `/api/users/${id}/change-pin`;
 
 async function fetchUserById(id: string): Promise<User> {
   return getJSON<User>(USER_BY_ID_API_PATH(id));
@@ -24,11 +27,23 @@ export async function deleteUserById(userId: string): Promise<undefined | User> 
   return deleteJSON<User>(USER_BY_ID_API_PATH(userId));
 }
 
+export async function changeUserPin(
+  userId: string,
+  currentPin: string,
+  newPin: string
+): Promise<User | void> {
+  return patchJSON<{ currentPin: string; newPin: string }, User>(
+    CHANGE_PIN_API_PATH(userId),
+    { currentPin, newPin }
+  );
+}
+
 export function useUser(userId?: string) {
   const [user, setUser] = useState<User>();
   const [isFetchingUser, setIsFetchingUser] = useState(false);
   const [isUpsertingUser, setIsUpsertingUser] = useState(false);
   const [isDeletingUser, setIsDeletingUser] = useState(false);
+  const [isChangingPin, setIsChangingPin] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const isFetchingRef = useRef(false);
@@ -59,7 +74,6 @@ export function useUser(userId?: string) {
   async function upsertUser(userData: User | UpdateUser): Promise<User | void> {
     setIsUpsertingUser(true);
     setError(null);
-
     try {
       let upsertedUser: User | void;
 
@@ -69,11 +83,7 @@ export function useUser(userId?: string) {
         upsertedUser = await createUser(userData as User);
       }
 
-      if (upsertedUser) {
-        setUser(upsertedUser);
-        await refetchUser();
-      }
-
+      if (upsertedUser) setUser(upsertedUser);
       return upsertedUser;
     } catch (e: any) {
       const errorMessage =
@@ -92,10 +102,8 @@ export function useUser(userId?: string) {
     if (!userId) {
       return;
     }
-
     setIsDeletingUser(true);
     setError(null);
-
     try {
       await deleteUserById(userId);
       setUser(undefined);
@@ -108,20 +116,59 @@ export function useUser(userId?: string) {
     }
   }
 
-  useEffect(() => {
-    if (userId) {
-      refetchUser();
+  async function changePin(currentPin: string, newPin: string): Promise<User | void> {
+    if (!userId) {
+      throw new Error('User ID is required to change PIN');
     }
-  }, [userId, refetchUser]);
+
+    setIsChangingPin(true);
+    setError(null);
+
+    try {
+      const updatedUser = await changeUserPin(userId, currentPin, newPin);
+      if (updatedUser) {
+        setUser(updatedUser);
+      }
+      return updatedUser;
+    } catch (e: any) {
+      const errorMessage = (e as APIError).message || 'Failed to change PIN';
+      setError(errorMessage);
+      throw e;
+    } finally {
+      setIsChangingPin(false);
+    }
+  }
+
+  useEffect(() => {
+    if (!userId) {
+      return;
+    }
+    setIsFetchingUser(true);
+    setError(null);
+
+    fetchUserById(userId)
+      .then((fetchedUser) => {
+        setUser(fetchedUser);
+      })
+      .catch((e: any) => {
+        const errorMessage = (e as APIError).message || 'Failed to fetch user';
+        setError(errorMessage);
+      })
+      .finally(() => {
+        setIsFetchingUser(false);
+      });
+  }, [userId]);
 
   return {
     user,
     isFetchingUser,
     isUpsertingUser,
     isDeletingUser,
+    isChangingPin,
     error,
     upsertUser,
     deleteUser,
+    changePin,
     refetchUser,
   };
 }

@@ -1,3 +1,5 @@
+"use client"
+
 import {Page, User, UsersFetchParams} from "@siku-zangu/core";
 import {useEffect, useState} from "react";
 import {getJSON} from "../get-json.function";

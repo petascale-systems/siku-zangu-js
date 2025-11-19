@@ -19,6 +19,7 @@
     --color-primary-800: #a11043;
     --color-primary-900: #8a113f;
     --color-primary-950: #4d041e;
+    --color-primary-base: #FFF9F6;
     --color-secondary: #7E22CE;
     --color-secondary-50: #faf5ff;
     --color-secondary-100: #f4e8ff;
@@ -43,6 +44,8 @@
     --color-tertiary-800: #293d63;
     --color-tertiary-900: #263554;
     --color-tertiary-950: #1a2237;
+    --color-neutral-dark-text: #333333;
+    --color-neutral-placeholder: #888888;
     --font-display: "Inter", sans-serif;
 }
 
