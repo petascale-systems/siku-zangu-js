@@ -4,6 +4,7 @@
   "dependencies": {
     "@expo/metro-config": "~0.20.14",
     "@expo/metro-runtime": "~5.0.4",
+    "@getbrevo/brevo": "^3.0.1",
     "@headlessui/react": "^2.2.9",
     "@heroicons/react": "^2.2.0",
     "@react-native-async-storage/async-storage": "^2.2.0",
@@ -111,5 +112,8 @@
     "vite": "^7.0.0",
     "vite-plugin-dts": "~4.5.0",
     "vitest": "^3.0.0"
+  },
+  "scripts": {
+    "postinstall": "flowbite-react register"
   }
 }
