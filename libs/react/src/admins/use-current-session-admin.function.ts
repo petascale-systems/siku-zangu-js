@@ -1,3 +1,5 @@
+"use client"
+
 import {getJSON} from "../get-json.function";
 import {Admin, EmailAndPassword} from "@siku-zangu/core";
 import {useEffect, useState} from "react";

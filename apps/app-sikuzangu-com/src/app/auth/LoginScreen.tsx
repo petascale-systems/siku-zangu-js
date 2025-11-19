@@ -94,7 +94,7 @@ export default function LoginScreen() {
             text: language === 'en' ? 'OK' : 'Sawa',
             onPress: () =>
               router.replace({
-                pathname: '/tabs/HomeScreen',
+                pathname: '/tabs/CalenderScreen',
                 params: {
                   lang: language,
                   userId: userId,

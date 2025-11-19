@@ -1,11 +1,10 @@
-import React, { useMemo, useState } from 'react';
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import React, { useMemo, useState, useCallback, useEffect } from 'react';
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View, RefreshControl } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import Svg, { Circle, Text as SvgText } from 'react-native-svg';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { NavbarCard } from '@siku-zangu/react-native';
-import { useAccessToken } from '@siku-zangu/react';
+import { useUser } from '@siku-zangu/react';
 import {
   calculateCycleData,
   formatDate,
@@ -15,21 +14,21 @@ import {
   MONTH_NAMES_EN,
   MONTH_NAMES_SW
 } from '@siku-zangu/react-native';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter, useFocusEffect } from 'expo-router';
 
 
 const RADIUS = 120;
 const CENTER_X = 180;
 const CENTER_Y = 180;
 
-export default function Calender () {
+export default function Calendar() {
   const router = useRouter();
   const params = useLocalSearchParams();
   const insets = useSafeAreaInsets();
 
   const language = (params.lang as 'en' | 'sw') ?? 'en';
   const userId = params.userId as string;
-  const { user } = useAccessToken();
+  const { user, refetchUser, isFetchingUser } = useUser(userId);
   const [selectedDay] = useState<number | null>(null);
 
   const currentDate = new Date();
@@ -37,29 +36,40 @@ export default function Calender () {
   const currentYear = currentDate.getFullYear();
   const monthNames = language === 'en' ? MONTH_NAMES_EN : MONTH_NAMES_SW;
 
+  useFocusEffect(
+    useCallback(() => {
+      if (userId && refetchUser) {
+        refetchUser();
+      }
+    }, [userId, refetchUser])
+  );
+  useEffect(() => {
+    if (userId && refetchUser) {
+      refetchUser();
+    }
+  }, [userId]);
+
   const cycleData = useMemo(() => {
     if (!user?.kv?.prev_cycle_start_date) {
       return {
-        periodDays: [1, 2, 3, 4, 5, 6],
-        fertilityDays: [10, 11, 12, 13, 14, 15],
-        ovulationDays: [17, 18],
-        predictedDays: [29, 30, 31],
-        nextPeriodDate: new Date(2025, 9, 24),
-        ovulationDate: new Date(2025, 9, 10),
-        daysUntilPeriod: 6,
+        periodDays: [],
+        fertilityDays: [],
+        ovulationDays: [],
+        predictedDays: [],
+        nextPeriodDate: new Date(currentYear, currentMonth + 1, 1),
+        ovulationDate: new Date(currentYear, currentMonth, 15),
+        daysUntilPeriod: 0,
         daysInMonth: getDaysInMonth(currentMonth, currentYear),
       };
     }
-
     return calculateCycleData(
       user.kv.prev_cycle_start_date,
       user.kv.avg_cycle_length_days || 28,
-      user.kv.avg_period_length_days || 5,
+      user.kv.avg_period_length_days || 6,
       currentMonth,
       currentYear
     );
-  }, [user, currentMonth, currentYear]);
-
+  }, [user?.kv?.prev_cycle_start_date, user?.kv?.avg_cycle_length_days, user?.kv?.avg_period_length_days, currentMonth, currentYear]);
   const {
     periodDays,
     fertilityDays,
@@ -72,19 +82,38 @@ export default function Calender () {
 
   const handleBack = () => router.back();
 
+  const handleRefresh = useCallback(async () => {
+    if (refetchUser) {
+      await refetchUser();
+    }
+  }, [refetchUser]);
+
+  const fertilityStart = new Date(ovulationDate.getTime() - 5 * 24 * 60 * 60 * 1000);
+  const fertilityEnd = new Date(ovulationDate.getTime() + 24 * 60 * 60 * 1000);
+
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={handleBack}>
           <Ionicons name="arrow-back" size={24} color="#000" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Calendar</Text>
+        <Text style={styles.headerTitle}>
+          {language === 'en' ? 'Calendar' : 'Kalenda'}
+        </Text>
         <View style={{ width: 32 }} />
       </View>
 
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
+        refreshControl={
+          <RefreshControl
+            refreshing={isFetchingUser}
+            onRefresh={handleRefresh}
+            tintColor="#FF5C8D"
+            colors={["#FF5C8D"]}
+          />
+        }
       >
         <View style={styles.card}>
           <Text style={styles.month}>
@@ -123,7 +152,7 @@ export default function Calender () {
                   sequenceNum = periodDays.indexOf(day) + 1;
                 } else if (predictedDays.includes(day)) {
                   fill = '#fff';
-                  stroke = '#bbb';
+                  stroke = '#FF5E87';
                   strokeDasharray = '4 4';
                   sequenceNum = predictedDays.indexOf(day) + 1;
                 } else if (ovulationDays.includes(day)) {
@@ -166,7 +195,7 @@ export default function Calender () {
                           cx={badgeX}
                           cy={badgeY}
                           r="8"
-                          fill={stroke === '#bbb' ? '#fff' : stroke}
+                          fill={strokeDasharray ? '#fff' : stroke}
                           stroke={stroke}
                           strokeWidth="1.5"
                           strokeDasharray={strokeDasharray}
@@ -177,7 +206,7 @@ export default function Calender () {
                           textAnchor="middle"
                           fontSize="8"
                           fontWeight="600"
-                          fill={stroke === '#bbb' ? '#999' : '#fff'}
+                          fill={strokeDasharray ? '#FF5E87' : '#fff'}
                         >
                           {sequenceNum}
                         </SvgText>
@@ -203,7 +232,7 @@ export default function Calender () {
               label={language === 'en' ? 'Fertility' : 'Uzazi'}
             />
             <LegendItem
-              color="#999"
+              color="#FF5E87"
               label={language === 'en' ? 'Predicted' : 'Inatabiriwa'}
               dotted
             />
@@ -220,52 +249,76 @@ export default function Calender () {
             graph
           />
           <InfoCard
-            title={language === 'en' ? 'Next Period' : 'Hedhi Inayofuata'}
+            title={language === 'en' ? 'Next Period' : 'Hedhi Ijayo'}
             value={
-              language === 'en'
-                ? `in ${daysUntilPeriod} days`
-                : `baada ya siku ${daysUntilPeriod}`
+              daysUntilPeriod === 0
+                ? (language === 'en' ? 'Today' : 'Leo')
+                : language === 'en'
+                  ? `in ${daysUntilPeriod} ${daysUntilPeriod === 1 ? 'day' : 'days'}`
+                  : `baada ya siku ${daysUntilPeriod}`
             }
             icon="water-outline"
             iconColor="#1ABC9C"
           />
         </View>
 
-        <PhaseCard
-          title={language === 'en' ? 'Ovulation Phase' : 'Awamu ya Ovulation'}
-          date={
-            language === 'en'
-              ? `Expected on ${formatDate(ovulationDate, monthNames)}`
-              : `Inatarajiwa ${formatDate(ovulationDate, monthNames)}`
-          }
-          description={
-            language === 'en'
-              ? 'Your body releases an egg — the most fertile day in your cycle.'
-              : 'Mwili wako hutoa yai — siku ya uzazi zaidi katika mzunguko wako.'
-          }
-          color="#9B59B6"
-          icon="flower-outline"
-        />
+        {user?.kv?.prev_cycle_start_date && (
+          <>
+            <PhaseCard
+              title={language === 'en' ? 'Ovulation Phase' : 'Awamu ya Ovulation'}
+              date={
+                language === 'en'
+                  ? `Expected on ${formatDate(ovulationDate, monthNames)}`
+                  : `Inatarajiwa ${formatDate(ovulationDate, monthNames)}`
+              }
+              description={
+                language === 'en'
+                  ? 'Your body releases an egg — the most fertile day in your cycle.'
+                  : 'Mwili wako hutoa yai — siku ya uzazi zaidi katika mzunguko wako.'
+              }
+              color="#9B59B6"
+              icon="flower-outline"
+            />
 
-        <PhaseCard
-          title={language === 'en' ? 'Fertility Phase' : 'Awamu ya Uzazi'}
-          date={formatDateRange(
-            new Date(ovulationDate.getTime() - 5 * 24 * 60 * 60 * 1000),
-            new Date(ovulationDate.getTime() + 24 * 60 * 60 * 1000),
-            monthNames
-          )}
-          description={
-            language === 'en'
-              ? 'Best chance of getting pregnant.'
-              : 'Nafasi bora ya kupata mimba.'
-          }
-          color="#1ABC9C"
-          icon="sparkles-outline"
-        />
+            <PhaseCard
+              title={language === 'en' ? 'Fertility Window' : 'Dirisha la Uzazi'}
+              date={formatDateRange(
+                fertilityStart,
+                fertilityEnd,
+                monthNames
+              )}
+              description={
+                language === 'en'
+                  ? 'Best chance of getting pregnant during this window.'
+                  : 'Nafasi bora ya kupata mimba wakati huu.'
+              }
+              color="#1ABC9C"
+              icon="sparkles-outline"
+            />
+          </>
+        )}
+
+        {!user?.kv?.prev_cycle_start_date && (
+          <View style={styles.emptyStateCard}>
+            <Ionicons name="calendar-outline" size={48} color="#FF5C8D" />
+            <Text style={styles.emptyStateTitle}>
+              {language === 'en' ? 'No Cycle Data Yet' : 'Hakuna Data ya Mzunguko'}
+            </Text>
+            <Text style={styles.emptyStateText}>
+              {language === 'en'
+                ? 'Start logging your period to see predictions and insights.'
+                : 'Anza kurekodi hedhi yako ili kuona utabiri na maarifa.'}
+            </Text>
+          </View>
+        )}
 
         <TouchableOpacity
           style={styles.trackingCard}
           activeOpacity={0.8}
+          onPress={() => router.push({
+            pathname: '/tabs/LogEntryScreen',
+            params: { lang: language, userId: userId }
+          })}
           accessibilityLabel={
             language === 'en' ? 'Track Cycle' : 'Fuatilia Mzunguko'
           }
@@ -277,12 +330,12 @@ export default function Calender () {
             </View>
             <View style={{ flex: 1 }}>
               <Text style={styles.trackingTitle}>
-                {language === 'en' ? 'High accuracy' : 'Usahihi wa juu'}
+                {language === 'en' ? 'Track Your Cycle' : 'Fuatilia Mzunguko Wako'}
               </Text>
               <Text style={styles.trackingText}>
                 {language === 'en'
-                  ? 'Best time for tracking'
-                  : 'Wakati bora wa kufuatilia'}
+                  ? 'Log your symptoms and moods'
+                  : 'Rekodi dalili na hisia zako'}
               </Text>
             </View>
           </View>
@@ -293,7 +346,7 @@ export default function Calender () {
       <NavbarCard language={language} userId={userId} />
     </View>
   );
-};
+}
 
 interface LegendItemProps {
   color: string;
@@ -503,6 +556,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#333',
     fontWeight: '600',
+    textAlign: 'center',
   },
   dropContainer: {
     flexDirection: 'row',
@@ -562,6 +616,30 @@ const styles = StyleSheet.create({
   phaseDesc: {
     color: '#666',
     fontSize: 14,
+    lineHeight: 20,
+  },
+  emptyStateCard: {
+    backgroundColor: '#fff',
+    borderRadius: 18,
+    padding: 32,
+    marginVertical: 10,
+    alignItems: 'center',
+    shadowColor: '#FF4C7C',
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    elevation: 3,
+  },
+  emptyStateTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#333',
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  emptyStateText: {
+    fontSize: 14,
+    color: '#666',
+    textAlign: 'center',
     lineHeight: 20,
   },
   trackingCard: {
