@@ -1,4 +1,6 @@
-import { useEffect, useState, useCallback, useRef } from 'react';
+"use client"
+
+import { useEffect, useState } from 'react';
 import { User, UpdateUser, APIError } from '@siku-zangu/core';
 import { getJSON } from '../get-json.function';
 import { postJSON } from '../post-json.function';
@@ -72,7 +74,6 @@ export function useUser(userId?: string) {
   async function upsertUser(userData: User | UpdateUser): Promise<User | void> {
     setIsUpsertingUser(true);
     setError(null);
-
     try {
       let upsertedUser: User | void;
 
@@ -82,11 +83,7 @@ export function useUser(userId?: string) {
         upsertedUser = await createUser(userData as User);
       }
 
-      if (upsertedUser) {
-        setUser(upsertedUser);
-        await refetchUser();
-      }
-
+      if (upsertedUser) setUser(upsertedUser);
       return upsertedUser;
     } catch (e: any) {
       const errorMessage =
@@ -105,10 +102,8 @@ export function useUser(userId?: string) {
     if (!userId) {
       return;
     }
-
     setIsDeletingUser(true);
     setError(null);
-
     try {
       await deleteUserById(userId);
       setUser(undefined);
@@ -145,10 +140,24 @@ export function useUser(userId?: string) {
   }
 
   useEffect(() => {
-    if (userId) {
-      refetchUser();
+    if (!userId) {
+      return;
     }
-  }, [userId, refetchUser]);
+    setIsFetchingUser(true);
+    setError(null);
+
+    fetchUserById(userId)
+      .then((fetchedUser) => {
+        setUser(fetchedUser);
+      })
+      .catch((e: any) => {
+        const errorMessage = (e as APIError).message || 'Failed to fetch user';
+        setError(errorMessage);
+      })
+      .finally(() => {
+        setIsFetchingUser(false);
+      });
+  }, [userId]);
 
   return {
     user,

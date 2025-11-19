@@ -1,5 +1,7 @@
+"use client"
+
 import {ReactNode} from "react";
-import {Pagination} from "@siku-zangu/react";
+import {Pagination} from "./pagination.component";
 
 export function Th({className = '', colSpan, children}: {
     className?: string,
