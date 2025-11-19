@@ -1,5 +1,4 @@
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../navigation/AppNavigator';
 import React, { useState, useRef } from 'react';
 import {
   View,
@@ -15,18 +14,23 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useUser } from '@siku-zangu/react';
 import { UpdateUser } from '@siku-zangu/core';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-type Props = NativeStackScreenProps<RootStackParamList, 'UpdatingCycleLength'>;
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
-export const UpdatingCycleLengthScreen = ({ navigation, route }: Props) => {
-  const language = route.params?.lang ?? 'en';
-  const userId = route.params?.userId;
+export default  function UpdatingPeriodLengthScreen  ()  {
+  const router = useRouter();
+  const params = useLocalSearchParams();
+  const insets = useSafeAreaInsets();
+
+  const language = (params.lang as 'en' | 'sw') ?? 'en';
+  const userId = params.userId as string;
   const { upsertUser, isUpsertingUser } = useUser(userId);
 
-  const [selectedLength, setSelectedLength] = useState<number>(28);
-  const cycleLengths = [21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35];
+  const [selectedLength, setSelectedLength] = useState<number>(7);
+  const periodLengths = [3, 4, 5, 6, 7, 8, 9, 10];
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(50)).current;
@@ -60,11 +64,11 @@ export const UpdatingCycleLengthScreen = ({ navigation, route }: Props) => {
     try {
       const updateData: UpdateUser = {
         kv: {
-          avg_cycle_length_days: selectedLength,
+          avg_period_length_days: selectedLength,
         },
       };
 
-      console.log('UpdatingCycleLength: Calling upsertUser with:', {
+      console.log('UpdatingPeriodLength: Calling upsertUser with:', {
         userId,
         updateData,
       });
@@ -74,64 +78,53 @@ export const UpdatingCycleLengthScreen = ({ navigation, route }: Props) => {
       Alert.alert(
         language === 'en' ? 'Success' : 'Mafanikio',
         language === 'en'
-          ? 'Cycle length saved successfully!'
-          : 'Muda wa mzunguko umehifadhiwa kwa mafanikio!',
+          ? 'Period length saved successfully!'
+          : 'Muda wa hedhi umehifadhiwa kwa mafanikio!',
         [
           {
             text: language === 'en' ? 'OK' : 'Sawa',
-            onPress: () => navigation.navigate('UpdatingSymptomsMoods', { lang: language, userId }),
+            onPress: () =>
+              router.replace({
+                pathname: '/UpdatingCycleLengthScreen',
+                params: {
+                  lang: language,
+                  userId: userId,
+                },
+              }),
           },
         ]
       );
     } catch (e: any) {
-      const errorMessage = e.message || (language === 'en'
-        ? 'Failed to save cycle length'
-        : 'Imeshindwa kuhifadhi muda wa mzunguko');
-      Alert.alert(
-        language === 'en' ? 'Error' : 'Hitilafu',
-        errorMessage
-      );
+      const errorMessage =
+        e.message ||
+        (language === 'en'
+          ? 'Failed to save period length'
+          : 'Imeshindwa kuhifadhi muda wa hedhi');
+      Alert.alert(language === 'en' ? 'Error' : 'Hitilafu', errorMessage);
     }
   };
 
-  const getFertileWindow = (length: number) => {
-    const ovulationDay = length - 14;
-    const fertileStart = Math.max(1, ovulationDay - 2);
-    const fertileEnd = ovulationDay + 2;
-    return { fertileStart, fertileEnd };
-  };
-
-  const renderCycleIndicator = (length: number) => {
+  const renderDayIndicator = (length: number) => {
     const isSelected = selectedLength === length;
-    const { fertileStart, fertileEnd } = getFertileWindow(length);
+    const dayDots = Array.from({ length }, (_, i) => (
+      <View
+        key={i}
+        style={[
+          styles.dayDot,
+          isSelected && styles.dayDotSelected,
+          i < length - 1 && styles.dayDotWithLine,
+        ]}
+      />
+    ));
 
-    const dots = Array.from({ length }, (_, i) => {
-      const day = i + 1;
-      const isFertile = day >= fertileStart && day <= fertileEnd;
-      return (
-        <View
-          key={i}
-          style={[
-            styles.cycleDot,
-            isFertile && styles.cycleDotFertile,
-            isSelected && isFertile && styles.cycleDotFertileSelected,
-          ]}
-        />
-      );
-    });
-
-    return (
-      <View style={styles.cycleIndicator}>
-        {dots}
-      </View>
-    );
+    return <View style={styles.dayIndicator}>{dayDots}</View>;
   };
 
   return (
     <View style={styles.container}>
       <TouchableOpacity
         style={styles.backButton}
-        onPress={() => navigation.goBack()}
+        onPress={() => router.back()}
         accessibilityLabel={language === 'en' ? 'Go back' : 'Rudi nyuma'}
       >
         <Ionicons name="arrow-back" size={24} color="black" />
@@ -149,85 +142,85 @@ export const UpdatingCycleLengthScreen = ({ navigation, route }: Props) => {
         <View style={styles.header}>
           <Text style={styles.title}>
             {language === 'en'
-              ? "What's your average cycle length?"
-              : 'Mzunguko wako wa wastani hudumu siku ngapi?'}
+              ? 'How many days does your period last?'
+              : 'Hedhi yako hudumu kwa siku ngapi?'}
           </Text>
 
           <Text style={styles.subtitle}>
             {language === 'en'
-              ? 'A cycle starts on day 1 of your period and ends before the next one.'
-              : 'Mzunguko huanza siku ya kwanza ya hedhi yako na kuisha kabla ya ijayo.'}
+              ? 'Include every day with period flow, including spotting.'
+              : 'Jumuisha kila siku yenye mtiririko wa hedhi, ikiwemo doa.'}
           </Text>
         </View>
-
         <View style={styles.visualIndicator}>
-          <View style={styles.cycleInfoContainer}>
-            <Ionicons name="calendar-outline" size={20} color="#FD5A7E" />
-            <Text style={styles.cycleInfoText}>
-              {language === 'en' ? 'Fertile window' : 'Dirisha la uzazi'}
+          <View style={styles.periodFlowContainer}>
+            <Ionicons name="water-outline" size={20} color="#FD5A7E" />
+            <Text style={styles.periodFlowText}>
+              {language === 'en'
+                ? 'Period flow days'
+                : 'Siku za mtiririko wa hedhi'}
             </Text>
           </View>
         </View>
-
         <View style={styles.lengthContainer}>
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.scrollContent}
           >
-            {cycleLengths.map((length) => {
-              const { fertileStart, fertileEnd } = getFertileWindow(length);
-              return (
-                <TouchableOpacity
-                  key={length}
-                  style={[
-                    styles.lengthCard,
-                    selectedLength === length && styles.lengthCardSelected,
-                  ]}
-                  onPress={() => setSelectedLength(length)}
-                  accessibilityLabel={`${length} ${language === 'en' ? 'days' : 'siku'}`}
-                  accessibilityRole="radio"
-                  accessibilityState={{ selected: selectedLength === length }}
-                >
-                  {renderCycleIndicator(length)}
-
-                  <View style={styles.lengthContent}>
-                    <Text
-                      style={[
-                        styles.lengthNumber,
-                        selectedLength === length && styles.lengthNumberSelected,
-                      ]}
-                    >
-                      {length}
-                    </Text>
-                    <Text
-                      style={[
-                        styles.lengthLabel,
-                        selectedLength === length && styles.lengthLabelSelected,
-                      ]}
-                    >
-                      {language === 'en' ? 'DAYS' : 'SIKU'}
-                    </Text>
-                  </View>
-
-                  <Text style={styles.fertileWindowText}>
-                    {language === 'en' ? 'Day' : 'Siku'} {fertileStart}-{fertileEnd}
+            {periodLengths.map((length) => (
+              <TouchableOpacity
+                key={length}
+                style={[
+                  styles.lengthCard,
+                  selectedLength === length && styles.lengthCardSelected,
+                ]}
+                onPress={() => setSelectedLength(length)}
+                accessibilityLabel={`${length} ${
+                  language === 'en' ? 'days' : 'siku'
+                }`}
+                accessibilityRole="radio"
+                accessibilityState={{ selected: selectedLength === length }}
+              >
+                {renderDayIndicator(length)}
+                <View style={styles.lengthContent}>
+                  <Text
+                    style={[
+                      styles.lengthNumber,
+                      selectedLength === length && styles.lengthNumberSelected,
+                    ]}
+                  >
+                    {length}
                   </Text>
-
-                  {selectedLength === length && (
-                    <View style={styles.selectedIndicator}>
-                      <Ionicons name="checkmark-circle" size={20} color="#FD5A7E" />
-                    </View>
-                  )}
-                </TouchableOpacity>
-              );
-            })}
+                  <Text
+                    style={[
+                      styles.lengthLabel,
+                      selectedLength === length && styles.lengthLabelSelected,
+                    ]}
+                  >
+                    {language === 'en' ? 'DAYS' : 'SIKU'}
+                  </Text>
+                </View>
+                {selectedLength === length && (
+                  <View style={styles.selectedIndicator}>
+                    <Ionicons
+                      name="checkmark-circle"
+                      size={20}
+                      color="#FD5A7E"
+                    />
+                  </View>
+                )}
+              </TouchableOpacity>
+            ))}
           </ScrollView>
         </View>
-
         <View style={styles.infoSection}>
           <View style={styles.infoIcon}>
-            <Ionicons name="information-circle-outline" size={20} color="#645F5F" />
+            <Ionicons
+              name="information-circle-outline"
+              size={20}
+              color="#645F5F"
+            />
           </View>
           <Text style={styles.infoText}>
             {language === 'en'
@@ -235,19 +228,23 @@ export const UpdatingCycleLengthScreen = ({ navigation, route }: Props) => {
               : 'Unaweza kubadilisha jibu lako kwenye wasifu wako wakati wowote.'}
           </Text>
         </View>
-
-      <TouchableOpacity
-                    style={[styles.nextButton, isUpsertingUser && styles.nextButtonDisabled]}
-                    onPress={handleSave}
-                    disabled={isUpsertingUser}
-                    accessibilityLabel={language === 'en' ? 'Next' : 'Ijayo'}
-                  >
-                    {isUpsertingUser ? (
-                      <ActivityIndicator size="small" color="#fff" />
-                    ) : (
-                      <Text style={styles.nextButtonText}>{language === 'en' ? 'NEXT' : 'IJAYO'}</Text>
-                    )}
-                  </TouchableOpacity>
+        <TouchableOpacity
+          style={[
+            styles.nextButton,
+            isUpsertingUser && styles.nextButtonDisabled,
+          ]}
+          onPress={handleSave}
+          disabled={isUpsertingUser}
+          accessibilityLabel={language === 'en' ? 'Next' : 'Ijayo'}
+        >
+          {isUpsertingUser ? (
+            <ActivityIndicator size="small" color="#fff" />
+          ) : (
+            <Text style={styles.nextButtonText}>
+              {language === 'en' ? 'NEXT' : 'IJAYO'}
+            </Text>
+          )}
+        </TouchableOpacity>
       </Animated.View>
     </View>
   );
@@ -258,7 +255,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#FFF5F2',
     padding: 20,
-    
   },
   backButton: {
     position: 'absolute',
@@ -271,17 +267,17 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 18,
-    fontFamily: "Inter",
-    fontStyle: "normal",
+    fontFamily: 'Inter',
+    fontStyle: 'normal',
     fontWeight: '600',
     textAlign: 'center',
     marginTop: 51,
-    color:"#333333"
+    color: '#333333',
   },
   subtitle: {
     fontSize: 14,
-    fontFamily: "Inter",
-    fontStyle: "normal",
+    fontFamily: 'Inter',
+    fontStyle: 'normal',
     fontWeight: '400',
     textAlign: 'center',
     color: '#645F5F',
@@ -295,7 +291,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 30,
   },
-  cycleInfoContainer: {
+  periodFlowContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#FFE1E6',
@@ -303,7 +299,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 20,
   },
-  cycleInfoText: {
+  periodFlowText: {
     fontSize: 14,
     fontFamily: 'Inter',
     fontWeight: '500',
@@ -337,26 +333,25 @@ const styles = StyleSheet.create({
     shadowColor: '#FD5A7E',
     shadowOpacity: 0.2,
   },
-  cycleIndicator: {
+  dayIndicator: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
     alignItems: 'center',
     marginBottom: 15,
-    maxWidth: 80,
-    justifyContent: 'center',
-  },
-  cycleDot: {
-    width: 4,
     height: 4,
-    borderRadius: 2,
+  },
+  dayDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
     backgroundColor: '#E0E0E0',
-    margin: 1,
+    marginRight: 4,
   },
-  cycleDotFertile: {
+  dayDotSelected: {
     backgroundColor: '#FD5A7E',
   },
-  cycleDotFertileSelected: {
-    backgroundColor: '#FD5A7E',
+  dayDotWithLine: {
+    width: 20,
+    borderRadius: 2,
   },
   lengthContent: {
     alignItems: 'center',
@@ -381,14 +376,7 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
   },
   lengthLabelSelected: {
-    color: '#B59EF3',
-  },
-  fertileWindowText: {
-    fontSize: 11,
-    fontFamily: 'Inter',
-    fontWeight: '500',
-    color: '#999999',
-    marginTop: 8,
+    color: '#FD5A7E',
   },
   selectedIndicator: {
     position: 'absolute',
@@ -417,10 +405,10 @@ const styles = StyleSheet.create({
     color: '#645F5F',
     lineHeight: 20,
   },
-   nextButton: {
+  nextButton: {
     backgroundColor: '#FD5A7E',
-    fontFamily: "Inter",
-    fontStyle: "normal",
+    fontFamily: 'Inter',
+    fontStyle: 'normal',
     fontWeight: '600',
     paddingVertical: 15,
     borderRadius: 24,
@@ -435,6 +423,6 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: '600',
     fontSize: 16,
-    fontStyle: "normal",
+    fontStyle: 'normal',
   },
 });
