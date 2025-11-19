@@ -1,3 +1,4 @@
+"use client"
 import {Admin, ADMIN_ZOD_SCHEMA, AdminRole, UserStatus} from "@siku-zangu/core";
 import {ChangeEvent, FormEvent, useEffect, useState} from "react";
 import {Button, Label, Select, Spinner, TextInput} from "flowbite-react";
