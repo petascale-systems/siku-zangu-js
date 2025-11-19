@@ -9,6 +9,7 @@ import { deleteJSON } from '../delete-json.function';
 
 export const USERS_API_PATH = '/api/users';
 export const USER_BY_ID_API_PATH = (id: string) => `/api/users/${id}`;
+export const CHANGE_PIN_API_PATH = (id: string) => `/api/users/${id}/change-pin`;
 
 async function fetchUserById(id: string): Promise<User> {
   return getJSON<User>(USER_BY_ID_API_PATH(id));
@@ -26,12 +27,49 @@ export async function deleteUserById(userId: string): Promise<undefined | User> 
   return deleteJSON<User>(USER_BY_ID_API_PATH(userId));
 }
 
+export async function changeUserPin(
+  userId: string,
+  currentPin: string,
+  newPin: string
+): Promise<User | void> {
+  return patchJSON<{ currentPin: string; newPin: string }, User>(
+    CHANGE_PIN_API_PATH(userId),
+    { currentPin, newPin }
+  );
+}
+
 export function useUser(userId?: string) {
   const [user, setUser] = useState<User>();
   const [isFetchingUser, setIsFetchingUser] = useState(false);
   const [isUpsertingUser, setIsUpsertingUser] = useState(false);
   const [isDeletingUser, setIsDeletingUser] = useState(false);
+  const [isChangingPin, setIsChangingPin] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const isFetchingRef = useRef(false);
+
+  const refetchUser = useCallback(async () => {
+    if (!userId || isFetchingRef.current) {
+      return;
+    }
+
+    isFetchingRef.current = true;
+    setIsFetchingUser(true);
+    setError(null);
+
+    try {
+      const fetchedUser = await fetchUserById(userId);
+      setUser(fetchedUser);
+      return fetchedUser;
+    } catch (e: any) {
+      const errorMessage = (e as APIError).message || 'Failed to fetch user';
+      setError(errorMessage);
+      throw e;
+    } finally {
+      setIsFetchingUser(false);
+      isFetchingRef.current = false;
+    }
+  }, [userId]);
 
   async function upsertUser(userData: User | UpdateUser): Promise<User | void> {
     setIsUpsertingUser(true);
@@ -78,6 +116,29 @@ export function useUser(userId?: string) {
     }
   }
 
+  async function changePin(currentPin: string, newPin: string): Promise<User | void> {
+    if (!userId) {
+      throw new Error('User ID is required to change PIN');
+    }
+
+    setIsChangingPin(true);
+    setError(null);
+
+    try {
+      const updatedUser = await changeUserPin(userId, currentPin, newPin);
+      if (updatedUser) {
+        setUser(updatedUser);
+      }
+      return updatedUser;
+    } catch (e: any) {
+      const errorMessage = (e as APIError).message || 'Failed to change PIN';
+      setError(errorMessage);
+      throw e;
+    } finally {
+      setIsChangingPin(false);
+    }
+  }
+
   useEffect(() => {
     if (!userId) {
       return;
@@ -103,8 +164,11 @@ export function useUser(userId?: string) {
     isFetchingUser,
     isUpsertingUser,
     isDeletingUser,
+    isChangingPin,
     error,
     upsertUser,
     deleteUser,
+    changePin,
+    refetchUser,
   };
 }
