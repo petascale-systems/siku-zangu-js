@@ -1,3 +1,5 @@
+"use client"
+
 import {ARTICLES_API_PATH} from './use-articles-page.function'
 import {useEffect, useState} from "react";
 import {APIError, Article} from "@siku-zangu/core";

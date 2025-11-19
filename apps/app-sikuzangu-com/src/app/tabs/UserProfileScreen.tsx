@@ -79,7 +79,7 @@ export default function Profile() {
       icon: '🔄',
       label: 'Change Language',
       labelSw: 'Badilisha Lugha',
-      onPress: () => router.push('/auth/LanguageScreen'),
+      onPress: () => router.push('/'),
     },
     {
       id: 'notifications',
@@ -99,7 +99,7 @@ export default function Profile() {
       labelSw: 'Badilisha PIN',
       onPress: () =>
         router.push({
-          pathname: '/change-pin',
+          pathname: 'tabs/ChangePinScreen',
           params: { lang: language, userId },
         }),
     },
@@ -121,7 +121,7 @@ export default function Profile() {
       labelSw: 'Futa Akaunti',
       onPress: () =>
         router.push({
-          pathname: '/delete-account',
+          pathname: 'tabs/DeleteAccountScreen',
           params: { lang: language, userId },
         }),
     },

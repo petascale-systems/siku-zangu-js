@@ -9,6 +9,7 @@ export default function TabsLayout() {
       <Stack.Screen name="LogEntryScreen" />
       <Stack.Screen name="UserProfileScreen" />
       <Stack.Screen name="NotificationsScreen" />
+      <Stack.Screen name="ChangePinScreen" />
     </Stack>
   );
 }
