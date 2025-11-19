@@ -1,14 +1,14 @@
 import Image from 'next/image';
-import signinImage from '../../../../public/images/signup.png';
+import signinImage from '../../../../public/images/signin.png';
 import profileSettingsImage from '../../../../public/images/profile.png';
 import confirmDeleteImage from '../../../../public/images/delete.png';
-import { WebsiteNav,WebsiteFooter } from '@siku-zangu/react';
-import logoPNG from '../../../../public/images/logo.png';
+import logo from '../../../../public/images/logo.png';
+import {WebsiteNav, WebsiteFooter} from '@siku-zangu/react'
 
 export default function DeleteAccountPage() {
   return (
     <div className="bg-primary-base">
-      <WebsiteNav logo={logoPNG} />
+      <WebsiteNav logo={logo}/>
       <section className="w-full px-4 sm:px-6 lg:px-8 py-12 sm:py-16 md:py-20">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-8 sm:mb-12">
@@ -180,7 +180,7 @@ export default function DeleteAccountPage() {
           </div>
         </div>
       </section>
-      <WebsiteFooter logo={logoPNG} />
+      <WebsiteFooter logo={logo}/>
     </div>
   );
 }

@@ -1,11 +1,11 @@
 import Link from 'next/link';
-import { WebsiteFooter, WebsiteNav } from '@siku-zangu/react';
-import logoPNG from '../../../../public/images/logo.png';
+import {WebsiteNav, WebsiteFooter} from '@siku-zangu/react'
+import logo from '../../../../public/images/logo.png';
 
 export default function AboutPage() {
   return (
     <div className="bg-primary-base">
-      <WebsiteNav logo={logoPNG} />
+      <WebsiteNav logo={logo}/>
       <section className="w-full px-4 sm:px-6 lg:px-8 py-12 sm:py-16 md:py-20">
         <div className="max-w-4xl mx-auto">
           <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-center mb-6 sm:mb-8">
@@ -114,8 +114,8 @@ export default function AboutPage() {
             </div>
           </div>
         </div>
-        <WebsiteFooter logo={logoPNG} />
       </section>
+      <WebsiteFooter logo={logo}/>
     </div>
   );
 }

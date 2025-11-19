@@ -1,5 +1,4 @@
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../navigation/AppNavigator';
 import React, { useState, useRef } from 'react';
 import {
   View,
@@ -14,16 +13,20 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useUser } from '@siku-zangu/react';
 import { UpdateUser } from '@siku-zangu/core';
-import { NavbarCard } from '../components/App-nav-component';
+import { NavbarCard } from '@siku-zangu/react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 
-type Props = NativeStackScreenProps<RootStackParamList, 'AddLog'>;
 
-export const LogEntryScreen = ({ navigation, route }: Props) => {
-  const language = route.params?.lang ?? 'en';
-  const userId = route.params?.userId;
-  const { upsertUser, isUpsertingUser, user } = useUser(userId);
+export default  function LogEntry  () {
+  const router = useRouter();
+  const params = useLocalSearchParams();
   const insets = useSafeAreaInsets();
+
+
+  const language = (params.lang as 'en' | 'sw') ?? 'en';
+  const userId = params.userId as string;
+  const { upsertUser, isUpsertingUser, user } = useUser(userId);
 
   const symptoms = [
     {
@@ -349,7 +352,7 @@ export const LogEntryScreen = ({ navigation, route }: Props) => {
       Alert.alert('Error', e.message || 'Failed to save');
     }
   };
-  const handleBack = () => navigation.goBack();
+  const handleBack = () => router.back();
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
       <View style={styles.header}>
@@ -390,7 +393,7 @@ export const LogEntryScreen = ({ navigation, route }: Props) => {
                     }
                   >
                     <Text style={styles.symptomIcon}>   <Ionicons
-                      name={item.icon}
+                      name={item.icon as any}
                       size={24}
                       color={item.color}
                     /></Text>
@@ -573,20 +576,20 @@ export const LogEntryScreen = ({ navigation, route }: Props) => {
             ]}
             onPress={handleSave}
             disabled={isUpsertingUser}
-            accessibilityLabel={language === 'en' ? 'Next' : 'Ijayo'}
+            accessibilityLabel={language === 'en' ? 'SAVE' : 'HIFADHI'}
           >
             {isUpsertingUser ? (
               <ActivityIndicator size="small" color="#fff" />
             ) : (
               <Text style={styles.saveButtonText}>
-                {language === 'en' ? 'NEXT' : 'IJAYO'}
+                {language === 'en' ? 'SAVE' : 'HIFADHI'}
               </Text>
             )}
           </TouchableOpacity>
         </Animated.View>
       </ScrollView>
 
-      <NavbarCard navigation={navigation} language={language} userId={userId} />
+      <NavbarCard  language={language} userId={userId} />
     </View>
   );
 };
