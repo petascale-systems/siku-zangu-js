@@ -86,7 +86,7 @@ export default function UpdatingCycleLengthScreen  ()  {
 
             onPress: () =>
               router.replace({
-                pathname: '/UpdatingSymptomsMoods',
+                pathname: '/onboarding/UpdatingSymptomsMoodsScreen',
                 params: {
                   lang: language,
                   userId: userId,

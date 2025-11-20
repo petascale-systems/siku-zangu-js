@@ -85,7 +85,7 @@ export default  function UpdatingPeriodLengthScreen  ()  {
             text: language === 'en' ? 'OK' : 'Sawa',
             onPress: () =>
               router.replace({
-                pathname: '/UpdatingCycleLengthScreen',
+                pathname: '/onboarding/UpdatingCycleLengthScreen',
                 params: {
                   lang: language,
                   userId: userId,
