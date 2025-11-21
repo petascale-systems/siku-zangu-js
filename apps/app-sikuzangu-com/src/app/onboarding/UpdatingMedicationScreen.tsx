@@ -1,19 +1,11 @@
-import React, { useState } from 'react';
-import {
-    View,
-    Text,
-    TouchableOpacity,
-    StyleSheet,
-    Alert,
-    ScrollView,
-    ActivityIndicator,
-} from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { useUser } from '@siku-zangu/react';
-import { UpdateUser } from '@siku-zangu/core';
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { markOnboardingComplete } from '@siku-zangu/react-native';
+import React, {useState} from 'react';
+import {ActivityIndicator, Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View,} from 'react-native';
+import {Ionicons} from '@expo/vector-icons';
+import {useUser} from '@siku-zangu/react';
+import {User} from '@siku-zangu/core';
+import {useLocalSearchParams, useRouter} from 'expo-router';
+import {useSafeAreaInsets} from 'react-native-safe-area-context';
+import {markOnboardingComplete} from '@siku-zangu/react-native';
 
 export default function UpdatingMedicationScreen() {
     const router = useRouter();
@@ -22,13 +14,13 @@ export default function UpdatingMedicationScreen() {
 
     const language = (params.lang as 'en' | 'sw') ?? 'en';
     const userId = params.userId as string;
-    const { upsertUser, isUpsertingUser, user } = useUser(userId);
+    const {upsertUser, isUpsertingUser, user} = useUser(userId);
 
     const medications = [
-        { key: 'pain_relief', label: 'Pain Relief', icon: 'medkit-outline' },
-        { key: 'herbal_supplement', label: 'Herbal Supplement', icon: 'leaf-outline' },
-        { key: 'hormone_therapy', label: 'Hormone Therapy', icon: 'flask-outline' },
-        { key: 'birth_control', label: 'Birth Control', icon: 'pill-outline' },
+        {key: 'pain_relief', label: 'Pain Relief', icon: 'medkit-outline'},
+        {key: 'herbal_supplement', label: 'Herbal Supplement', icon: 'leaf-outline'},
+        {key: 'hormone_therapy', label: 'Hormone Therapy', icon: 'flask-outline'},
+        {key: 'birth_control', label: 'Birth Control', icon: 'pill-outline'},
     ];
 
     const [selectedMedications, setSelectedMedications] = useState<string[]>([]);
@@ -62,7 +54,7 @@ export default function UpdatingMedicationScreen() {
                 timestamp,
             }));
 
-            const updateData: UpdateUser = {
+            const updateData: User = {
                 kv: {
                     selected_medications: selectedMedications,
                     medication_logs: [...currentMedicationLogs, ...newMedicationLogs],
@@ -129,7 +121,7 @@ export default function UpdatingMedicationScreen() {
                 onPress={() => router.back()}
                 accessibilityLabel={language === 'en' ? 'Go back' : 'Rudi nyuma'}
             >
-                <Ionicons name="arrow-back" size={24} color="black" />
+                <Ionicons name="arrow-back" size={24} color="black"/>
             </TouchableOpacity>
 
             <ScrollView contentContainerStyle={styles.content}>
@@ -157,7 +149,7 @@ export default function UpdatingMedicationScreen() {
                                 style={[styles.card, isSelected && styles.cardSelected]}
                                 onPress={() => toggleSelection(item.key)}
                                 accessibilityLabel={item.label}
-                                accessibilityState={{ selected: isSelected }}
+                                accessibilityState={{selected: isSelected}}
                             >
                                 <Ionicons
                                     name={item.icon as any}
@@ -183,7 +175,7 @@ export default function UpdatingMedicationScreen() {
                     accessibilityLabel={language === 'en' ? 'Complete Setup' : 'Kamali Mipango'}
                 >
                     {isUpsertingUser || isSaving ? (
-                        <ActivityIndicator size="small" color="#fff" />
+                        <ActivityIndicator size="small" color="#fff"/>
                     ) : (
                         <Text style={styles.nextButtonText}>
                             {language === 'en' ? 'COMPLETE SETUP' : 'KAMALI MIPANGO'}
@@ -247,7 +239,7 @@ const styles = StyleSheet.create({
         marginBottom: 16,
         shadowColor: '#000',
         shadowOpacity: 0.08,
-        shadowOffset: { width: 0, height: 2 },
+        shadowOffset: {width: 0, height: 2},
         shadowRadius: 6,
         elevation: 3,
     },

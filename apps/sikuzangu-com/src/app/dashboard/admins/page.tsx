@@ -35,7 +35,7 @@ export default function AdminsPage() {
     }
 
     const _handleStatusToggleClick = (userId: string, status: UserStatus) => {
-        updateAdmin(userId, {status: status}).catch(console.error);
+        updateAdmin(userId, {status: status} as Admin).catch(console.error);
     }
 
     const _handleQInputEnter = (q: KeyboardEvent<HTMLInputElement>) => {
