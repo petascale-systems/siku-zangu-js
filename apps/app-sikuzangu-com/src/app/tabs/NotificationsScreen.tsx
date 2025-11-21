@@ -1,21 +1,10 @@
-import React, { useState } from 'react';
-import {
-    View,
-    Text,
-    ScrollView,
-    StyleSheet,
-    TouchableOpacity,
-    Switch,
-    ActivityIndicator,
-    Alert,
-} from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { useUser } from '@siku-zangu/react';
-import { UpdateUser } from '@siku-zangu/core';
-import { useLocalSearchParams, useRouter } from 'expo-router';
-
+import React, {useState} from 'react';
+import {ActivityIndicator, Alert, ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View,} from 'react-native';
+import {Ionicons} from '@expo/vector-icons';
+import {useSafeAreaInsets} from 'react-native-safe-area-context';
+import {useUser} from '@siku-zangu/react';
+import {UserKv} from '@siku-zangu/core';
+import {useLocalSearchParams, useRouter} from 'expo-router';
 
 
 interface NotificationSetting {
@@ -29,14 +18,14 @@ interface NotificationSetting {
     enabled: boolean;
 }
 
-export default function NotificationsScreen  () {
+export default function NotificationsScreen() {
     const router = useRouter();
     const params = useLocalSearchParams();
     const insets = useSafeAreaInsets();
 
     const language = (params.lang as 'en' | 'sw') ?? 'en';
     const userId = params.userId as string;
-    const { user, upsertUser, isUpsertingUser } = useUser(userId);
+    const {user, upsertUser, isUpsertingUser} = useUser(userId);
 
     const [initialNotifications, setInitialNotifications] = useState<NotificationSetting[]>([]);
     const [notifications, setNotifications] = useState<NotificationSetting[]>([
@@ -87,7 +76,7 @@ export default function NotificationsScreen  () {
         const updatedNotifications = notifications.map(notif => {
             let enabledValue: boolean | undefined;
 
-            switch(notif.id) {
+            switch (notif.id) {
                 case 'period':
                     enabledValue = user.kv.receive_period_alerts;
                     break;
@@ -117,7 +106,7 @@ export default function NotificationsScreen  () {
     const toggleNotification = (id: string) => {
         setNotifications((prev) =>
             prev.map((notif) =>
-                notif.id === id ? { ...notif, enabled: !notif.enabled } : notif
+                notif.id === id ? {...notif, enabled: !notif.enabled} : notif
             )
         );
     };
@@ -140,14 +129,14 @@ export default function NotificationsScreen  () {
         }
 
         try {
-            const updates: Partial<UpdateUser['kv']> = {
+            const updates: UserKv = {
                 receive_period_alerts: notifications.find(n => n.id === 'period')?.enabled,
                 receive_fertile_alerts: notifications.find(n => n.id === 'fertile')?.enabled,
                 receive_medication_tips: notifications.find(n => n.id === 'medication')?.enabled,
                 receive_insights_tips: notifications.find(n => n.id === 'insights')?.enabled,
             };
 
-            await upsertUser({ kv: updates });
+            await upsertUser({kv: updates});
 
             Alert.alert(
                 language === 'sw' ? 'Mafanikio' : 'Success',
@@ -174,23 +163,23 @@ export default function NotificationsScreen  () {
     const handleBack = () => router.back();
 
     return (
-        <View style={[styles.container, { paddingTop: insets.top }]}>
+        <View style={[styles.container, {paddingTop: insets.top}]}>
             <View style={styles.header}>
                 <TouchableOpacity style={styles.backButton} onPress={handleBack}>
-                    <Ionicons name="arrow-back" size={24} color="#000" />
+                    <Ionicons name="arrow-back" size={24} color="#000"/>
                 </TouchableOpacity>
                 <Text style={styles.headerTitle}>
                     {language === 'sw' ? 'Arifa' : 'Notifications'}
                 </Text>
-                <Ionicons name="notifications" size={22} color="#999" />
+                <Ionicons name="notifications" size={22} color="#999"/>
             </View>
 
             <ScrollView showsVerticalScrollIndicator={false}>
                 <View style={styles.heroSection}>
                     <View style={styles.iconCircle}>
-                        <Text style={styles.heroIcon}><Ionicons name="calendar" size={24} color="#FD5A7E" /></Text>
+                        <Text style={styles.heroIcon}><Ionicons name="calendar" size={24} color="#FD5A7E"/></Text>
                         <View style={styles.badge}>
-                            <Ionicons name="notifications" size={14} color="#fff" />
+                            <Ionicons name="notifications" size={14} color="#fff"/>
                         </View>
                     </View>
                     <Text style={styles.heroTitle}>
@@ -215,7 +204,7 @@ export default function NotificationsScreen  () {
                             ]}
                         >
                             <View style={styles.settingLeft}>
-                                <View style={[styles.settingIcon, { backgroundColor: item.iconBg }]}>
+                                <View style={[styles.settingIcon, {backgroundColor: item.iconBg}]}>
                                     <Text style={styles.settingEmoji}>{item.icon}</Text>
                                 </View>
                                 <View style={styles.settingContent}>
@@ -230,7 +219,7 @@ export default function NotificationsScreen  () {
                             <Switch
                                 value={item.enabled}
                                 onValueChange={() => toggleNotification(item.id)}
-                                trackColor={{ false: '#D1D5DB', true: '#FF597D' }}
+                                trackColor={{false: '#D1D5DB', true: '#FF597D'}}
                                 thumbColor="#fff"
                                 ios_backgroundColor="#D1D5DB"
                             />
@@ -251,7 +240,7 @@ export default function NotificationsScreen  () {
                     }
                 >
                     {isUpsertingUser ? (
-                        <ActivityIndicator size="small" color="#fff" />
+                        <ActivityIndicator size="small" color="#fff"/>
                     ) : (
                         <Text style={styles.saveButtonText}>
                             {language === 'sw' ? 'Hifadhi Mapendeleo' : 'Save Preferences'}

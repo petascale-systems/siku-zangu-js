@@ -9,14 +9,14 @@ import {TABLE_NAME_S_USER, TABLE_NAME_S_USER_KV} from "../table-names";
 import {Knex} from 'knex';
 
 
-export async function updateOneUser(userIdHex: string, partialUser: Partial<User>): Promise<User> {
-    const parsedUser = USER_ZOD_SCHEMA.safeParse(partialUser);
+export async function updateOneUser(userIdHex: string, user: User): Promise<User> {
+    const parsedUser = USER_ZOD_SCHEMA.safeParse(user);
     if (!parsedUser.success) {
         return Promise.reject(zodErrorToApiError(parsedUser.error))
     }
 
     if (!await userExistsByUserId(userIdHex)) {
-        throw {status: 404, message: 'User not found'} as APIError;
+        return Promise.reject({status: 404, message: 'User not found'} as APIError);
     }
 
     const data = parsedUser.data;
@@ -25,26 +25,26 @@ export async function updateOneUser(userIdHex: string, partialUser: Partial<User
 
     const currentRow = await buildUserTableJoins(DATABASE).where('_u.id_user', userIdBin).first(USER_TABLE_COLUMN_ALIASES);
     if (!currentRow) {
-        throw {status: 500, message: 'User exists but SELECT failed'} as APIError;
+        return Promise.reject({status: 500, message: 'User exists but SELECT failed'} as APIError);
     }
     const currentUser = rowToUser(currentRow);
 
     if (data?.kv?.email && data?.kv?.email.toLowerCase() !== (currentUser?.kv?.email?.toLowerCase() || null)) {
         if (await isTakenEmail(data?.kv.email)) {
-            throw {
+            return Promise.reject({
                 status: 409,
                 message: 'E-mail is taken',
                 issues: [{path: ['kv', 'email'], error: 'E-mail is taken'}],
-            } as APIError;
+            } as APIError);
         }
     }
     if (data?.kv?.phone_number && data?.kv?.phone_number !== currentUser?.kv?.phone_number) {
         if (await isTakenPhoneNumber(data.kv.phone_number)) {
-            throw {
+            return Promise.reject({
                 status: 409,
                 message: 'Phone number is taken',
                 issues: [{path: ['kv', 'phone_number'], error: 'Phone number is taken'}],
-            } as APIError;
+            } as APIError);
         }
     }
 
@@ -63,14 +63,13 @@ export async function updateOneUser(userIdHex: string, partialUser: Partial<User
         }
         const updatedRow = await buildUserTableJoins(tx).where('_u.id_user', userIdBin).first(USER_TABLE_COLUMN_ALIASES);
         if (!updatedRow) {
-            throw new Error('User updated but SELECT returns zero records');
+            return Promise.reject({status: 500, message: 'User updated but SELECT returns zero records'} as APIError);
         }
 
         await tx.commit();
-        const mappedUser = rowToUser(updatedRow);
-        return mappedUser;
+        return rowToUser(updatedRow);
     } catch (e: any) {
         await tx.rollback();
-        throw {status: 500, message: 'User update failed', details: e.message} as APIError;
+        return Promise.reject({status: 500, message: 'User update failed', details: e.message} as APIError);
     }
 }
