@@ -145,7 +145,7 @@ export default function UpdatingNamesScreen ()  {
             text: language === 'en' ? 'OK' : 'Sawa',
             onPress: () =>
               router.replace({
-                pathname: '/UpdatingDOBScreen',
+                pathname: '/onboarding/UpdatingDOBScreen',
                 params: {
                   lang: language,
                   userId: userId,

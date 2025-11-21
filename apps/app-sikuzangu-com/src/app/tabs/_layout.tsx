@@ -11,6 +11,7 @@ export default function TabsLayout() {
       <Stack.Screen name="NotificationsScreen" />
       <Stack.Screen name="ChangePinScreen" />
       <Stack.Screen name="ArticleDetailScreen" />
+        <Stack.Screen name="DeleteAccountScreen" />
     </Stack>
   );
 }
