@@ -47,15 +47,13 @@ const _ADMIN_INVITE_TEMPLATE = handlebars.compile(`<!DOCTYPE html>
                         </p>
                         
                         <p style="margin: 0 0 30px; color: #666666; font-size: 15px; line-height: 1.6;">
-                            Click the button below to set up your password and activate your account:
+                            Click the link below to set up your password and activate your account:
                         </p>
                         
                         <!-- Button -->
                         <table role="presentation" style="margin: 0 0 30px;">
                             <tr>
-                                <td style="text-align: center;">
-                                    <a href="{{link}}" target="_blank" style="display: inline-block; padding: 14px 36px; background-color: #FD5A7E; color: #ffffff; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 600;">Set Up Password</a>
-                                </td>
+                                <td style="text-align: center;">{{link}}</td>
                             </tr>
                         </table>
                         
