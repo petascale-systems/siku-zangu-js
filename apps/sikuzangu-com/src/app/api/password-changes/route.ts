@@ -2,7 +2,6 @@ import {NextRequest} from "next/server";
 import {EMAIL_ZOD_SCHEMA, handleAPIError, zodErrorToApiError} from "@siku-zangu/core";
 import {insertOneUserPasswordChange, selectUserIdByEmail} from "@siku-zangu/knex";
 import {sendAdminPasswordResetLink} from "@siku-zangu/brevo";
-import {FETCH_CONFIG} from "@siku-zangu/react";
 
 export async function POST(req: NextRequest) {
     return handleAPIError(async () => {
@@ -13,7 +12,7 @@ export async function POST(req: NextRequest) {
         const pwdChange = await insertOneUserPasswordChange(userId);
         await sendAdminPasswordResetLink({
             toEmail: result.data.email,
-            link: `${FETCH_CONFIG.host}/password-changes/${pwdChange.password_change_id}`
+            link: `${req.nextUrl.origin}/password-changes/${pwdChange.password_change_id}`
         })
 
         return Response.json(result.data, {status: 201})
