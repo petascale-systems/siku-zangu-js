@@ -33,7 +33,7 @@ export function useCurrentSessionAdmin() {
         return _createSession(formData)
             .then(data => {
                 setAdmin(data)
-                return data
+                _router.push('/dashboard')
             })
             .finally(() => setIsLoggingIn(false));
     }
