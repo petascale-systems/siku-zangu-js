@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
         await sendAdminInvite({
             toEmail: admin.kv?.email,
             toName: admin.kv?.first_name,
-            link: `${req.nextUrl.origin}/password-changes/${pwdChange.password_change_id}`
+            link: `${req?.headers?.get('origin') || 'https://sikuzangu.org'}/password-changes/${pwdChange.password_change_id}`
         })
         return Response.json(admin, {status: 201});
     })

@@ -12,7 +12,7 @@ export async function POST(req: NextRequest) {
         const pwdChange = await insertOneUserPasswordChange(userId);
         await sendAdminPasswordResetLink({
             toEmail: result.data.email,
-            link: `${req.nextUrl.origin}/password-changes/${pwdChange.password_change_id}`
+            link: `${req?.headers?.get('origin') || 'https://sikuzangu.org'}/password-changes/${pwdChange.password_change_id}`
         })
 
         return Response.json(result.data, {status: 201})
