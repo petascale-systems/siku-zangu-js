@@ -13,7 +13,7 @@ import deleteImage from '../../../public/images/user-manual/delete.jpeg';
 import setupProfileImage from '../../../public/images/user-manual/use names.jpeg';
 import birthDateImage from '../../../public/images/user-manual/user dob.jpeg';
 import lastPeriodImage from '../../../public/images/user-manual/userfday.jpeg';
-import periodLengthImage from '../../../public/images/user-manual/user lnghtWhatsApp Image 2025-11-23 at 3.18.18 PM.jpeg';
+import periodLengthImage from '../../../public/images/user-manual/user length.jpeg';
 import cycleLengthImage from '../../../public/images/user-manual/cycle lenght.jpeg';
 import symptomsImage from '../../../public/images/user-manual/symptoms.jpeg';
 import medicationImage from '../../../public/images/user-manual/med.jpeg';
