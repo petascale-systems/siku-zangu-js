@@ -190,7 +190,6 @@ export default function UserManualPage() {
                                 Step 4: Set Up Your Profile
                             </h2>
                         </div>
-
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
                             <div className="space-y-4 order-2 lg:order-1">
                                 <h3 className="text-md sm:text-xl font-medium text-neutral-dark-text">
@@ -236,15 +235,12 @@ export default function UserManualPage() {
                             </div>
                         </div>
                     </div>
-
-                    {/* Birth Date Section */}
                     <div className="mb-12 sm:mb-16">
                         <div className="rounded-2xl sm:rounded-3xl p-6 sm:p-8 mb-6">
                             <h2 className="text-xl sm:text-2xl font-medium text-neutral-dark-text mb-2 text-center">
                                 Step 5: Enter Your Birth Date
                             </h2>
                         </div>
-
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
                             <div className="flex justify-center">
                                 <div className="relative w-full max-w-[280px] sm:max-w-[320px]">
@@ -261,7 +257,6 @@ export default function UserManualPage() {
                                     </div>
                                 </div>
                             </div>
-
                             <div className="space-y-4">
                                 <h3 className="text-md sm:text-xl font-medium text-neutral-dark-text">
                                     How to enter your birth date:
@@ -291,15 +286,12 @@ export default function UserManualPage() {
                             </div>
                         </div>
                     </div>
-
-                    {/* Last Period Section */}
                     <div className="mb-12 sm:mb-16">
                         <div className="rounded-2xl sm:rounded-3xl p-6 sm:p-8 mb-6">
                             <h2 className="text-xl sm:text-2xl font-medium text-neutral-dark-text mb-2 text-center">
                                 Step 6: Enter Your Last Period Date
                             </h2>
                         </div>
-
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
                             <div className="space-y-4 order-2 lg:order-1">
                                 <h3 className="text-md sm:text-xl font-medium text-neutral-dark-text">
@@ -345,15 +337,12 @@ export default function UserManualPage() {
                             </div>
                         </div>
                     </div>
-
-                    {/* Period Length Section */}
                     <div className="mb-12 sm:mb-16">
                         <div className="rounded-2xl sm:rounded-3xl p-6 sm:p-8 mb-6">
                             <h2 className="text-xl sm:text-2xl font-medium text-neutral-dark-text mb-2 text-center">
                                 Step 7: Set Your Period Duration
                             </h2>
                         </div>
-
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
                             <div className="flex justify-center">
                                 <div className="relative w-full max-w-[280px] sm:max-w-[320px]">
@@ -370,7 +359,6 @@ export default function UserManualPage() {
                                     </div>
                                 </div>
                             </div>
-
                             <div className="space-y-4">
                                 <h3 className="text-md sm:text-xl font-medium text-neutral-dark-text">
                                     How to set period duration:
@@ -400,15 +388,12 @@ export default function UserManualPage() {
                             </div>
                         </div>
                     </div>
-
-                    {/* Cycle Length Section */}
                     <div className="mb-12 sm:mb-16">
                         <div className="rounded-2xl sm:rounded-3xl p-6 sm:p-8 mb-6">
                             <h2 className="text-xl sm:text-2xl font-medium text-neutral-dark-text mb-2 text-center">
                                 Step 8: Set Your Cycle Length
                             </h2>
                         </div>
-
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
                             <div className="space-y-4 order-2 lg:order-1">
                                 <h3 className="text-md sm:text-xl font-medium text-neutral-dark-text">
@@ -454,15 +439,12 @@ export default function UserManualPage() {
                             </div>
                         </div>
                     </div>
-
-                    {/* Symptoms Tracking Section */}
                     <div className="mb-12 sm:mb-16">
                         <div className="rounded-2xl sm:rounded-3xl p-6 sm:p-8 mb-6">
                             <h2 className="text-xl sm:text-2xl font-medium text-neutral-dark-text mb-2 text-center">
                                 Step 9: Track Your Symptoms and Mood
                             </h2>
                         </div>
-
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
                             <div className="flex justify-center">
                                 <div className="relative w-full max-w-[280px] sm:max-w-[320px]">
@@ -479,7 +461,6 @@ export default function UserManualPage() {
                                     </div>
                                 </div>
                             </div>
-
                             <div className="space-y-4">
                                 <h3 className="text-md sm:text-xl font-medium text-neutral-dark-text">
                                     How to track symptoms and moods:
@@ -509,15 +490,12 @@ export default function UserManualPage() {
                             </div>
                         </div>
                     </div>
-
-                    {/* Medication Section */}
                     <div className="mb-12 sm:mb-16">
                         <div className="rounded-2xl sm:rounded-3xl p-6 sm:p-8 mb-6">
                             <h2 className="text-xl sm:text-2xl font-medium text-neutral-dark-text mb-2 text-center">
                                 Step 10: Set Up Medication Tracking
                             </h2>
                         </div>
-
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
                             <div className="space-y-4 order-2 lg:order-1">
                                 <h3 className="text-md sm:text-xl font-medium text-neutral-dark-text">
