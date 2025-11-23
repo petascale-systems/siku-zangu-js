@@ -10,6 +10,13 @@ import signinImage from '../../../public/images/user-manual/login.jpeg';
 import registerImage from '../../../public/images/user-manual/register.jpeg';
 import languageImage from '../../../public/images/user-manual/language.jpeg';
 import deleteImage from '../../../public/images/user-manual/delete.jpeg';
+import setupProfileImage from '../../../public/images/user-manual/use names.jpeg';
+import birthDateImage from '../../../public/images/user-manual/user dob.jpeg';
+import lastPeriodImage from '../../../public/images/user-manual/userfday.jpeg';
+import periodLengthImage from '../../../public/images/user-manual/user lnghtWhatsApp Image 2025-11-23 at 3.18.18 PM.jpeg';
+import cycleLengthImage from '../../../public/images/user-manual/cycle lenght.jpeg';
+import symptomsImage from '../../../public/images/user-manual/symptoms.jpeg';
+import medicationImage from '../../../public/images/user-manual/med.jpeg';
 import logo from '../../../public/images/logo.png';
 import {WebsiteNav, WebsiteFooter} from '@siku-zangu/react'
 
@@ -180,7 +187,386 @@ export default function UserManualPage() {
                     <div className="mb-12 sm:mb-16">
                         <div className="rounded-2xl sm:rounded-3xl p-6 sm:p-8 mb-6">
                             <h2 className="text-xl sm:text-2xl font-medium text-neutral-dark-text mb-2 text-center">
-                                Step 4: View Your Cycle Overview
+                                Step 4: Set Up Your Profile
+                            </h2>
+                        </div>
+
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                            <div className="space-y-4 order-2 lg:order-1">
+                                <h3 className="text-md sm:text-xl font-medium text-neutral-dark-text">
+                                    How to complete your profile:
+                                </h3>
+                                <ol className="space-y-3 text-neutral-placeholder">
+                                    <li className="flex gap-3">
+                                        <span className="font-semibold text-primary flex-shrink-0">1.</span>
+                                        <span>Enter your first name (required)</span>
+                                    </li>
+                                    <li className="flex gap-3">
+                                        <span className="font-semibold text-primary flex-shrink-0">2.</span>
+                                        <span>Add your last name (optional)</span>
+                                    </li>
+                                    <li className="flex gap-3">
+                                        <span className="font-semibold text-primary flex-shrink-0">3.</span>
+                                        <span>Review the Privacy Policy</span>
+                                    </li>
+                                    <li className="flex gap-3">
+                                        <span className="font-semibold text-primary flex-shrink-0">4.</span>
+                                        <span>Your data is never shared without consent</span>
+                                    </li>
+                                    <li className="flex gap-3">
+                                        <span className="font-semibold text-primary flex-shrink-0">5.</span>
+                                        <span>Tap "Next" to continue</span>
+                                    </li>
+                                </ol>
+                            </div>
+                            <div className="flex justify-center order-1 lg:order-2">
+                                <div className="relative w-full max-w-[280px] sm:max-w-[320px]">
+                                    <div className="bg-gradient-to-br from-amber-100 to-amber-50 rounded-3xl p-6 shadow-xl">
+                                        <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+                                            <Image
+                                                src={setupProfileImage}
+                                                alt="Setup Profile Screen"
+                                                width={280}
+                                                height={560}
+                                                className="rounded-2xl w-full h-full object-cover"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Birth Date Section */}
+                    <div className="mb-12 sm:mb-16">
+                        <div className="rounded-2xl sm:rounded-3xl p-6 sm:p-8 mb-6">
+                            <h2 className="text-xl sm:text-2xl font-medium text-neutral-dark-text mb-2 text-center">
+                                Step 5: Enter Your Birth Date
+                            </h2>
+                        </div>
+
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                            <div className="flex justify-center">
+                                <div className="relative w-full max-w-[280px] sm:max-w-[320px]">
+                                    <div className="bg-gradient-to-br from-lime-100 to-lime-50 rounded-3xl p-6 shadow-xl">
+                                        <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+                                            <Image
+                                                src={birthDateImage}
+                                                alt="Birth Date Screen"
+                                                width={280}
+                                                height={560}
+                                                className="rounded-2xl w-full h-full object-cover"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="space-y-4">
+                                <h3 className="text-md sm:text-xl font-medium text-neutral-dark-text">
+                                    How to enter your birth date:
+                                </h3>
+                                <ol className="space-y-3 text-neutral-placeholder">
+                                    <li className="flex gap-3">
+                                        <span className="font-semibold text-primary flex-shrink-0">1.</span>
+                                        <span>Use the date picker to select your birth day</span>
+                                    </li>
+                                    <li className="flex gap-3">
+                                        <span className="font-semibold text-primary flex-shrink-0">2.</span>
+                                        <span>Choose your birth month</span>
+                                    </li>
+                                    <li className="flex gap-3">
+                                        <span className="font-semibold text-primary flex-shrink-0">3.</span>
+                                        <span>Select your birth year</span>
+                                    </li>
+                                    <li className="flex gap-3">
+                                        <span className="font-semibold text-primary flex-shrink-0">4.</span>
+                                        <span>This helps provide age-appropriate health information</span>
+                                    </li>
+                                    <li className="flex gap-3">
+                                        <span className="font-semibold text-primary flex-shrink-0">5.</span>
+                                        <span>Review Terms and Conditions, then tap "Next"</span>
+                                    </li>
+                                </ol>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Last Period Section */}
+                    <div className="mb-12 sm:mb-16">
+                        <div className="rounded-2xl sm:rounded-3xl p-6 sm:p-8 mb-6">
+                            <h2 className="text-xl sm:text-2xl font-medium text-neutral-dark-text mb-2 text-center">
+                                Step 6: Enter Your Last Period Date
+                            </h2>
+                        </div>
+
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                            <div className="space-y-4 order-2 lg:order-1">
+                                <h3 className="text-md sm:text-xl font-medium text-neutral-dark-text">
+                                    How to enter your last period:
+                                </h3>
+                                <ol className="space-y-3 text-neutral-placeholder">
+                                    <li className="flex gap-3">
+                                        <span className="font-semibold text-primary flex-shrink-0">1.</span>
+                                        <span>Select the first day of your last period</span>
+                                    </li>
+                                    <li className="flex gap-3">
+                                        <span className="font-semibold text-primary flex-shrink-0">2.</span>
+                                        <span>Use the date picker or tap "Yesterday" for quick selection</span>
+                                    </li>
+                                    <li className="flex gap-3">
+                                        <span className="font-semibold text-primary flex-shrink-0">3.</span>
+                                        <span>If unsure, provide your best estimate</span>
+                                    </li>
+                                    <li className="flex gap-3">
+                                        <span className="font-semibold text-primary flex-shrink-0">4.</span>
+                                        <span>This helps predict your next period</span>
+                                    </li>
+                                    <li className="flex gap-3">
+                                        <span className="font-semibold text-primary flex-shrink-0">5.</span>
+                                        <span>Tap "Next" to continue</span>
+                                    </li>
+                                </ol>
+                            </div>
+                            <div className="flex justify-center order-1 lg:order-2">
+                                <div className="relative w-full max-w-[280px] sm:max-w-[320px]">
+                                    <div className="bg-gradient-to-br from-sky-100 to-sky-50 rounded-3xl p-6 shadow-xl">
+                                        <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+                                            <Image
+                                                src={lastPeriodImage}
+                                                alt="Last Period Screen"
+                                                width={280}
+                                                height={560}
+                                                className="rounded-2xl w-full h-full object-cover"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Period Length Section */}
+                    <div className="mb-12 sm:mb-16">
+                        <div className="rounded-2xl sm:rounded-3xl p-6 sm:p-8 mb-6">
+                            <h2 className="text-xl sm:text-2xl font-medium text-neutral-dark-text mb-2 text-center">
+                                Step 7: Set Your Period Duration
+                            </h2>
+                        </div>
+
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                            <div className="flex justify-center">
+                                <div className="relative w-full max-w-[280px] sm:max-w-[320px]">
+                                    <div className="bg-gradient-to-br from-fuchsia-100 to-fuchsia-50 rounded-3xl p-6 shadow-xl">
+                                        <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+                                            <Image
+                                                src={periodLengthImage}
+                                                alt="Period Length Screen"
+                                                width={280}
+                                                height={560}
+                                                className="rounded-2xl w-full h-full object-cover"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="space-y-4">
+                                <h3 className="text-md sm:text-xl font-medium text-neutral-dark-text">
+                                    How to set period duration:
+                                </h3>
+                                <ol className="space-y-3 text-neutral-placeholder">
+                                    <li className="flex gap-3">
+                                        <span className="font-semibold text-primary flex-shrink-0">1.</span>
+                                        <span>Select how many days your period typically lasts</span>
+                                    </li>
+                                    <li className="flex gap-3">
+                                        <span className="font-semibold text-primary flex-shrink-0">2.</span>
+                                        <span>Choose from 3 to 7+ days (most common is 4-5 days)</span>
+                                    </li>
+                                    <li className="flex gap-3">
+                                        <span className="font-semibold text-primary flex-shrink-0">3.</span>
+                                        <span>Include all days with any flow, including spotting</span>
+                                    </li>
+                                    <li className="flex gap-3">
+                                        <span className="font-semibold text-primary flex-shrink-0">4.</span>
+                                        <span>You can update this later in your profile</span>
+                                    </li>
+                                    <li className="flex gap-3">
+                                        <span className="font-semibold text-primary flex-shrink-0">5.</span>
+                                        <span>Tap "Next" to continue</span>
+                                    </li>
+                                </ol>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Cycle Length Section */}
+                    <div className="mb-12 sm:mb-16">
+                        <div className="rounded-2xl sm:rounded-3xl p-6 sm:p-8 mb-6">
+                            <h2 className="text-xl sm:text-2xl font-medium text-neutral-dark-text mb-2 text-center">
+                                Step 8: Set Your Cycle Length
+                            </h2>
+                        </div>
+
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                            <div className="space-y-4 order-2 lg:order-1">
+                                <h3 className="text-md sm:text-xl font-medium text-neutral-dark-text">
+                                    How to set cycle length:
+                                </h3>
+                                <ol className="space-y-3 text-neutral-placeholder">
+                                    <li className="flex gap-3">
+                                        <span className="font-semibold text-primary flex-shrink-0">1.</span>
+                                        <span>A cycle starts on day 1 of your period</span>
+                                    </li>
+                                    <li className="flex gap-3">
+                                        <span className="font-semibold text-primary flex-shrink-0">2.</span>
+                                        <span>It ends the day before your next period starts</span>
+                                    </li>
+                                    <li className="flex gap-3">
+                                        <span className="font-semibold text-primary flex-shrink-0">3.</span>
+                                        <span>Select from 26-30+ days (28 is average)</span>
+                                    </li>
+                                    <li className="flex gap-3">
+                                        <span className="font-semibold text-primary flex-shrink-0">4.</span>
+                                        <span>The app shows your fertile window based on this</span>
+                                    </li>
+                                    <li className="flex gap-3">
+                                        <span className="font-semibold text-primary flex-shrink-0">5.</span>
+                                        <span>Tap "Next" to continue</span>
+                                    </li>
+                                </ol>
+                            </div>
+                            <div className="flex justify-center order-1 lg:order-2">
+                                <div className="relative w-full max-w-[280px] sm:max-w-[320px]">
+                                    <div className="bg-gradient-to-br from-violet-100 to-violet-50 rounded-3xl p-6 shadow-xl">
+                                        <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+                                            <Image
+                                                src={cycleLengthImage}
+                                                alt="Cycle Length Screen"
+                                                width={280}
+                                                height={560}
+                                                className="rounded-2xl w-full h-full object-cover"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Symptoms Tracking Section */}
+                    <div className="mb-12 sm:mb-16">
+                        <div className="rounded-2xl sm:rounded-3xl p-6 sm:p-8 mb-6">
+                            <h2 className="text-xl sm:text-2xl font-medium text-neutral-dark-text mb-2 text-center">
+                                Step 9: Track Your Symptoms and Mood
+                            </h2>
+                        </div>
+
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                            <div className="flex justify-center">
+                                <div className="relative w-full max-w-[280px] sm:max-w-[320px]">
+                                    <div className="bg-gradient-to-br from-emerald-100 to-emerald-50 rounded-3xl p-6 shadow-xl">
+                                        <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+                                            <Image
+                                                src={symptomsImage}
+                                                alt="Symptoms Tracking Screen"
+                                                width={280}
+                                                height={560}
+                                                className="rounded-2xl w-full h-full object-cover"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="space-y-4">
+                                <h3 className="text-md sm:text-xl font-medium text-neutral-dark-text">
+                                    How to track symptoms and moods:
+                                </h3>
+                                <ol className="space-y-3 text-neutral-placeholder">
+                                    <li className="flex gap-3">
+                                        <span className="font-semibold text-primary flex-shrink-0">1.</span>
+                                        <span>Select your current symptoms: Cramps, Fatigue, Bloating, Tender breasts, Backache, Headache</span>
+                                    </li>
+                                    <li className="flex gap-3">
+                                        <span className="font-semibold text-primary flex-shrink-0">2.</span>
+                                        <span>Choose your mood: Happy, Sad, Tired, Angry, In Love, Calm, Anxious</span>
+                                    </li>
+                                    <li className="flex gap-3">
+                                        <span className="font-semibold text-primary flex-shrink-0">3.</span>
+                                        <span>You can select multiple symptoms</span>
+                                    </li>
+                                    <li className="flex gap-3">
+                                        <span className="font-semibold text-primary flex-shrink-0">4.</span>
+                                        <span>Understanding patterns helps manage your cycle better</span>
+                                    </li>
+                                    <li className="flex gap-3">
+                                        <span className="font-semibold text-primary flex-shrink-0">5.</span>
+                                        <span>Continue to complete setup</span>
+                                    </li>
+                                </ol>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Medication Section */}
+                    <div className="mb-12 sm:mb-16">
+                        <div className="rounded-2xl sm:rounded-3xl p-6 sm:p-8 mb-6">
+                            <h2 className="text-xl sm:text-2xl font-medium text-neutral-dark-text mb-2 text-center">
+                                Step 10: Set Up Medication Tracking
+                            </h2>
+                        </div>
+
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                            <div className="space-y-4 order-2 lg:order-1">
+                                <h3 className="text-md sm:text-xl font-medium text-neutral-dark-text">
+                                    How to track medications:
+                                </h3>
+                                <ol className="space-y-3 text-neutral-placeholder">
+                                    <li className="flex gap-3">
+                                        <span className="font-semibold text-primary flex-shrink-0">1.</span>
+                                        <span>Select medication types you're taking</span>
+                                    </li>
+                                    <li className="flex gap-3">
+                                        <span className="font-semibold text-primary flex-shrink-0">2.</span>
+                                        <span>Options include: Pain Relief, Herbal Supplement, Hormone Therapy, Birth Control</span>
+                                    </li>
+                                    <li className="flex gap-3">
+                                        <span className="font-semibold text-primary flex-shrink-0">3.</span>
+                                        <span>This helps track effectiveness and avoid missed doses</span>
+                                    </li>
+                                    <li className="flex gap-3">
+                                        <span className="font-semibold text-primary flex-shrink-0">4.</span>
+                                        <span>You can skip this step if not taking any medications</span>
+                                    </li>
+                                    <li className="flex gap-3">
+                                        <span className="font-semibold text-primary flex-shrink-0">5.</span>
+                                        <span>Tap "Complete Setup" to finish onboarding</span>
+                                    </li>
+                                </ol>
+                            </div>
+                            <div className="flex justify-center order-1 lg:order-2">
+                                <div className="relative w-full max-w-[280px] sm:max-w-[320px]">
+                                    <div className="bg-gradient-to-br from-red-100 to-pink-50 rounded-3xl p-6 shadow-xl">
+                                        <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+                                            <Image
+                                                src={medicationImage}
+                                                alt="Medication Tracking Screen"
+                                                width={280}
+                                                height={560}
+                                                className="rounded-2xl w-full h-full object-cover"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="mb-12 sm:mb-16">
+                        <div className="rounded-2xl sm:rounded-3xl p-6 sm:p-8 mb-6">
+                            <h2 className="text-xl sm:text-2xl font-medium text-neutral-dark-text mb-2 text-center">
+                                Step 11: View Your Cycle Overview
                             </h2>
                         </div>
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
@@ -231,7 +617,7 @@ export default function UserManualPage() {
                     <div className="mb-12 sm:mb-16">
                         <div className="rounded-2xl sm:rounded-3xl p-6 sm:p-8 mb-6">
                             <h2 className="text-xl sm:text-2xl font-medium text-neutral-dark-text mb-2 text-center">
-                                Step 5: Use the Calendar
+                                Step 12: Use the Calendar
                             </h2>
                         </div>
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
@@ -282,7 +668,7 @@ export default function UserManualPage() {
                     <div className="mb-12 sm:mb-16">
                         <div className="rounded-2xl sm:rounded-3xl p-6 sm:p-8 mb-6">
                             <h2 className="text-xl sm:text-2xl font-medium text-neutral-dark-text mb-2 text-center">
-                                Step 6: Log Your Daily Information
+                                Step 13: Log Your Daily Information
                             </h2>
                         </div>
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
@@ -333,7 +719,7 @@ export default function UserManualPage() {
                     <div className="mb-12 sm:mb-16">
                         <div className="rounded-2xl sm:rounded-3xl p-6 sm:p-8 mb-6">
                             <h2 className="text-xl sm:text-2xl font-medium text-neutral-dark-text mb-2 text-center">
-                                Step 7: Read Health Insights and Tips
+                                Step 14: Read Health Insights and Tips
                             </h2>
                         </div>
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
@@ -384,7 +770,7 @@ export default function UserManualPage() {
                     <div className="mb-12 sm:mb-16">
                         <div className="rounded-2xl sm:rounded-3xl p-6 sm:p-8 mb-6">
                             <h2 className="text-xl sm:text-2xl font-medium text-neutral-dark-text mb-2 text-center">
-                                Step 8: Manage Your Profile
+                                Step 15: Manage Your Profile
                             </h2>
                         </div>
 
@@ -436,7 +822,7 @@ export default function UserManualPage() {
                     <div className="mb-12 sm:mb-16">
                         <div className="rounded-2xl sm:rounded-3xl p-6 sm:p-8 mb-6">
                             <h2 className="text-xl sm:text-2xl font-medium text-neutral-dark-text mb-2 text-center">
-                                Step 9: Set Up Notifications
+                                Step 16: Set Up Notifications
                             </h2>
                         </div>
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
@@ -487,7 +873,7 @@ export default function UserManualPage() {
                     <div className="mb-12 sm:mb-16">
                         <div className="rounded-2xl sm:rounded-3xl p-6 sm:p-8 mb-6">
                             <h2 className="text-xl sm:text-2xl font-medium text-neutral-dark-text mb-2 text-center">
-                                Step 11: Delete Your Account (Optional)
+                                Step 17: Delete Your Account (Optional)
                             </h2>
                         </div>
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
@@ -538,7 +924,7 @@ export default function UserManualPage() {
                         <div className="mb-12 sm:mb-16">
                             <div className="rounded-2xl sm:rounded-3xl p-6 sm:p-8 mb-6">
                                 <h2 className="text-xl sm:text-2xl font-medium text-neutral-dark-text mb-2 text-center">
-                                    Step 10: Change Your PIN
+                                    Step 18: Change Your PIN
                                 </h2>
                             </div>
                             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
@@ -589,7 +975,7 @@ export default function UserManualPage() {
                         <div className="mb-12 sm:mb-16">
                             <div className="rounded-2xl sm:rounded-3xl p-6 sm:p-8 mb-6">
                                 <h2 className="text-xl sm:text-2xl font-medium text-neutral-dark-text mb-2 text-center">
-                                    Step 11: Delete Your Account (Optional)
+                                    Step 19: Delete Your Account (Optional)
                                 </h2>
                             </div>
                             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
