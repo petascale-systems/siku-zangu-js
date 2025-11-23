@@ -114,7 +114,7 @@ export default function UpdatingSymptomsMoodsScreen() {
                     {
                         text: language === 'en' ? 'OK' : 'Sawa',
                         onPress: () =>
-                            router.replace({
+                            router.push({
                                 pathname: '/onboarding/UpdatingMedicationScreen',
                                 params: {
                                     lang: language,

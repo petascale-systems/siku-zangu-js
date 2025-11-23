@@ -121,7 +121,7 @@ export default  function RegisterScreen()    {
         [
           {
             text: language === 'en' ? 'OK' : 'Sawa',
-            onPress: () => router.replace({
+            onPress: () => router.push({
               pathname: '/auth/LoginScreen',
               params: {
                 lang: language,

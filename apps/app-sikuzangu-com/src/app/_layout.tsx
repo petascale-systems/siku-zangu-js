@@ -11,6 +11,8 @@ export default function RootLayout() {
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const [onboardingComplete, setOnboardingComplete] = useState(false);
     const [hasSeenLanguageScreen, setHasSeenLanguageScreen] = useState(false);
+    const [userId, setUserId] = useState<string | null>(null);
+    const [language, setLanguage] = useState<string>('en');
 
     const router = useRouter();
 
@@ -19,14 +21,14 @@ export default function RootLayout() {
             try {
                 const savedLang = await AsyncStorage.getItem('language');
                 setHasSeenLanguageScreen(!!savedLang);
-
+                setLanguage(savedLang || 'en');
                 const storedToken = await AsyncStorage.getItem(ACCESS_TOKEN_KEY);
-                if (storedToken) {
-                    const parsed = JSON.parse(storedToken);
+                if (storedToken) {const parsed = JSON.parse(storedToken);
                     if (parsed?.token && parsed?.expires_in) {
                         const isExpired = Date.now() >= parsed.expires_in * 1000;
                         if (!isExpired && parsed.user?.user_id) {
                             setIsLoggedIn(true);
+                            setUserId(parsed.user.user_id);
                             const completed = await isOnboardingComplete(parsed.user.user_id);
                             setOnboardingComplete(completed);
                         } else {
@@ -35,42 +37,47 @@ export default function RootLayout() {
                     }
                 }
             } catch (e) {
-                console.error('Bootstrap failed:', e);
             } finally {
-                // Small delay to show splash
                 setTimeout(() => {
                     setIsReady(true);
                 }, 1500);
             }
         };
-
         bootstrapAsync();
     }, []);
-
     useEffect(() => {
         if (!isReady) return;
-
         if (!hasSeenLanguageScreen) {
-            router.replace('/LanguageScreen');
+            router.push('/LanguageScreen');
         } else if (!isLoggedIn) {
-            router.replace('/auth');
-        } else if (!onboardingComplete) {
-            router.replace('/onboarding');
-        } else {
-            router.replace('/tabs/HomeScreen');
+            router.push('/auth');
+        } else if (!onboardingComplete && userId) {
+            router.push({
+                pathname: '/onboarding/UpdatingNamesScreen',
+                params: {
+                    lang: language,
+                    userId: userId
+                }
+            });
+        } else if (userId) {
+            router.push({
+                pathname: '/tabs/HomeScreen',
+                params: {
+                    lang: language,
+                    userId: userId
+                }
+            });
         }
-    }, [isReady, hasSeenLanguageScreen, isLoggedIn, onboardingComplete]);
-
+    }, [isReady, hasSeenLanguageScreen, isLoggedIn, onboardingComplete, userId, language]);
     if (!isReady) {
         return (
             <ImageBackground
-                source={require('../../assets/images/landingPage.png')} // Fixed typo: .pngg -> .png
+                source={require('../../assets/images/landingPage.png')}
                 resizeMode="cover"
                 style={styles.container}
             />
         );
     }
-
     return (
         <Stack screenOptions={{ headerShown: false }}>
             <Stack.Screen name="index" options={{ headerShown: false }} />
@@ -81,7 +88,6 @@ export default function RootLayout() {
         </Stack>
     );
 }
-
 const styles = StyleSheet.create({
     container: { flex: 1, justifyContent: 'center', alignItems: 'center' },
 });

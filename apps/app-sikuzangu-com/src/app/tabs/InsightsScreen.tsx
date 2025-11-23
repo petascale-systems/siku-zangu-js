@@ -118,7 +118,7 @@ export default function InsightsScreen() {
   const handleArticlePress = useCallback(
     (article: Article) => {
       router.push({
-        pathname: '/article-detail',
+        pathname: 'tabs/ArticleDetailScreen',
         params: { articleId: article.article_id, lang: language, userId },
       });
     },

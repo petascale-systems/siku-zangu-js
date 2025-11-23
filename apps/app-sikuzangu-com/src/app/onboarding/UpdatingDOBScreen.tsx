@@ -159,7 +159,7 @@ export default function UpdatingDOBScreen() {
                     {
                         text: language === 'en' ? 'OK' : 'Sawa',
                         onPress: () =>
-                            router.replace({
+                            router.push({
                                 pathname: '/onboarding/UpdatingPeriodScreen',
                                 params: {
                                     lang: language,
