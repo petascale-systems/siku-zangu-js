@@ -49,7 +49,7 @@ const _ADMIN_PASSWORD_RESET_LINK_TEMPLATE = handlebars.compile(`<!DOCTYPE html>
                         <table role="presentation" style="margin: 0 0 30px;">
                             <tr>
                                 <td style="text-align: center;">
-                                    <a href="{{link}}" target="_blank" style="display: inline-block; padding: 14px 36px; background-color: #FD5A7E; color: #ffffff; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 600;">Set up password</a>
+                                    <a href={{link}} target="_blank" style="display: inline-block; padding: 14px 36px; background-color: #FD5A7E; color: #ffffff; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 600;">Set up password</a>
                                 </td>
                             </tr>
                         </table>
