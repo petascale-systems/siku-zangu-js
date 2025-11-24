@@ -56,17 +56,17 @@ export function WebsiteFooter({ logo }: { logo: string | StaticImport }) {
         </div>
         <div className='flex flex-col gap-4'>
           <h3 className='text-xl font-bold mb-2'>Socials</h3>
-          <Link href={'https://instagram.com'} target='_blank' className='text-gray-300 hover:text-white transition-colors border-b border-transparent hover:border-white w-fit'>
+          <Link href={'https://www.instagram.com/sikuzanguapp/'} target='_blank' className='text-gray-300 hover:text-white transition-colors border-b border-transparent hover:border-white w-fit'>
             Instagram
           </Link>
-          <Link href={'https://facebook.com'} target='_blank' className='text-gray-300 hover:text-white transition-colors border-b border-transparent hover:border-white w-fit'>
+          <Link href={'https://www.facebook.com/sikuzangu'} target='_blank' className='text-gray-300 hover:text-white transition-colors border-b border-transparent hover:border-white w-fit'>
             Facebook
           </Link>
-          <Link href={'https://twitter.com'} target='_blank' className='text-gray-300 hover:text-white transition-colors border-b border-transparent hover:border-white w-fit'>
-            Twitter
+          <Link href={'https://www.tiktok.com/@sikuzanguapp'} target='_blank' className='text-gray-300 hover:text-white transition-colors border-b border-transparent hover:border-white w-fit'>
+            Tiktok
           </Link>
-          <Link href={'https://pinterest.com'} target='_blank' className='text-gray-300 hover:text-white transition-colors border-b border-transparent hover:border-white w-fit'>
-            Pinterest
+          <Link href={'https://www.linkedin.com/company/siku-zangu-app'} target='_blank' className='text-gray-300 hover:text-white transition-colors border-b border-transparent hover:border-white w-fit'>
+            Linkedin
           </Link>
         </div>
       </div>
