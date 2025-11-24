@@ -950,57 +950,6 @@ export default function UserManualPage() {
                                 </div>
                             </div>
                         </div>
-                        <div className="mb-12 sm:mb-16">
-                            <div className="rounded-2xl sm:rounded-3xl p-6 sm:p-8 mb-6">
-                                <h2 className="text-xl sm:text-2xl font-medium text-neutral-dark-text mb-2 text-center">
-                                    Step 19: Delete Your Account (Optional)
-                                </h2>
-                            </div>
-                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
-                                <div className="flex justify-center">
-                                    <div className="relative w-full max-w-[280px] sm:max-w-[320px]">
-                                        <div className="bg-gradient-to-br from-orange-100 to-orange-50 rounded-3xl p-6 shadow-xl">
-                                            <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
-                                                <Image
-                                                    src={deleteImage}
-                                                    alt="Delete Account Screen"
-                                                    width={280}
-                                                    height={560}
-                                                    className="rounded-2xl w-full h-auto"
-                                                />
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div className="space-y-4">
-                                    <h3 className="text-md sm:text-xl font-medium text-neutral-dark-text">
-                                        How to delete your account:
-                                    </h3>
-                                    <ol className="space-y-3 text-neutral-placeholder">
-                                        <li className="flex gap-3">
-                                            <span className="font-semibold text-primary flex-shrink-0">1.</span>
-                                            <span>Go to Profile and tap "Delete Account"</span>
-                                        </li>
-                                        <li className="flex gap-3">
-                                            <span className="font-semibold text-primary flex-shrink-0">2.</span>
-                                            <span>A confirmation page will appear</span>
-                                        </li>
-                                        <li className="flex gap-3">
-                                            <span className="font-semibold text-primary flex-shrink-0">3.</span>
-                                            <span>Read the warning carefully - this action cannot be undone</span>
-                                        </li>
-                                        <li className="flex gap-3">
-                                            <span className="font-semibold text-primary flex-shrink-0">4.</span>
-                                            <span>Tap "Yes, Delete My Account" to confirm</span>
-                                        </li>
-                                        <li className="flex gap-3">
-                                            <span className="font-semibold text-primary flex-shrink-0">5.</span>
-                                            <span>To cancel, tap "Cancel" or close the dialog</span>
-                                        </li>
-                                    </ol>
-                                </div>
-                            </div>
-                        </div>
                         <div className="bg-purple-50 border-l-4 border-purple-600 rounded-lg p-6 sm:p-8">
                             <h3 className="text-xl sm:text-2xl font-bold text-purple-900 mb-3">
                                 Pro Tips for Better Tracking
