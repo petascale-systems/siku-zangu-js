@@ -6,6 +6,6 @@
 !/dist
 !/dist/apps
 !/atlasgo
-!/atlasgo/api-sikuzangu-com
+!/atlasgo/api-sikuzangu-org
 !*Dockerfile
 !*entrypoint.sh

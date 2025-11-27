@@ -19,8 +19,8 @@ atlas schema apply --url="$ATLASGO_URL" \
 ```
 
 ```shell
-npx nx build sikuzangu-com --skip-nx-cache
-docker build -t sikuzangu-com:0.0.4 -f ./sikuzangu-com-Dockerfile .
+npx nx build sikuzangu-org --skip-nx-cache
+docker build -t sikuzangu-org:0.0.4 -f ./sikuzangu-org-Dockerfile .
 docker run --publish 3001:3000 \
 --network petascale.systems \
 --env S_DATABASE_HOST=mysql84 \
@@ -29,10 +29,10 @@ docker run --publish 3001:3000 \
 --env S_DATABASE_NAME=siku_zangu \
 --env ATLASGO_VAR_DATABASE=siku_zangu \
 --env ATLASGO_URL=mysql://root:PetaPlay%40%23%246yty@mysql84:3306/siku_zangu \
-sikuzangu-com:0.0.4
+sikuzangu-org:0.0.4
 ```
 
-nx build sikuzangu-com
-mv "dist/apps/sikuzangu-com/public" "dist/apps/sikuzangu-com/.next/standalone/dist/apps/sikuzangu-com"
-mv "dist/apps/sikuzangu-com/.next/static" "dist/apps/sikuzangu-com/.next/standalone/dist/apps/sikuzangu-com/.next"
-node dist/apps/sikuzangu-com/.next/standalone/apps/sikuzangu-com/server.js
+nx build sikuzangu-org
+mv "dist/apps/sikuzangu-org/public" "dist/apps/sikuzangu-org/.next/standalone/dist/apps/sikuzangu-org"
+mv "dist/apps/sikuzangu-org/.next/static" "dist/apps/sikuzangu-org/.next/standalone/dist/apps/sikuzangu-org/.next"
+node dist/apps/sikuzangu-org/.next/standalone/apps/sikuzangu-org/server.js

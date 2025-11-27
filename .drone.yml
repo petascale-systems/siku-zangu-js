@@ -6,8 +6,8 @@ steps:
   - name: docker-build
     commands:
       - npm install
-      - npx nx build sikuzangu-com --skip-nx-cache
-      - docker build -t sikuzangu-com:${DRONE_TAG} -f ./sikuzangu-com-Dockerfile .
+      - npx nx build sikuzangu-org --skip-nx-cache
+      - docker build -t sikuzangu-org:${DRONE_TAG} -f ./sikuzangu-org-Dockerfile .
   - name: docker-run
     environment:
       S_DATABASE_HOST:
@@ -27,12 +27,12 @@ steps:
     depends_on:
       - docker-build
     commands:
-      - docker stop sikuzangu-com || true && docker rm sikuzangu-com || true
+      - docker stop sikuzangu-org || true && docker rm sikuzangu-org || true
       - >-
         docker 
         run 
         --detach
-        --name=sikuzangu-com 
+        --name=sikuzangu-org 
         --publish=40001:3000                           
         --network=petascale.systems 
         --env=S_DATABASE_HOST=$S_DATABASE_HOST 
@@ -42,7 +42,7 @@ steps:
         --env=ATLASGO_VAR_DATABASE=$ATLASGO_VAR_DATABASE 
         --env=ATLASGO_URL=$ATLASGO_URL 
         --env=S_BREVO_API_KEY=$S_BREVO_API_KEY 
-        sikuzangu-com:${DRONE_TAG}
+        sikuzangu-org:${DRONE_TAG}
 trigger:
   event:
     - tag
