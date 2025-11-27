@@ -4,6 +4,23 @@
   "sourceRoot": "apps/app-sikuzangu-org/src",
   "projectType": "application",
   "tags": [],
-  "// targets": "to see all targets run: nx show project app-sikuzangu-org --web",
-  "targets": {}
+  "targets": {
+    "sync-deps": {
+      "executor": "@nx/expo:sync-deps",
+      "options": {
+        "all": true,
+        "excludeImplicit": false,
+        "exclude": [
+          "express",
+          "next",
+          "knex",
+          "@headlessui/react",
+          "@heroicons/react",
+          "@getbrevo/brevo",
+          "lucide-react",
+          "mysql2"
+        ]
+      }
+    }
+  }
 }
