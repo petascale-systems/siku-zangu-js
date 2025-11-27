@@ -1,12 +1,12 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import cycleImage from '../../../../public/images/cycle.png';
-import symptomImage from '../../../../public/images/symptoms.png';
-import insightImage from '../../../../public/images/insights.png';
-import languageImage from '../../../../public/images/language.png';
-import notificationImage from '../../../../public/images/notifications.png';
-import africanImage from '../../../../public/images/african.jpg';
-import logo from '../../../../public/images/logo.png';
+import cycleImage from '../../../public/images/cycle.png';
+import symptomImage from '../../../public/images/symptoms.png';
+import insightImage from '../../../public/images/insights.png';
+import languageImage from '../../../public/images/language.png';
+import notificationImage from '../../../public/images/notifications.png';
+import africanImage from '../../../public/images/african.jpg';
+import logo from '../../../public/images/logo.png';
 import {WebsiteNav, WebsiteFooter} from '@siku-zangu/react'
 
 

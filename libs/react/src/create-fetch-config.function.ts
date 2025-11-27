@@ -2,7 +2,7 @@ import {FetchConfig} from './fetch-config.model';
 
 export function _createFetchConfig(): FetchConfig {
     return {
-        host: process.env.NEXT_PUBLIC_SIKUZANGU_COM_HOST || process.env.EXPO_PUBLIC_SIKUZANGU_COM_HOST || '',
+        host: process.env.NEXT_PUBLIC_SIKUZANGU_COM_HOST || process.env.EXPO_PUBLIC_SIKUZANGU_COM_HOST || 'https://sikuzangu.org',
     };
 }
 

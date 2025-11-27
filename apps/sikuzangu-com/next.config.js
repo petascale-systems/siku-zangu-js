@@ -1,14 +1,9 @@
-//@ts-check
-
-// eslint-disable-next-line @typescript-eslint/no-var-requires
 import {composePlugins, withNx} from '@nx/next';
 
 /**
  * @type {import('@nx/next/plugins/with-nx').WithNxOptions}
  **/
 const nextConfig = {
-    // Use this to set Nx-specific options
-    // See: https://nx.dev/recipes/next/next-config-setup
     output: 'standalone',
     nx: {},
     serverExternalPackages: ["knex", "mysql2"],
@@ -18,12 +13,11 @@ const nextConfig = {
     async headers() {
         return [
             {
-                // Applies to all API routes
                 source: "/api/:path*",
                 headers: [
                     {
                         key: "Access-Control-Allow-Origin",
-                        value: "http://localhost:8081",
+                        value: "http://localhost:8082",
                     },
                     {
                         key: "Access-Control-Allow-Credentials",

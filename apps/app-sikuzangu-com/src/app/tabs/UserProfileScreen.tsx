@@ -57,7 +57,7 @@ export default function Profile() {
           onPress: async () => {
             try {
               await logoutUser();
-              router.replace('/auth/LoginScreen');
+              router.push('/auth/LoginScreen');
             } catch (e: any) {
               Alert.alert(
                 language === 'sw' ? 'Hitilafu' : 'Error',
@@ -79,7 +79,7 @@ export default function Profile() {
       icon: '🔄',
       label: 'Change Language',
       labelSw: 'Badilisha Lugha',
-      onPress: () => router.push('/'),
+      onPress: () => router.push('/LanguageScreen'),
     },
     {
       id: 'notifications',

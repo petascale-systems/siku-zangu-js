@@ -84,7 +84,7 @@ export default function UpdatingCycleLengthScreen() {
                         text: language === 'en' ? 'OK' : 'Sawa',
 
                         onPress: () =>
-                            router.replace({
+                            router.push({
                                 pathname: '/onboarding/UpdatingSymptomsMoodsScreen',
                                 params: {
                                     lang: language,

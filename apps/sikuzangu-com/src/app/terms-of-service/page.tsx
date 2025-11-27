@@ -1,4 +1,4 @@
-import logo from '../../../../public/images/logo.png';
+import logo from '../../../public/images/logo.png';
 import {WebsiteNav, WebsiteFooter} from '@siku-zangu/react'
 
 

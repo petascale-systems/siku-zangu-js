@@ -57,7 +57,7 @@ export default function DeleteAccountScreen  ()  {
                                         text: 'OK',
 
                                         onPress: () =>
-                                            router.replace({
+                                            router.push({
                                                 pathname: '/auth/LoginScreen',
 
                                             }),

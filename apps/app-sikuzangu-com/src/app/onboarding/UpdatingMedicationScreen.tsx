@@ -81,7 +81,7 @@ export default function UpdatingMedicationScreen() {
                         {
                             text: language === 'en' ? 'Get Started' : 'Kuanza',
                             onPress: () =>
-                                router.replace({
+                                router.push({
                                     pathname: '/tabs/HomeScreen',
                                     params: {
                                         lang: language,
@@ -93,7 +93,7 @@ export default function UpdatingMedicationScreen() {
                 );
             } else {
                 // Still navigate even if marking failed
-                router.replace({
+                router.push({
                     pathname: '/tabs/HomeScreen',
                     params: {
                         lang: language,

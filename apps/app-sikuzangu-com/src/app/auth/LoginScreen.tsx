@@ -84,42 +84,24 @@ export default function LoginScreen() {
             }
 
             const userId = accessToken.user.user_id;
-
-            // Check if user has completed onboarding
             const hasCompletedOnboarding = await isOnboardingComplete(userId);
-
-            Alert.alert(
-                language === 'en' ? 'Success' : 'Mafanikio',
-                language === 'en'
-                    ? 'Logged in successfully!'
-                    : 'Umeingia kwa mafanikio!',
-                [
-                    {
-                        text: language === 'en' ? 'OK' : 'Sawa',
-                        onPress: () => {
-                            if (!hasCompletedOnboarding) {
-                                // First time user - go to onboarding
-                                router.replace({
-                                    pathname: '/onboarding/UpdatingNamesScreen',
-                                    params: {
-                                        lang: language,
-                                        userId: userId,
-                                    },
-                                });
-                            } else {
-                                // Returning user - go to home
-                                router.replace({
-                                    pathname: '/tabs/HomeScreen',
-                                    params: {
-                                        lang: language,
-                                        userId: userId,
-                                    },
-                                });
-                            }
-                        },
+            if (!hasCompletedOnboarding) {
+                router.push({
+                    pathname: '/onboarding/UpdatingNamesScreen',
+                    params: {
+                        lang: language,
+                        userId: userId,
                     },
-                ]
-            );
+                });
+            } else {
+                router.push({
+                    pathname: '/tabs/HomeScreen',
+                    params: {
+                        lang: language,
+                        userId: userId,
+                    },
+                });
+            }
         } catch (e: any) {
             const errorMessage =
                 (e as APIError).issues?.map((issue: any) => issue.message).join(', ') ||

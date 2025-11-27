@@ -1,5 +1,6 @@
 
 import { StaticImport } from "next/dist/shared/lib/get-img-props";
+import {usePathname} from "next/navigation";
 import Link from "next/link";
 
 export function WebsiteFooter({ logo }: { logo: string | StaticImport }) {
@@ -34,35 +35,38 @@ export function WebsiteFooter({ logo }: { logo: string | StaticImport }) {
         </div>
         <div className='flex flex-col gap-4'>
           <h3 className='text-xl font-bold mb-2'>Company</h3>
-          <Link href={'/publicSite/about'} className='text-gray-300 hover:text-white transition-colors border-b border-transparent hover:border-white w-fit'>
+          <Link href={'/about'} className='text-gray-300 hover:text-white transition-colors border-b border-transparent hover:border-white w-fit'>
             About us
           </Link>
-          <Link href={'/publicSite/privacy-policy'} className='text-gray-300 hover:text-white transition-colors border-b border-transparent hover:border-white w-fit'>
+          <Link href={'/privacy-policy'} className='text-gray-300 hover:text-white transition-colors border-b border-transparent hover:border-white w-fit'>
             Privacy Policy
           </Link>
-          <Link href={'/publicSite/terms-of-service'} className='text-gray-300 hover:text-white transition-colors border-b border-transparent hover:border-white w-fit'>
+          <Link href={'/terms-of-service'} className='text-gray-300 hover:text-white transition-colors border-b border-transparent hover:border-white w-fit'>
             Terms of Service
           </Link>
-          <Link href={'/publicSite/contact'} className='text-gray-300 hover:text-white transition-colors border-b border-transparent hover:border-white w-fit'>
+          <Link href={'/contact'} className='text-gray-300 hover:text-white transition-colors border-b border-transparent hover:border-white w-fit'>
             Contact us
           </Link>
-          <Link href={'/publicSite/delete-account'} className='text-gray-300 hover:text-white transition-colors border-b border-transparent hover:border-white w-fit'>
+          <Link href={'/delete-account'} className='text-gray-300 hover:text-white transition-colors border-b border-transparent hover:border-white w-fit'>
             Delete Account
           </Link>
+            <Link href={'/user-manual'} className='text-gray-300 hover:text-white transition-colors border-b border-transparent hover:border-white w-fit'>
+                User Manual
+            </Link>
         </div>
         <div className='flex flex-col gap-4'>
           <h3 className='text-xl font-bold mb-2'>Socials</h3>
-          <Link href={'https://instagram.com'} target='_blank' className='text-gray-300 hover:text-white transition-colors border-b border-transparent hover:border-white w-fit'>
+          <Link href={'https://www.instagram.com/sikuzanguapp/'} target='_blank' className='text-gray-300 hover:text-white transition-colors border-b border-transparent hover:border-white w-fit'>
             Instagram
           </Link>
-          <Link href={'https://facebook.com'} target='_blank' className='text-gray-300 hover:text-white transition-colors border-b border-transparent hover:border-white w-fit'>
+          <Link href={'https://www.facebook.com/sikuzangu'} target='_blank' className='text-gray-300 hover:text-white transition-colors border-b border-transparent hover:border-white w-fit'>
             Facebook
           </Link>
-          <Link href={'https://twitter.com'} target='_blank' className='text-gray-300 hover:text-white transition-colors border-b border-transparent hover:border-white w-fit'>
-            Twitter
+          <Link href={'https://www.tiktok.com/@sikuzanguapp'} target='_blank' className='text-gray-300 hover:text-white transition-colors border-b border-transparent hover:border-white w-fit'>
+            Tiktok
           </Link>
-          <Link href={'https://pinterest.com'} target='_blank' className='text-gray-300 hover:text-white transition-colors border-b border-transparent hover:border-white w-fit'>
-            Pinterest
+          <Link href={'https://www.linkedin.com/company/siku-zangu-app'} target='_blank' className='text-gray-300 hover:text-white transition-colors border-b border-transparent hover:border-white w-fit'>
+            Linkedin
           </Link>
         </div>
       </div>

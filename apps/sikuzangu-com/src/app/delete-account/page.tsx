@@ -1,8 +1,8 @@
 import Image from 'next/image';
-import signinImage from '../../../../public/images/signin.png';
-import profileSettingsImage from '../../../../public/images/profile.png';
-import confirmDeleteImage from '../../../../public/images/delete.png';
-import logo from '../../../../public/images/logo.png';
+import signinImage from '../../../public/images/signin.png';
+import profileSettingsImage from '../../../public/images/profile.png';
+import confirmDeleteImage from '../../../public/images/delete.png';
+import logo from '../../../public/images/logo.png';
 import {WebsiteNav, WebsiteFooter} from '@siku-zangu/react'
 
 export default function DeleteAccountPage() {

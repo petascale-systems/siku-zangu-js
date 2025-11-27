@@ -87,7 +87,7 @@ export default  function ChangePinScreen  ()  {
               setNewPin('');
               setConfirmPin('');
 
-              router.replace('/auth/LoginScreen');
+              router.push('/auth/LoginScreen');
             },
           },
         ]
