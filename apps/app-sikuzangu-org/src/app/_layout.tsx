@@ -1,7 +1,7 @@
 import { Stack } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { ImageBackground, StyleSheet } from 'react-native';
+import { ImageBackground, StyleSheet, Animated } from 'react-native';
 import { ACCESS_TOKEN_KEY } from '@siku-zangu/react';
 import { isOnboardingComplete } from '@siku-zangu/react-native';
 import { useRouter } from 'expo-router';
@@ -13,14 +13,32 @@ export default function RootLayout() {
     const [hasSeenLanguageScreen, setHasSeenLanguageScreen] = useState(false);
     const [userId, setUserId] = useState<string | null>(null);
     const [language, setLanguage] = useState<string>('en');
+    const [appIsReady, setAppIsReady] = useState(false);
+
+    const fadeAnim = useRef(new Animated.Value(1)).current;
+    const hasNavigated = useRef(false);
     const router = useRouter();
+    const onLayoutRootView = useCallback(async () => {
+        if (appIsReady) {
+            Animated.timing(fadeAnim, {
+                toValue: 0,
+                duration: 300,
+                useNativeDriver: true,
+            }).start();
+        }
+    }, [appIsReady, fadeAnim]);
     useEffect(() => {
         const bootstrapAsync = async () => {
+            const startTime = Date.now();
+
             try {
-                const savedLang = await AsyncStorage.getItem('language');
+                const [savedLang, storedToken] = await Promise.all([
+                    AsyncStorage.getItem('language'),
+                    AsyncStorage.getItem(ACCESS_TOKEN_KEY),
+                ]);
+
                 setHasSeenLanguageScreen(!!savedLang);
                 setLanguage(savedLang || 'en');
-                const storedToken = await AsyncStorage.getItem(ACCESS_TOKEN_KEY);
                 if (storedToken) {
                     const parsed = JSON.parse(storedToken);
                     if (parsed?.token && parsed?.expires_in) {
@@ -38,50 +56,83 @@ export default function RootLayout() {
             } catch (e) {
                 console.error('Bootstrap error:', e);
             } finally {
-                setTimeout(() => {
+                const loadTime = Date.now() - startTime;
+                const minDisplayTime = 500;
+                if (loadTime < minDisplayTime) {
+                    setTimeout(() => {
+                        setIsReady(true);
+                    }, minDisplayTime - loadTime);
+                } else {
                     setIsReady(true);
-                }, 1500);
+                }
             }
         };
         bootstrapAsync();
     }, []);
     useEffect(() => {
-        if (!isReady) return;
+        if (!isReady || hasNavigated.current) return;
+        hasNavigated.current = true;
         if (!hasSeenLanguageScreen) {
-            router.push('/LanguageScreen');
+            router.replace('/LanguageScreen');
         } else if (!isLoggedIn) {
-            router.push('/auth');
+            router.replace('/auth');
         } else if (!onboardingComplete && userId) {
-            router.push({
+            router.replace({
                 pathname: '/onboarding/UpdatingNamesScreen',
                 params: { lang: language, userId: userId },
             });
         } else if (userId) {
-            router.push({
+            router.replace({
                 pathname: '/tabs/HomeScreen',
                 params: { lang: language, userId: userId },
             });
         }
-    }, [isReady]);
-    if (!isReady) {
-        return (
-            <ImageBackground
-                source={require('../../assets/images/landingPage.png')}
-                resizeMode="cover"
-                style={styles.container}
-            />
-        );
-    }
+        setTimeout(() => {
+            setAppIsReady(true);
+        }, 400);
+    }, [isReady, hasSeenLanguageScreen, isLoggedIn, onboardingComplete, userId, language, router]);
     return (
-        <Stack screenOptions={{ headerShown: false }}>
-            <Stack.Screen name="index" options={{ headerShown: false }} />
-            <Stack.Screen name="LanguageScreen" />
-            <Stack.Screen name="auth" />
-            <Stack.Screen name="onboarding" />
-            <Stack.Screen name="tabs" />
-        </Stack>
+        <>
+            <Stack
+                screenOptions={{ headerShown: false }}
+                onLayout={onLayoutRootView}
+            >
+                <Stack.Screen name="index" options={{ headerShown: false }} />
+                <Stack.Screen name="LanguageScreen" />
+                <Stack.Screen name="auth" />
+                <Stack.Screen name="onboarding" />
+                <Stack.Screen name="tabs" />
+            </Stack>
+            {!appIsReady && (
+                <Animated.View
+                    style={[
+                        styles.splashContainer,
+                        {
+                            opacity: fadeAnim,
+                        },
+                    ]}
+                    pointerEvents="none"
+                >
+                    <ImageBackground
+                        source={require('../../assets/images/landingPage.png')}
+                        resizeMode="cover"
+                        style={styles.container}
+                    />
+                </Animated.View>
+            )}
+        </>
     );
 }
+
 const styles = StyleSheet.create({
-    container: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+    container: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: '#FFF4EC',
+    },
+    splashContainer: {
+        ...StyleSheet.absoluteFillObject,
+        zIndex: 9999,
+    },
 });
