@@ -5,6 +5,7 @@ import { ImageBackground, StyleSheet } from 'react-native';
 import { ACCESS_TOKEN_KEY } from '@siku-zangu/react';
 import { isOnboardingComplete } from '@siku-zangu/react-native';
 import { useRouter } from 'expo-router';
+import { useCrashlytics } from '@siku-zangu/react-native';
 
 export default function RootLayout() {
     const [isReady, setIsReady] = useState(false);
@@ -14,6 +15,9 @@ export default function RootLayout() {
     const [userId, setUserId] = useState<string | null>(null);
     const [language, setLanguage] = useState<string>('en');
     const router = useRouter();
+
+    const crashlytics = useCrashlytics(userId);
+
     useEffect(() => {
         const bootstrapAsync = async () => {
             try {
@@ -37,6 +41,10 @@ export default function RootLayout() {
                 }
             } catch (e) {
                 console.error('Bootstrap error:', e);
+                // Log error to Crashlytics
+                if (e instanceof Error) {
+                    crashlytics.logError(e, 'Bootstrap failed');
+                }
             } finally {
                 setTimeout(() => {
                     setIsReady(true);
@@ -45,6 +53,7 @@ export default function RootLayout() {
         };
         bootstrapAsync();
     }, []);
+
     useEffect(() => {
         if (!isReady) return;
         if (!hasSeenLanguageScreen) {
@@ -63,6 +72,7 @@ export default function RootLayout() {
             });
         }
     }, [isReady]);
+
     if (!isReady) {
         return (
             <ImageBackground
@@ -72,6 +82,7 @@ export default function RootLayout() {
             />
         );
     }
+
     return (
         <Stack screenOptions={{ headerShown: false }}>
             <Stack.Screen name="index" options={{ headerShown: false }} />
@@ -82,6 +93,7 @@ export default function RootLayout() {
         </Stack>
     );
 }
+
 const styles = StyleSheet.create({
     container: { flex: 1, justifyContent: 'center', alignItems: 'center' },
 });

@@ -3,6 +3,9 @@
     "name": "Siku zangu",
     "slug": "app-sikuzangu-org",
     "version": "1.0.0",
+    "cli": {
+      "appVersionSource": "remote"
+    },
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "org.sikuzangu.app",
@@ -12,7 +15,11 @@
       "bundleIdentifier": "org.sikuzangu.app",
       "associatedDomains": [
         "applinks:sikuzangu.org"
-      ]
+      ],
+      "googleServicesFile": "./GoogleService-Info.plist",
+      "infoPlist": {
+        "FirebaseCrashlyticsCollectionEnabled": true
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -22,6 +29,7 @@
       "versionCode": 2,
       "edgeToEdgeEnabled": true,
       "package": "org.sikuzangu.app",
+      "googleServicesFile": "./google-services.json",
       "intentFilters": [
         {
           "action": "VIEW",
@@ -65,7 +73,9 @@
             "deploymentTarget": "15.1"
           }
         }
-      ]
+      ],
+      "@react-native-firebase/app",
+      "@react-native-firebase/crashlytics"
     ]
   }
 }
