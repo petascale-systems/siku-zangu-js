@@ -59,7 +59,7 @@ export function WebsiteFooter({ logo }: { logo: string | StaticImport }) {
           <Link href={'https://www.instagram.com/sikuzanguapp/'} target='_blank' className='text-gray-300 hover:text-white transition-colors border-b border-transparent hover:border-white w-fit'>
             Instagram
           </Link>
-          <Link href={'https://www.facebook.com/sikuzangu'} target='_blank' className='text-gray-300 hover:text-white transition-colors border-b border-transparent hover:border-white w-fit'>
+          <Link href={'https://www.facebook.com/sikuzanguapp'} target='_blank' className='text-gray-300 hover:text-white transition-colors border-b border-transparent hover:border-white w-fit'>
             Facebook
           </Link>
           <Link href={'https://www.tiktok.com/@sikuzanguapp'} target='_blank' className='text-gray-300 hover:text-white transition-colors border-b border-transparent hover:border-white w-fit'>
