@@ -3,7 +3,7 @@ import { useEffect, useState, useRef, useCallback } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ImageBackground, StyleSheet, Animated } from 'react-native';
 import { ACCESS_TOKEN_KEY } from '@siku-zangu/react';
-import { isOnboardingComplete } from '@siku-zangu/react-native';
+import { isOnboardingComplete, useFirebaseCrashlytics } from '@siku-zangu/react-native';
 import { useRouter } from 'expo-router';
 
 export default function RootLayout() {
@@ -18,6 +18,8 @@ export default function RootLayout() {
     const fadeAnim = useRef(new Animated.Value(1)).current;
     const hasNavigated = useRef(false);
     const router = useRouter();
+    const crashlytics = useFirebaseCrashlytics(userId);
+
     const onLayoutRootView = useCallback(async () => {
         if (appIsReady) {
             Animated.timing(fadeAnim, {
@@ -55,6 +57,9 @@ export default function RootLayout() {
                 }
             } catch (e) {
                 console.error('Bootstrap error:', e);
+                if (e instanceof Error) {
+                    crashlytics.logError(e, 'Bootstrap failed');
+                }
             } finally {
                 const loadTime = Date.now() - startTime;
                 const minDisplayTime = 500;

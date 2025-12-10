@@ -177,3 +177,7 @@ yarn-error.log
 /coverage
 /apps/app-sikuzangu-org/ios/
 /apps/app-sikuzangu-org/android/
+
+# Firebase Configuration Files
+apps/app-sikuzangu-org/GoogleService-Info.plist
+apps/app-sikuzangu-org/google-services.json

@@ -1,5 +1,6 @@
 export * from './users'
 export * from './utils'
+export * from './firebase'
 export * from './InputField'
 export * from './App-nav-component'
 export * from './LanguageCard'
