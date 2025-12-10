@@ -3,9 +3,8 @@ import { useEffect, useState, useRef, useCallback } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ImageBackground, StyleSheet, Animated } from 'react-native';
 import { ACCESS_TOKEN_KEY } from '@siku-zangu/react';
-import { isOnboardingComplete } from '@siku-zangu/react-native';
+import { isOnboardingComplete, useFirebaseCrashlytics } from '@siku-zangu/react-native';
 import { useRouter } from 'expo-router';
-import { useCrashlytics } from '@siku-zangu/react-native';
 
 export default function RootLayout() {
     const [isReady, setIsReady] = useState(false);
@@ -19,8 +18,7 @@ export default function RootLayout() {
     const fadeAnim = useRef(new Animated.Value(1)).current;
     const hasNavigated = useRef(false);
     const router = useRouter();
-
-    const crashlytics = useCrashlytics(userId);
+    const crashlytics = useFirebaseCrashlytics(userId);
 
     const onLayoutRootView = useCallback(async () => {
         if (appIsReady) {
@@ -58,6 +56,7 @@ export default function RootLayout() {
                     }
                 }
             } catch (e) {
+                console.error('Bootstrap error:', e);
                 if (e instanceof Error) {
                     crashlytics.logError(e, 'Bootstrap failed');
                 }
@@ -75,7 +74,6 @@ export default function RootLayout() {
         };
         bootstrapAsync();
     }, []);
-
     useEffect(() => {
         if (!isReady || hasNavigated.current) return;
         hasNavigated.current = true;
@@ -94,18 +92,6 @@ export default function RootLayout() {
                 params: { lang: language, userId: userId },
             });
         }
-    }, [isReady]);
-
-    if (!isReady) {
-        return (
-            <ImageBackground
-                source={require('../../assets/images/landingPage.png')}
-                resizeMode="cover"
-                style={styles.container}
-            />
-        );
-    }
-
         setTimeout(() => {
             setAppIsReady(true);
         }, 400);

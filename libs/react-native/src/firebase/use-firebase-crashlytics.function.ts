@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import crashlytics from '@react-native-firebase/crashlytics';
 
-export function useCrashlytics(userId?: string | null) {
+export function useFirebaseCrashlytics(userId?: string | null) {
     useEffect(() => {
         crashlytics().setCrashlyticsCollectionEnabled(true);
         if (userId) {
