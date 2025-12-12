@@ -41,7 +41,11 @@
     "react-native-svg-transformer": "*",
     "react-native-web": "*",
     "recharts": "*",
-    "zod": "*"
+    "zod": "*",
+    "@react-native-firebase/app": "*",
+    "@react-native-firebase/crashlytics": "*",
+    "expo-dev-client": "*",
+    "react-server-dom-webpack": "*"
   },
   "devDependencies": {
     "@babel/core": "*",

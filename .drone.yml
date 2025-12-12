@@ -5,7 +5,7 @@ name: release
 steps:
   - name: docker-build
     commands:
-      - npm install
+      - npm install --legacy-peer-deps
       - npx nx build sikuzangu-org --skip-nx-cache
       - docker build -t sikuzangu-org:${DRONE_TAG} -f ./sikuzangu-org-Dockerfile .
   - name: docker-run
