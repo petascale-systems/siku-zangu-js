@@ -1,5 +1,3 @@
-'use server'
-
 import {APIError} from "./api-error.model";
 
 export async function handleAPIError(fn: () => Promise<Response | void>) {

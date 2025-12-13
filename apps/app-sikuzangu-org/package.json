@@ -11,6 +11,8 @@
     "@expo/metro-runtime": "*",
     "@react-native-async-storage/async-storage": "*",
     "@react-native-community/datetimepicker": "*",
+    "@react-native-firebase/app": "*",
+    "@react-native-firebase/crashlytics": "*",
     "@react-native-picker/picker": "*",
     "@react-navigation/native": "*",
     "@react-navigation/native-stack": "*",
@@ -21,6 +23,7 @@
     "expo": "*",
     "expo-build-properties": "*",
     "expo-constants": "*",
+    "expo-dev-client": "*",
     "expo-linear-gradient": "*",
     "expo-linking": "*",
     "expo-router": "*",
@@ -41,11 +44,7 @@
     "react-native-svg-transformer": "*",
     "react-native-web": "*",
     "recharts": "*",
-    "zod": "*",
-    "@react-native-firebase/app": "*",
-    "@react-native-firebase/crashlytics": "*",
-    "expo-dev-client": "*",
-    "react-server-dom-webpack": "*"
+    "zod": "*"
   },
   "devDependencies": {
     "@babel/core": "*",
