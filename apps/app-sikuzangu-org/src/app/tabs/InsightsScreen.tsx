@@ -13,9 +13,11 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { NavbarCard } from '@siku-zangu/react-native';
 import { useArticlesPage } from '@siku-zangu/react';
 import { Article } from '@siku-zangu/core';
-import { ARTICLE_COVER_IMAGE_API_PATH } from '@siku-zangu/react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-
+const ARTICLE_COVER_IMAGE_API_PATH = (articleId: string) => {
+  const baseUrl = 'https://sikuzangu.org/';
+  return `${baseUrl}/api/articles/${articleId}/cover-image`;
+};
 const translations = {
   en: {
     title: 'Insights and Tips',
@@ -58,12 +60,12 @@ const translations = {
 };
 
 const categoryIcons: Record<
-  string,
-  {
-    icon: string;
-    library: 'Ionicons' | 'MaterialCommunityIcons';
-    color: string;
-  }
+    string,
+    {
+      icon: string;
+      library: 'Ionicons' | 'MaterialCommunityIcons';
+      color: string;
+    }
 > = {
   'body-education': {
     icon: 'brain',
@@ -94,6 +96,71 @@ const categoryIcons: Record<
   },
 };
 
+const stripHtml = (html: string): string => {
+  return html.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').trim();
+};
+interface ArticleCoverImageProps {
+  articleId?: string;
+  hasCoverImage?: boolean;
+  title?: string;
+  style?: any;
+}
+const ArticleCoverImage: React.FC<ArticleCoverImageProps> = ({
+                                                               articleId,
+                                                               hasCoverImage,
+                                                               title,
+                                                               style,
+                                                             }) => {
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+
+  const coverImageUrl = useMemo(() => {
+    if (!articleId || !hasCoverImage) {
+      return null;
+    }
+    const url = ARTICLE_COVER_IMAGE_API_PATH(articleId);
+    return url;
+  }, [articleId, hasCoverImage]);
+
+  if (!coverImageUrl) {
+    return null;
+  }
+  return (
+      <View style={style}>
+        {loading && (
+            <View style={[StyleSheet.absoluteFill, styles.imageLoading]}>
+              <ActivityIndicator size="small" color="#FF4C7C" />
+            </View>
+        )}
+
+        <Image
+            source={{ uri: coverImageUrl }}
+            style={[style, loading && { opacity: 0 }]}
+            resizeMode="cover"
+            onLoadStart={() => {
+              setLoading(true);
+              setError(false);
+            }}
+            onLoad={() => {
+              setLoading(false);
+            }}
+            onError={(e) => {
+              setError(true);
+              setLoading(false);
+            }}
+            accessibilityLabel={`${title} cover image`}
+        />
+
+        {error && (
+            <View style={[style, styles.imageError]}>
+              <Ionicons name="image-outline" size={32} color="#999" />
+              <Text style={styles.imageErrorText}>Image unavailable</Text>
+            </View>
+        )}
+      </View>
+  );
+};
+
 export default function InsightsScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
@@ -114,224 +181,196 @@ export default function InsightsScreen() {
   const t = translations[language];
 
   const handleBack = useCallback(() => router.back(), [router]);
-
   const handleArticlePress = useCallback(
-    (article: Article) => {
-      router.push({
-        pathname: 'tabs/ArticleDetailScreen',
-        params: { articleId: article.article_id, lang: language, userId },
-      });
-    },
-    [router, language, userId]
+      (article: Article) => {
+        router.push({
+          pathname: 'tabs/ArticleDetailScreen',
+          params: { articleId: article.article_id, lang: language, userId },
+        });
+      },
+      [router, language, userId]
   );
-
   const getIconForCategory = useCallback((category?: string) => {
     const iconData =
-      categoryIcons[category || 'default'] || categoryIcons['default'];
+        categoryIcons[category || 'default'] || categoryIcons['default'];
     const IconComponent =
-      iconData.library === 'Ionicons' ? Ionicons : MaterialCommunityIcons;
+        iconData.library === 'Ionicons' ? Ionicons : MaterialCommunityIcons;
     return (
-      <IconComponent
-        name={iconData.icon as any}
-        size={26}
-        color={iconData.color}
-      />
+        <IconComponent
+            name={iconData.icon as any}
+            size={26}
+            color={iconData.color}
+        />
     );
   }, []);
-
-  const getCoverImageUrl = useCallback(
-    (articleId?: string, hasCoverImage?: boolean) => {
-      if (!articleId || !hasCoverImage) return null;
-      return ARTICLE_COVER_IMAGE_API_PATH(articleId);
-    },
-    []
-  );
-
   const getCategoryName = useCallback(
-    (category?: string) => {
-      if (!category) return '';
-      return t.categories[category as keyof typeof t.categories] || category;
-    },
-    [t]
+      (category?: string) => {
+        if (!category) return '';
+        return t.categories[category as keyof typeof t.categories] || category;
+      },
+      [t]
   );
-
   const renderArticleCard = useCallback(
-    (article: Article, index: number) => {
-      const isPink = index % 3 === 1;
-      const coverImageUrl = getCoverImageUrl(
-        article.article_id,
-        article.kv?.has_cover_image
-      );
-
-      return (
-        <TouchableOpacity
-          key={article.article_id}
-          style={[styles.card, isPink && styles.pinkCard]}
-          onPress={() => handleArticlePress(article)}
-          activeOpacity={0.7}
-          accessibilityRole="button"
-          accessibilityLabel={`${t.readMore}: ${
-            article.kv?.title || t.untitledArticle
-          }`}
-        >
-          {coverImageUrl && (
-            <Image
-              source={{ uri: coverImageUrl }}
-              style={styles.coverImage}
-              resizeMode="cover"
-              accessibilityLabel={`${article.kv?.title} cover image`}
-            />
-          )}
-          <View
-            style={[styles.iconCircle, isPink && { backgroundColor: '#fff' }]}
-          >
-            {getIconForCategory(article.kv?.category)}
-          </View>
-          <Text style={[styles.title, isPink && { color: '#fff' }]}>
-            {article.kv?.title || t.untitledArticle}
-          </Text>
-          {article.kv?.content && (
-            <Text
-              style={[
-                styles.description,
-                isPink && { color: '#fff', opacity: 0.9 },
-              ]}
-              numberOfLines={3}
+      (article: Article, index: number) => {
+        const isPink = index % 3 === 1;
+        const contentPreview = article.kv?.content
+            ? stripHtml(article.kv.content).substring(0, 150) + '...'
+            : '';
+        return (
+            <TouchableOpacity
+                key={article.article_id}
+                style={[styles.card, isPink && styles.pinkCard]}
+                onPress={() => handleArticlePress(article)}
+                activeOpacity={0.7}
+                accessibilityRole="button"
+                accessibilityLabel={`${t.readMore}: ${
+                    article.kv?.title || t.untitledArticle
+                }`}
             >
-              {article.kv.content.substring(0, 150)}...
-            </Text>
-          )}
-
-          {article.kv?.author && (
-            <Text
-              style={[styles.author, isPink && { color: '#fff', opacity: 0.8 }]}
-            >
-              {t.by} {article.kv.author}
-            </Text>
-          )}
-          <View style={[styles.button, isPink && styles.whiteButton]}>
-            <Text style={[styles.buttonText, isPink && { color: '#FF4C7C' }]}>
-              {t.readMore}
-            </Text>
-            <Ionicons
-              name="arrow-forward"
-              size={16}
-              color={isPink ? '#FF4C7C' : '#fff'}
-            />
-          </View>
-        </TouchableOpacity>
-      );
-    },
-    [handleArticlePress, getCoverImageUrl, getIconForCategory, t]
+              <ArticleCoverImage
+                  articleId={article.article_id}
+                  hasCoverImage={article.kv?.has_cover_image}
+                  title={article.kv?.title}
+                  style={styles.coverImage}
+              />
+              <View
+                  style={[styles.iconCircle, isPink && { backgroundColor: '#fff' }]}
+              >
+                {getIconForCategory(article.kv?.category)}
+              </View>
+              <Text style={[styles.title, isPink && { color: '#fff' }]}>
+                {article.kv?.title || t.untitledArticle}
+              </Text>
+              {contentPreview && (
+                  <Text
+                      style={[
+                        styles.description,
+                        isPink && { color: '#fff', opacity: 0.9 },
+                      ]}
+                      numberOfLines={3}
+                  >
+                    {contentPreview}
+                  </Text>
+              )}
+              {article.kv?.author && (
+                  <Text
+                      style={[styles.author, isPink && { color: '#fff', opacity: 0.8 }]}
+                  >
+                    {t.by} {article.kv.author}
+                  </Text>
+              )}
+              <View style={[styles.button, isPink && styles.whiteButton]}>
+                <Text style={[styles.buttonText, isPink && { color: '#FF4C7C' }]}>
+                  {t.readMore}
+                </Text>
+                <Ionicons
+                    name="arrow-forward"
+                    size={16}
+                    color={isPink ? '#FF4C7C' : '#fff'}
+                />
+              </View>
+            </TouchableOpacity>
+        );
+      },
+      [handleArticlePress, getIconForCategory, t]
   );
-
   const articles = useMemo(
-    () => articlesPage?.items || [],
-    [articlesPage?.items]
+      () => articlesPage?.items || [],
+      [articlesPage?.items]
   );
   const totalPages = useMemo(
-    () => articlesPage?.totalPages || 1,
-    [articlesPage?.totalPages]
+      () => articlesPage?.totalPages || 1,
+      [articlesPage?.totalPages]
   );
-
   const handlePreviousPage = useCallback(() => {
     setPage((p) => Math.max(1, p - 1));
   }, []);
-
   const handleNextPage = useCallback(() => {
     setPage((p) => Math.min(totalPages, p + 1));
   }, [totalPages]);
-
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
-      <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={handleBack}
-          accessibilityRole="button"
-          accessibilityLabel="Go back"
-        >
-          <Ionicons name="arrow-back" size={24} color="#000" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>{t.title}</Text>
-        <View style={{ width: 32 }} />
+      <View style={[styles.container, { paddingTop: insets.top }]}>
+        <View style={styles.header}>
+          <TouchableOpacity
+              style={styles.backButton}
+              onPress={handleBack}
+              accessibilityRole="button"
+              accessibilityLabel="Go back"
+          >
+            <Ionicons name="arrow-back" size={24} color="#000" />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>{t.title}</Text>
+          <View style={{ width: 32 }} />
+        </View>
+        {isFetchingArticlesPage && page === 1 ? (
+            <View style={styles.centerContent}>
+              <ActivityIndicator size="large" color="#FF4C7C" />
+              <Text style={styles.loadingText}>{t.loadingArticles}</Text>
+            </View>
+        ) : articles.length === 0 ? (
+            <View style={styles.centerContent}>
+              <Ionicons name="document-text-outline" size={48} color="#CCC" />
+              <Text style={styles.emptyText}>{t.noArticles}</Text>
+              <Text style={styles.emptySubtext}>{t.checkBackSoon}</Text>
+            </View>
+        ) : (
+            <ScrollView
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={styles.scrollContent}
+            >
+              {articles.map((article, index) => renderArticleCard(article, index))}
+              {totalPages > 1 && (
+                  <View style={styles.pagination}>
+                    <TouchableOpacity
+                        style={[
+                          styles.pageButton,
+                          page === 1 && styles.pageButtonDisabled,
+                        ]}
+                        onPress={handlePreviousPage}
+                        disabled={page === 1 || isFetchingArticlesPage}
+                        accessibilityRole="button"
+                        accessibilityLabel={`${t.page} ${page - 1}`}
+                        accessibilityState={{ disabled: page === 1 }}
+                    >
+                      <Ionicons
+                          name="chevron-back"
+                          size={20}
+                          color={page === 1 ? '#CCC' : '#FF4C7C'}
+                      />
+                    </TouchableOpacity>
+                    <Text style={styles.pageText}>
+                      {t.page} {page} {t.of} {totalPages}
+                    </Text>
+                    <TouchableOpacity
+                        style={[
+                          styles.pageButton,
+                          page === totalPages && styles.pageButtonDisabled,
+                        ]}
+                        onPress={handleNextPage}
+                        disabled={page === totalPages || isFetchingArticlesPage}
+                        accessibilityRole="button"
+                        accessibilityLabel={`${t.page} ${page + 1}`}
+                        accessibilityState={{ disabled: page === totalPages }}
+                    >
+                      <Ionicons
+                          name="chevron-forward"
+                          size={20}
+                          color={page === totalPages ? '#CCC' : '#FF4C7C'}
+                      />
+                    </TouchableOpacity>
+                  </View>
+              )}
+              {isFetchingArticlesPage && page > 1 && (
+                  <View style={styles.loadingMore}>
+                    <ActivityIndicator size="small" color="#FF4C7C" />
+                  </View>
+              )}
+            </ScrollView>
+        )}
+        <NavbarCard language={language} userId={userId} />
       </View>
-
-      {isFetchingArticlesPage && page === 1 ? (
-        <View style={styles.centerContent}>
-          <ActivityIndicator size="large" color="#FF4C7C" />
-          <Text style={styles.loadingText}>{t.loadingArticles}</Text>
-        </View>
-      ) : articles.length === 0 ? (
-        <View style={styles.centerContent}>
-          <Ionicons name="document-text-outline" size={48} color="#CCC" />
-          <Text style={styles.emptyText}>{t.noArticles}</Text>
-          <Text style={styles.emptySubtext}>{t.checkBackSoon}</Text>
-        </View>
-      ) : (
-        <ScrollView
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.scrollContent}
-        >
-          {articles.map((article, index) => renderArticleCard(article, index))}
-
-          {totalPages > 1 && (
-            <View style={styles.pagination}>
-              <TouchableOpacity
-                style={[
-                  styles.pageButton,
-                  page === 1 && styles.pageButtonDisabled,
-                ]}
-                onPress={handlePreviousPage}
-                disabled={page === 1 || isFetchingArticlesPage}
-                accessibilityRole="button"
-                accessibilityLabel={`${t.page} ${page - 1}`}
-                accessibilityState={{ disabled: page === 1 }}
-              >
-                <Ionicons
-                  name="chevron-back"
-                  size={20}
-                  color={page === 1 ? '#CCC' : '#FF4C7C'}
-                />
-              </TouchableOpacity>
-
-              <Text style={styles.pageText}>
-                {t.page} {page} {t.of} {totalPages}
-              </Text>
-
-              <TouchableOpacity
-                style={[
-                  styles.pageButton,
-                  page === totalPages && styles.pageButtonDisabled,
-                ]}
-                onPress={handleNextPage}
-                disabled={page === totalPages || isFetchingArticlesPage}
-                accessibilityRole="button"
-                accessibilityLabel={`${t.page} ${page + 1}`}
-                accessibilityState={{ disabled: page === totalPages }}
-              >
-                <Ionicons
-                  name="chevron-forward"
-                  size={20}
-                  color={page === totalPages ? '#CCC' : '#FF4C7C'}
-                />
-              </TouchableOpacity>
-            </View>
-          )}
-
-          {isFetchingArticlesPage && page > 1 && (
-            <View style={styles.loadingMore}>
-              <ActivityIndicator size="small" color="#FF4C7C" />
-            </View>
-          )}
-        </ScrollView>
-      )}
-
-      <NavbarCard language={language} userId={userId} />
-    </View>
   );
 }
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -402,6 +441,24 @@ const styles = StyleSheet.create({
     height: 180,
     borderRadius: 12,
     marginBottom: 12,
+    backgroundColor: '#f0f0f0',
+  },
+  imageLoading: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#f0f0f0',
+    borderRadius: 12,
+  },
+  imageError: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#f5f5f5',
+    borderRadius: 12,
+  },
+  imageErrorText: {
+    marginTop: 8,
+    fontSize: 12,
+    color: '#999',
   },
   iconCircle: {
     width: 48,
