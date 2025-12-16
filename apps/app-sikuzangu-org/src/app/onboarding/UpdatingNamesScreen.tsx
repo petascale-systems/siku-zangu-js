@@ -125,33 +125,14 @@ export default function UpdatingNamesScreen() {
       if (lastName.trim()) {
         updateData.kv!.last_name = lastName.trim();
       }
-
-      console.log('UpdatingNames: Calling upsertUser with:', {
-        userId,
-        updateData,
-      });
-
       await upsertUser(updateData);
-
-      Alert.alert(
-        language === 'en' ? 'Success' : 'Mafanikio',
-        language === 'en'
-          ? 'Names updated successfully!'
-          : 'Majina yamebadilishwa kwa mafanikio!',
-        [
-          {
-            text: language === 'en' ? 'OK' : 'Sawa',
-            onPress: () =>
-              router.push({
-                pathname: '/onboarding/UpdatingDOBScreen',
-                params: {
-                  lang: language,
-                  userId: userId,
-                },
-              }),
-          },
-        ]
-      );
+      router.push({
+        pathname: '/onboarding/UpdatingDOBScreen',
+        params: {
+          lang: language,
+          userId: userId,
+        },
+      });
     } catch (e: any) {
       const errorMessage =
         e.message ||

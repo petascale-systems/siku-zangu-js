@@ -171,30 +171,14 @@ export default function UpdatingPeriodScreen() {
         selectedYear
       );
       const updateData: User = { kv: { prev_cycle_start_date } };
-
-      console.log('UpdatingPeriod: Saving date:', prev_cycle_start_date);
-
       await upsertUser(updateData);
-
-      Alert.alert(
-        language === 'en' ? 'Success' : 'Mafanikio',
-        language === 'en'
-          ? 'Date saved successfully!'
-          : 'Tarehe imehifadhiwa kwa mafanikio!',
-        [
-          {
-            text: language === 'en' ? 'OK' : 'Sawa',
-            onPress: () =>
-              router.push({
-                pathname: '/onboarding/UpdatingPeriodLengthScreen',
-                params: {
-                  lang: language,
-                  userId: userId,
-                },
-              }),
-          },
-        ]
-      );
+      router.push({
+        pathname: '/onboarding/UpdatingPeriodLengthScreen',
+        params: {
+          lang: language,
+          userId: userId,
+        },
+      });
     } catch (error: any) {
       const errorMessage =
         error.message ||

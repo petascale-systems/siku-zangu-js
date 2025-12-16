@@ -1,7 +1,7 @@
 import React, {useEffect, useState} from 'react';
 import {Alert, StyleSheet, Text, TextInput, TouchableOpacity, View,} from 'react-native';
 import {useLocalSearchParams, useRouter} from 'expo-router';
-import {PrimaryButton} from '@siku-zangu/react-native';
+import {isOnboardingComplete, PrimaryButton} from '@siku-zangu/react-native';
 import {Ionicons} from '@expo/vector-icons';
 import {useAccessToken} from '@siku-zangu/react';
 import {APIError} from '@siku-zangu/core';
@@ -115,7 +115,7 @@ export default function LoginScreen() {
             }
 
             const userId = accessToken.user.user_id;
-            // const hasCompletedOnboarding = await isOnboardingComplete(userId);
+             const hasCompletedOnboarding = await isOnboardingComplete(userId);
             router.push({
                 pathname: '/tabs/HomeScreen',
                 params: {
@@ -123,23 +123,23 @@ export default function LoginScreen() {
                     userId: userId,
                 },
             });
-            // if (!hasCompletedOnboarding) {
-            //   router.push({
-            //     pathname: '/onboarding/UpdatingNamesScreen',
-            //     params: {
-            //       lang: language,
-            //       userId: userId,
-            //     },
-            //   });
-            // } else {
-            //   router.push({
-            //     pathname: '/tabs/HomeScreen',
-            //     params: {
-            //       lang: language,
-            //       userId: userId,
-            //     },
-            //   });
-            // }
+             if (!hasCompletedOnboarding) {
+               router.push({
+                 pathname: '/onboarding/UpdatingNamesScreen',
+                params: {
+                  lang: language,
+                userId: userId,
+                },
+               });
+            } else {
+               router.push({
+               pathname: '/tabs/HomeScreen',
+               params: {
+                lang: language,
+                userId: userId,
+                },
+               });
+             }
         } catch
             (e: any) {
             const errorMessage =

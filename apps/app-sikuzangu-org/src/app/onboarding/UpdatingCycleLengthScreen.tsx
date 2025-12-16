@@ -67,34 +67,14 @@ export default function UpdatingCycleLengthScreen() {
           avg_cycle_length_days: selectedLength,
         },
       };
-
-      console.log('UpdatingCycleLength: Calling upsertUser with:', {
-        userId,
-        updateData,
-      });
-
       await upsertUser(updateData);
-
-      Alert.alert(
-        language === 'en' ? 'Success' : 'Mafanikio',
-        language === 'en'
-          ? 'Cycle length saved successfully!'
-          : 'Muda wa mzunguko umehifadhiwa kwa mafanikio!',
-        [
-          {
-            text: language === 'en' ? 'OK' : 'Sawa',
-
-            onPress: () =>
-              router.push({
-                pathname: '/onboarding/UpdatingSymptomsMoodsScreen',
-                params: {
-                  lang: language,
-                  userId: userId,
-                },
-              }),
-          },
-        ]
-      );
+      router.push({
+        pathname: '/onboarding/UpdatingSymptomsMoodsScreen',
+        params: {
+          lang: language,
+          userId: userId,
+        },
+      });
     } catch (e: any) {
       const errorMessage =
         e.message ||

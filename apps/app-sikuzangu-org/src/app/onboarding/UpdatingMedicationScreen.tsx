@@ -74,39 +74,17 @@ export default function UpdatingMedicationScreen() {
           medication_logs: [...currentMedicationLogs, ...newMedicationLogs],
         },
       };
-
-      console.log('UpdatingMedication: Calling upsertUser with:', {
-        userId,
-        updateData,
-      });
-
       await upsertUser(updateData);
-
-      // Mark onboarding as complete
       const onboardingMarked = await markOnboardingComplete(userId);
-
       if (onboardingMarked) {
-        Alert.alert(
-          language === 'en' ? 'Success' : 'Mafanikio',
-          language === 'en'
-            ? 'Setup complete! Welcome to Siku Zangu'
-            : 'Mipango imekamilika! Karibu kwenye Siku Zangu',
-          [
-            {
-              text: language === 'en' ? 'Get Started' : 'Kuanza',
-              onPress: () =>
-                router.push({
-                  pathname: '/tabs/HomeScreen',
-                  params: {
-                    lang: language,
-                    userId: userId,
-                  },
-                }),
-            },
-          ]
-        );
+        router.push({
+          pathname: '/tabs/HomeScreen',
+          params: {
+            lang: language,
+            userId: userId,
+          },
+        });
       } else {
-        // Still navigate even if marking failed
         router.push({
           pathname: '/tabs/HomeScreen',
           params: {
@@ -129,7 +107,6 @@ export default function UpdatingMedicationScreen() {
 
   return (
     <View style={styles.container}>
-      {/* Back button */}
       <TouchableOpacity
         style={styles.backButton}
         onPress={() => router.back()}
@@ -139,7 +116,6 @@ export default function UpdatingMedicationScreen() {
       </TouchableOpacity>
 
       <ScrollView contentContainerStyle={styles.content}>
-        {/* Header */}
         <View style={styles.header}>
           <Text style={styles.title}>
             {language === 'en'
@@ -152,8 +128,6 @@ export default function UpdatingMedicationScreen() {
               : 'Kurekodi kunasaidia kufuatilia ufanisi na kuepuka dozi zilizokosekana.'}
           </Text>
         </View>
-
-        {/* Medication Options */}
         <View style={styles.grid}>
           {medications.map((item) => {
             const isSelected = selectedMedications.includes(item.key);
@@ -182,8 +156,6 @@ export default function UpdatingMedicationScreen() {
             );
           })}
         </View>
-
-        {/* Confirm button */}
         <TouchableOpacity
           style={[
             styles.nextButton,
