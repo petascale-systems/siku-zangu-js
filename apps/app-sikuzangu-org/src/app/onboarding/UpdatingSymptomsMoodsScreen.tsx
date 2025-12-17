@@ -161,33 +161,14 @@ export default function UpdatingSymptomsMoodsScreen() {
           mood_logs: [...currentMoodLogs, ...newMoodLogs],
         },
       };
-
-      console.log('UpdatingSymptomsMoods: Calling upsertUser with:', {
-        userId,
-        updateData,
-      });
-
       await upsertUser(updateData);
-
-      Alert.alert(
-        language === 'en' ? 'Success' : 'Mafanikio',
-        language === 'en'
-          ? 'Your symptoms and moods have been saved!'
-          : 'Dalili na hisia zako zimehifadhiwa kwa mafanikio!',
-        [
-          {
-            text: language === 'en' ? 'OK' : 'Sawa',
-            onPress: () =>
-              router.push({
-                pathname: '/onboarding/UpdatingMedicationScreen',
-                params: {
-                  lang: language,
-                  userId: userId,
-                },
-              }),
-          },
-        ]
-      );
+      router.push({
+        pathname: '/onboarding/UpdatingMedicationScreen',
+        params: {
+          lang: language,
+          userId: userId,
+        },
+      });
     } catch (e: any) {
       const errorMessage =
         e.message ||

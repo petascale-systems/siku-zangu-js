@@ -65,33 +65,14 @@ export default function UpdatingPeriodLengthScreen() {
           avg_period_length_days: selectedLength,
         },
       };
-
-      console.log('UpdatingPeriodLength: Calling upsertUser with:', {
-        userId,
-        updateData,
-      });
-
       await upsertUser(updateData);
-
-      Alert.alert(
-        language === 'en' ? 'Success' : 'Mafanikio',
-        language === 'en'
-          ? 'Period length saved successfully!'
-          : 'Muda wa hedhi umehifadhiwa kwa mafanikio!',
-        [
-          {
-            text: language === 'en' ? 'OK' : 'Sawa',
-            onPress: () =>
-              router.push({
-                pathname: '/onboarding/UpdatingCycleLengthScreen',
-                params: {
-                  lang: language,
-                  userId: userId,
-                },
-              }),
-          },
-        ]
-      );
+      router.push({
+        pathname: '/onboarding/UpdatingCycleLengthScreen',
+        params: {
+          lang: language,
+          userId: userId,
+        },
+      });
     } catch (e: any) {
       const errorMessage =
         e.message ||

@@ -144,30 +144,14 @@ export default function UpdatingDOBScreen() {
         selectedYear
       );
       const updateData: User = { kv: { date_of_birth } };
-
-      console.log('UpdatingDOB: Saving date:', date_of_birth);
-
       await upsertUser(updateData);
-
-      Alert.alert(
-        language === 'en' ? 'Success' : 'Mafanikio',
-        language === 'en'
-          ? 'Date of birth saved successfully!'
-          : 'Tarehe ya kuzaliwa imehifadhiwa!',
-        [
-          {
-            text: language === 'en' ? 'OK' : 'Sawa',
-            onPress: () =>
-              router.push({
-                pathname: '/onboarding/UpdatingPeriodScreen',
-                params: {
-                  lang: language,
-                  userId: userId,
-                },
-              }),
-          },
-        ]
-      );
+      router.push({
+        pathname: '/onboarding/UpdatingPeriodScreen',
+        params: {
+          lang: language,
+          userId: userId,
+        },
+      });
     } catch (error: any) {
       const errorMessage =
         error.message ||
