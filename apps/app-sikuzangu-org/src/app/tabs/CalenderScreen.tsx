@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useCallback, useEffect } from 'react';
+import React, { useMemo, useState, useCallback, useRef } from 'react';
 import {
   ScrollView,
   StyleSheet,
@@ -31,30 +31,30 @@ export default function Calendar() {
   const router = useRouter();
   const params = useLocalSearchParams();
   const insets = useSafeAreaInsets();
-
   const language = (params.lang as 'en' | 'sw') ?? 'en';
   const userId = params.userId as string;
   const { user, refetchUser, isFetchingUser } = useUser(userId);
   const [selectedDay] = useState<number | null>(null);
-
+  const lastFetchRef = useRef<number>(0);
+  const STALE_TIME = 3 * 60 * 1000;
   const currentDate = new Date();
   const currentMonth = currentDate.getMonth();
   const currentYear = currentDate.getFullYear();
   const monthNames = language === 'en' ? MONTH_NAMES_EN : MONTH_NAMES_SW;
 
   useFocusEffect(
-    useCallback(() => {
-      if (userId && refetchUser) {
-        refetchUser();
-      }
-    }, [userId, refetchUser])
-  );
-  useEffect(() => {
-    if (userId && refetchUser) {
-      refetchUser();
-    }
-  }, [userId]);
+      useCallback(() => {
+        const now = Date.now();
+        const timeSinceLastFetch = now - lastFetchRef.current;
+        const isStale = timeSinceLastFetch > STALE_TIME;
 
+        if (userId && refetchUser && (!user || isStale)) {
+          refetchUser();
+          lastFetchRef.current = now;
+        } else {
+        }
+      }, [userId, refetchUser, user])
+  );
   const cycleData = useMemo(() => {
     if (!user?.kv?.prev_cycle_start_date) {
       return {
@@ -69,11 +69,11 @@ export default function Calendar() {
       };
     }
     return calculateCycleData(
-      user.kv.prev_cycle_start_date,
-      user.kv.avg_cycle_length_days || 28,
-      user.kv.avg_period_length_days || 6,
-      currentMonth,
-      currentYear
+        user.kv.prev_cycle_start_date,
+        user.kv.avg_cycle_length_days || 28,
+        user.kv.avg_period_length_days || 6,
+        currentMonth,
+        currentYear
     );
   }, [
     user?.kv?.prev_cycle_start_date,
@@ -82,6 +82,7 @@ export default function Calendar() {
     currentMonth,
     currentYear,
   ]);
+
   const {
     periodDays,
     fertilityDays,
@@ -93,282 +94,273 @@ export default function Calendar() {
   } = cycleData;
 
   const handleBack = () => router.back();
-
   const handleRefresh = useCallback(async () => {
     if (refetchUser) {
       await refetchUser();
+      lastFetchRef.current = Date.now();
     }
   }, [refetchUser]);
-
   const fertilityStart = new Date(
-    ovulationDate.getTime() - 5 * 24 * 60 * 60 * 1000
+      ovulationDate.getTime() - 5 * 24 * 60 * 60 * 1000
   );
   const fertilityEnd = new Date(ovulationDate.getTime() + 24 * 60 * 60 * 1000);
-
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={handleBack}>
-          <Ionicons name="arrow-back" size={24} color="#000" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>
-          {language === 'en' ? 'Calendar' : 'Kalenda'}
-        </Text>
-        <View style={{ width: 32 }} />
-      </View>
-
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}
-        refreshControl={
-          <RefreshControl
-            refreshing={isFetchingUser}
-            onRefresh={handleRefresh}
-            tintColor="#FF5C8D"
-            colors={['#FF5C8D']}
-          />
-        }
-      >
-        <View style={styles.card}>
-          <Text style={styles.month}>
-            {`${monthNames[currentMonth]} ${currentYear}`}
+      <View style={[styles.container, { paddingTop: insets.top }]}>
+        <View style={styles.header}>
+          <TouchableOpacity style={styles.backButton} onPress={handleBack}>
+            <Ionicons name="arrow-back" size={24} color="#000" />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>
+            {language === 'en' ? 'Calendar' : 'Kalenda'}
           </Text>
-          <View style={styles.calendarContainer}>
-            <Svg height="360" width="360">
-              <SvgText
-                x={CENTER_X}
-                y={CENTER_Y}
-                textAnchor="middle"
-                fontSize="22"
-                fontWeight="600"
-                fill="#999"
-              >
-                {monthNames[currentMonth].slice(0, 3)}
-              </SvgText>
+          <View style={{ width: 32 }} />
+        </View>
 
-              {Array.from({ length: daysInMonth }, (_, i) => {
-                const day = i + 1;
-                const { x, y, angle } = getCircularCoordinates(
-                  day,
-                  daysInMonth,
-                  RADIUS,
-                  CENTER_X,
-                  CENTER_Y
-                );
-                let fill = '#fff';
-                let stroke = '#e0e0e0';
-                let strokeDasharray: string | undefined = undefined;
-                let sequenceNum: number | null = null;
+        <ScrollView
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={styles.scrollContent}
+            refreshControl={
+              <RefreshControl
+                  refreshing={isFetchingUser}
+                  onRefresh={handleRefresh}
+                  tintColor="#FF5C8D"
+                  colors={['#FF5C8D']}
+              />
+            }
+        >
+          <View style={styles.card}>
+            <Text style={styles.month}>
+              {`${monthNames[currentMonth]} ${currentYear}`}
+            </Text>
+            <View style={styles.calendarContainer}>
+              <Svg height="360" width="360">
+                <SvgText
+                    x={CENTER_X}
+                    y={CENTER_Y}
+                    textAnchor="middle"
+                    fontSize="22"
+                    fontWeight="600"
+                    fill="#999"
+                >
+                  {monthNames[currentMonth].slice(0, 3)}
+                </SvgText>
 
-                if (periodDays.includes(day)) {
-                  fill = '#FF5E87';
-                  stroke = '#FF5E87';
-                  sequenceNum = periodDays.indexOf(day) + 1;
-                } else if (predictedDays.includes(day)) {
-                  fill = '#fff';
-                  stroke = '#FF5E87';
-                  strokeDasharray = '4 4';
-                  sequenceNum = predictedDays.indexOf(day) + 1;
-                } else if (ovulationDays.includes(day)) {
-                  fill = '#D245D2';
-                  stroke = '#D245D2';
-                } else if (fertilityDays.includes(day)) {
-                  fill = '#27B3B3';
-                  stroke = '#27B3B3';
-                }
+                {Array.from({ length: daysInMonth }, (_, i) => {
+                  const day = i + 1;
+                  const { x, y, angle } = getCircularCoordinates(
+                      day,
+                      daysInMonth,
+                      RADIUS,
+                      CENTER_X,
+                      CENTER_Y
+                  );
+                  let fill = '#fff';
+                  let stroke = '#e0e0e0';
+                  let strokeDasharray: string | undefined = undefined;
+                  let sequenceNum: number | null = null;
 
-                const badgeRadius = RADIUS + 20;
-                const badgeX = CENTER_X + badgeRadius * Math.cos(angle);
-                const badgeY = CENTER_Y + badgeRadius * Math.sin(angle);
+                  if (periodDays.includes(day)) {
+                    fill = '#FF5E87';
+                    stroke = '#FF5E87';
+                    sequenceNum = periodDays.indexOf(day) + 1;
+                  } else if (predictedDays.includes(day)) {
+                    fill = '#fff';
+                    stroke = '#FF5E87';
+                    strokeDasharray = '4 4';
+                    sequenceNum = predictedDays.indexOf(day) + 1;
+                  } else if (ovulationDays.includes(day)) {
+                    fill = '#D245D2';
+                    stroke = '#D245D2';
+                  } else if (fertilityDays.includes(day)) {
+                    fill = '#27B3B3';
+                    stroke = '#27B3B3';
+                  }
 
-                return (
-                  <React.Fragment key={day}>
-                    <Circle
-                      cx={x}
-                      cy={y}
-                      r={selectedDay === day ? 19 : 16}
-                      fill={fill}
-                      stroke={stroke}
-                      strokeWidth={selectedDay === day ? 3 : 2.5}
-                      strokeDasharray={strokeDasharray}
-                    />
-                    <SvgText
-                      x={x}
-                      y={y + 5}
-                      textAnchor="middle"
-                      fontSize="13"
-                      fontWeight="500"
-                      fill={fill === '#fff' ? '#333' : '#fff'}
-                    >
-                      {day}
-                    </SvgText>
+                  const badgeRadius = RADIUS + 20;
+                  const badgeX = CENTER_X + badgeRadius * Math.cos(angle);
+                  const badgeY = CENTER_Y + badgeRadius * Math.sin(angle);
 
-                    {sequenceNum && (
-                      <>
+                  return (
+                      <React.Fragment key={day}>
                         <Circle
-                          cx={badgeX}
-                          cy={badgeY}
-                          r="8"
-                          fill={strokeDasharray ? '#fff' : stroke}
-                          stroke={stroke}
-                          strokeWidth="1.5"
-                          strokeDasharray={strokeDasharray}
+                            cx={x}
+                            cy={y}
+                            r={selectedDay === day ? 19 : 16}
+                            fill={fill}
+                            stroke={stroke}
+                            strokeWidth={selectedDay === day ? 3 : 2.5}
+                            strokeDasharray={strokeDasharray}
                         />
                         <SvgText
-                          x={badgeX}
-                          y={badgeY + 3}
-                          textAnchor="middle"
-                          fontSize="8"
-                          fontWeight="600"
-                          fill={strokeDasharray ? '#FF5E87' : '#fff'}
+                            x={x}
+                            y={y + 5}
+                            textAnchor="middle"
+                            fontSize="13"
+                            fontWeight="500"
+                            fill={fill === '#fff' ? '#333' : '#fff'}
                         >
-                          {sequenceNum}
+                          {day}
                         </SvgText>
-                      </>
-                    )}
-                  </React.Fragment>
-                );
-              })}
-            </Svg>
-          </View>
-
-          <View style={styles.legend}>
-            <LegendItem
-              color="#FF5E87"
-              label={language === 'en' ? 'Period' : 'Hedhi'}
-            />
-            <LegendItem
-              color="#D245D2"
-              label={language === 'en' ? 'Ovulation' : 'Ovulation'}
-            />
-            <LegendItem
-              color="#27B3B3"
-              label={language === 'en' ? 'Fertility' : 'Uzazi'}
-            />
-            <LegendItem
-              color="#FF5E87"
-              label={language === 'en' ? 'Predicted' : 'Inatabiriwa'}
-              dotted
-            />
-          </View>
-        </View>
-
-        <View style={styles.row}>
-          <InfoCard
-            title={language === 'en' ? 'Cycle Length' : 'Urefu wa Mzunguko'}
-            value={String(user?.kv?.avg_cycle_length_days || 28)}
-            unit={language === 'en' ? 'days' : 'siku'}
-            icon="calendar-outline"
-            iconColor="#FF4C7C"
-            graph
-          />
-          <InfoCard
-            title={language === 'en' ? 'Next Period' : 'Hedhi Ijayo'}
-            value={
-              daysUntilPeriod === 0
-                ? language === 'en'
-                  ? 'Today'
-                  : 'Leo'
-                : language === 'en'
-                ? `in ${daysUntilPeriod} ${
-                    daysUntilPeriod === 1 ? 'day' : 'days'
-                  }`
-                : `baada ya siku ${daysUntilPeriod}`
-            }
-            icon="water-outline"
-            iconColor="#1ABC9C"
-          />
-        </View>
-
-        {user?.kv?.prev_cycle_start_date && (
-          <>
-            <PhaseCard
-              title={
-                language === 'en' ? 'Ovulation Phase' : 'Awamu ya Ovulation'
-              }
-              date={
-                language === 'en'
-                  ? `Expected on ${formatDate(ovulationDate, monthNames)}`
-                  : `Inatarajiwa ${formatDate(ovulationDate, monthNames)}`
-              }
-              description={
-                language === 'en'
-                  ? 'Your body releases an egg — the most fertile day in your cycle.'
-                  : 'Mwili wako hutoa yai — siku ya uzazi zaidi katika mzunguko wako.'
-              }
-              color="#9B59B6"
-              icon="flower-outline"
-            />
-
-            <PhaseCard
-              title={
-                language === 'en' ? 'Fertility Window' : 'Dirisha la Uzazi'
-              }
-              date={formatDateRange(fertilityStart, fertilityEnd, monthNames)}
-              description={
-                language === 'en'
-                  ? 'Best chance of getting pregnant during this window.'
-                  : 'Nafasi bora ya kupata mimba wakati huu.'
-              }
-              color="#1ABC9C"
-              icon="sparkles-outline"
-            />
-          </>
-        )}
-
-        {!user?.kv?.prev_cycle_start_date && (
-          <View style={styles.emptyStateCard}>
-            <Ionicons name="calendar-outline" size={48} color="#FF5C8D" />
-            <Text style={styles.emptyStateTitle}>
-              {language === 'en'
-                ? 'No Cycle Data Yet'
-                : 'Hakuna Data ya Mzunguko'}
-            </Text>
-            <Text style={styles.emptyStateText}>
-              {language === 'en'
-                ? 'Start logging your period to see predictions and insights.'
-                : 'Anza kurekodi hedhi yako ili kuona utabiri na maarifa.'}
-            </Text>
-          </View>
-        )}
-
-        <TouchableOpacity
-          style={styles.trackingCard}
-          activeOpacity={0.8}
-          onPress={() =>
-            router.push({
-              pathname: '/tabs/LogEntryScreen',
-              params: { lang: language, userId: userId },
-            })
-          }
-          accessibilityLabel={
-            language === 'en' ? 'Track Cycle' : 'Fuatilia Mzunguko'
-          }
-          accessibilityRole="button"
-        >
-          <View style={styles.trackingContent}>
-            <View style={styles.bulbIcon}>
-              <Ionicons name="bulb" size={20} color="#fff" />
+                        {sequenceNum && (
+                            <>
+                              <Circle
+                                  cx={badgeX}
+                                  cy={badgeY}
+                                  r="8"
+                                  fill={strokeDasharray ? '#fff' : stroke}
+                                  stroke={stroke}
+                                  strokeWidth="1.5"
+                                  strokeDasharray={strokeDasharray}
+                              />
+                              <SvgText
+                                  x={badgeX}
+                                  y={badgeY + 3}
+                                  textAnchor="middle"
+                                  fontSize="8"
+                                  fontWeight="600"
+                                  fill={strokeDasharray ? '#FF5E87' : '#fff'}
+                              >
+                                {sequenceNum}
+                              </SvgText>
+                            </>
+                        )}
+                      </React.Fragment>
+                  );
+                })}
+              </Svg>
             </View>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.trackingTitle}>
-                {language === 'en'
-                  ? 'Track Your Cycle'
-                  : 'Fuatilia Mzunguko Wako'}
-              </Text>
-              <Text style={styles.trackingText}>
-                {language === 'en'
-                  ? 'Log your symptoms and moods'
-                  : 'Rekodi dalili na hisia zako'}
-              </Text>
+            <View style={styles.legend}>
+              <LegendItem
+                  color="#FF5E87"
+                  label={language === 'en' ? 'Period' : 'Hedhi'}
+              />
+              <LegendItem
+                  color="#D245D2"
+                  label={language === 'en' ? 'Ovulation' : 'Ovulation'}
+              />
+              <LegendItem
+                  color="#27B3B3"
+                  label={language === 'en' ? 'Fertility' : 'Uzazi'}
+              />
+              <LegendItem
+                  color="#FF5E87"
+                  label={language === 'en' ? 'Predicted' : 'Inatabiriwa'}
+                  dotted
+              />
             </View>
           </View>
-          <Ionicons name="chevron-forward" size={20} color="#fff" />
-        </TouchableOpacity>
-      </ScrollView>
+          <View style={styles.row}>
+            <InfoCard
+                title={language === 'en' ? 'Cycle Length' : 'Urefu wa Mzunguko'}
+                value={String(user?.kv?.avg_cycle_length_days || 28)}
+                unit={language === 'en' ? 'days' : 'siku'}
+                icon="calendar-outline"
+                iconColor="#FF4C7C"
+                graph
+            />
+            <InfoCard
+                title={language === 'en' ? 'Next Period' : 'Hedhi Ijayo'}
+                value={
+                  daysUntilPeriod === 0
+                      ? language === 'en'
+                          ? 'Today'
+                          : 'Leo'
+                      : language === 'en'
+                          ? `in ${daysUntilPeriod} ${
+                              daysUntilPeriod === 1 ? 'day' : 'days'
+                          }`
+                          : `baada ya siku ${daysUntilPeriod}`
+                }
+                icon="water-outline"
+                iconColor="#1ABC9C"
+            />
+          </View>
+          {user?.kv?.prev_cycle_start_date && (
+              <>
+                <PhaseCard
+                    title={
+                      language === 'en' ? 'Ovulation Phase' : 'Awamu ya Ovulation'
+                    }
+                    date={
+                      language === 'en'
+                          ? `Expected on ${formatDate(ovulationDate, monthNames)}`
+                          : `Inatarajiwa ${formatDate(ovulationDate, monthNames)}`
+                    }
+                    description={
+                      language === 'en'
+                          ? 'Your body releases an egg — the most fertile day in your cycle.'
+                          : 'Mwili wako hutoa yai — siku ya uzazi zaidi katika mzunguko wako.'
+                    }
+                    color="#9B59B6"
+                    icon="flower-outline"
+                />
+                <PhaseCard
+                    title={
+                      language === 'en' ? 'Fertility Window' : 'Dirisha la Uzazi'
+                    }
+                    date={formatDateRange(fertilityStart, fertilityEnd, monthNames)}
+                    description={
+                      language === 'en'
+                          ? 'Best chance of getting pregnant during this window.'
+                          : 'Nafasi bora ya kupata mimba wakati huu.'
+                    }
+                    color="#1ABC9C"
+                    icon="sparkles-outline"
+                />
+              </>
+          )}
+          {!user?.kv?.prev_cycle_start_date && (
+              <View style={styles.emptyStateCard}>
+                <Ionicons name="calendar-outline" size={48} color="#FF5C8D" />
+                <Text style={styles.emptyStateTitle}>
+                  {language === 'en'
+                      ? 'No Cycle Data Yet'
+                      : 'Hakuna Data ya Mzunguko'}
+                </Text>
+                <Text style={styles.emptyStateText}>
+                  {language === 'en'
+                      ? 'Start logging your period to see predictions and insights.'
+                      : 'Anza kurekodi hedhi yako ili kuona utabiri na maarifa.'}
+                </Text>
+              </View>
+          )}
+          <TouchableOpacity
+              style={styles.trackingCard}
+              activeOpacity={0.8}
+              onPress={() =>
+                  router.push({
+                    pathname: '/tabs/LogEntryScreen',
+                    params: { lang: language, userId: userId },
+                  })
+              }
+              accessibilityLabel={
+                language === 'en' ? 'Track Cycle' : 'Fuatilia Mzunguko'
+              }
+              accessibilityRole="button"
+          >
+            <View style={styles.trackingContent}>
+              <View style={styles.bulbIcon}>
+                <Ionicons name="bulb" size={20} color="#fff" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.trackingTitle}>
+                  {language === 'en'
+                      ? 'Track Your Cycle'
+                      : 'Fuatilia Mzunguko Wako'}
+                </Text>
+                <Text style={styles.trackingText}>
+                  {language === 'en'
+                      ? 'Log your symptoms and moods'
+                      : 'Rekodi dalili na hisia zako'}
+                </Text>
+              </View>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color="#fff" />
+          </TouchableOpacity>
+        </ScrollView>
 
-      <NavbarCard language={language} userId={userId} />
-    </View>
+        <NavbarCard language={language} userId={userId} />
+      </View>
   );
 }
 
@@ -379,19 +371,19 @@ interface LegendItemProps {
 }
 
 const LegendItem: React.FC<LegendItemProps> = ({ color, label, dotted }) => (
-  <View style={styles.legendItem}>
-    <View
-      style={[
-        styles.legendDot,
-        {
-          borderColor: color,
-          borderStyle: dotted ? 'dashed' : 'solid',
-          backgroundColor: dotted ? '#fff' : color,
-        },
-      ]}
-    />
-    <Text style={styles.legendLabel}>{label}</Text>
-  </View>
+    <View style={styles.legendItem}>
+      <View
+          style={[
+            styles.legendDot,
+            {
+              borderColor: color,
+              borderStyle: dotted ? 'dashed' : 'solid',
+              backgroundColor: dotted ? '#fff' : color,
+            },
+          ]}
+      />
+      <Text style={styles.legendLabel}>{label}</Text>
+    </View>
 );
 
 interface InfoCardProps {
@@ -402,43 +394,41 @@ interface InfoCardProps {
   iconColor?: string;
   graph?: boolean;
 }
-
 const InfoCard: React.FC<InfoCardProps> = ({
-  title,
-  value,
-  unit,
-  icon,
-  iconColor,
-  graph,
-}) => (
-  <View style={styles.infoCard}>
-    {icon && (
-      <View style={[styles.iconCircle, { backgroundColor: `${iconColor}15` }]}>
-        <Ionicons name={icon} size={28} color={iconColor} />
-      </View>
-    )}
-    <Text style={styles.cardTitle}>{title}</Text>
-    {graph ? (
-      <>
-        <Text style={[styles.cycleValue, { color: iconColor }]}>{value}</Text>
-        <Text style={styles.cycleUnit}>{unit}</Text>
-        <View style={[styles.graphLine, { backgroundColor: iconColor }]} />
-      </>
-    ) : (
-      <>
-        <Text style={styles.nextPeriod}>{value}</Text>
-        {icon && (
-          <View style={styles.dropContainer}>
-            <Ionicons name="water" size={14} color={iconColor} />
-            <Ionicons name="water" size={14} color={iconColor} />
-            <Ionicons name="water" size={14} color={iconColor} />
+                                             title,
+                                             value,
+                                             unit,
+                                             icon,
+                                             iconColor,
+                                             graph,
+                                           }) => (
+    <View style={styles.infoCard}>
+      {icon && (
+          <View style={[styles.iconCircle, { backgroundColor: `${iconColor}15` }]}>
+            <Ionicons name={icon} size={28} color={iconColor} />
           </View>
-        )}
-      </>
-    )}
-  </View>
+      )}
+      <Text style={styles.cardTitle}>{title}</Text>
+      {graph ? (
+          <>
+            <Text style={[styles.cycleValue, { color: iconColor }]}>{value}</Text>
+            <Text style={styles.cycleUnit}>{unit}</Text>
+            <View style={[styles.graphLine, { backgroundColor: iconColor }]} />
+          </>
+      ) : (
+          <>
+            <Text style={styles.nextPeriod}>{value}</Text>
+            {icon && (
+                <View style={styles.dropContainer}>
+                  <Ionicons name="water" size={14} color={iconColor} />
+                  <Ionicons name="water" size={14} color={iconColor} />
+                  <Ionicons name="water" size={14} color={iconColor} />
+                </View>
+            )}
+          </>
+      )}
+    </View>
 );
-
 interface PhaseCardProps {
   title: string;
   date: string;
@@ -446,27 +436,25 @@ interface PhaseCardProps {
   color: string;
   icon: keyof typeof Ionicons.glyphMap;
 }
-
 const PhaseCard: React.FC<PhaseCardProps> = ({
-  title,
-  date,
-  description,
-  color,
-  icon,
-}) => (
-  <View style={styles.phaseCard}>
-    <View style={[styles.phaseAccent, { backgroundColor: color }]} />
-    <View style={styles.phaseHeader}>
-      <View style={[styles.phaseIconBg, { backgroundColor: `${color}20` }]}>
-        <Ionicons name={icon} size={20} color={color} />
+                                               title,
+                                               date,
+                                               description,
+                                               color,
+                                               icon,
+                                             }) => (
+    <View style={styles.phaseCard}>
+      <View style={[styles.phaseAccent, { backgroundColor: color }]} />
+      <View style={styles.phaseHeader}>
+        <View style={[styles.phaseIconBg, { backgroundColor: `${color}20` }]}>
+          <Ionicons name={icon} size={20} color={color} />
+        </View>
+        <Text style={[styles.phaseTitle, { color }]}>{title}</Text>
       </View>
-      <Text style={[styles.phaseTitle, { color }]}>{title}</Text>
+      <Text style={styles.phaseDate}>{date}</Text>
+      <Text style={styles.phaseDesc}>{description}</Text>
     </View>
-    <Text style={styles.phaseDate}>{date}</Text>
-    <Text style={styles.phaseDesc}>{description}</Text>
-  </View>
 );
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,

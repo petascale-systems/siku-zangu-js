@@ -1,4 +1,4 @@
-import React, { useMemo, useCallback, useEffect } from 'react';
+import React, { useMemo, useCallback, useRef } from 'react';
 import {
   View,
   Text,
@@ -6,6 +6,7 @@ import {
   StyleSheet,
   TouchableOpacity,
   RefreshControl,
+  ActivityIndicator,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -31,53 +32,47 @@ export default function Dashboard() {
   const router = useRouter();
   const params = useLocalSearchParams();
   const insets = useSafeAreaInsets();
-
   const language = (params.lang as 'en' | 'sw') ?? 'en';
   const userId = params.userId as string;
-
   const { user, refetchUser, isFetchingUser } = useUser(userId);
-
+  const lastFetchRef = useRef<number>(0);
+  const STALE_TIME = 3 * 60 * 1000;
   const currentDate = new Date();
 
   useFocusEffect(
-    useCallback(() => {
-      if (userId && refetchUser) {
-        refetchUser();
-      }
-    }, [userId, refetchUser])
+      useCallback(() => {
+        const now = Date.now();
+        const timeSinceLastFetch = now - lastFetchRef.current;
+        const isStale = timeSinceLastFetch > STALE_TIME;
+        if (userId && refetchUser && (!user || isStale)) {
+          refetchUser();
+          lastFetchRef.current = now;
+        } else {
+        }
+      }, [userId, refetchUser, user])
   );
-
-  useEffect(() => {
-    if (userId && refetchUser) {
-      refetchUser();
-    }
-  }, [userId]);
-
   const MOOD_CONFIG = useMemo(() => getMoodConfig(language), [language]);
   const SYMPTOM_CONFIG = useMemo(() => getSymptomConfig(language), [language]);
-
   const mostRecentMood = useMemo(
-    () => getMostRecentMood(user?.kv?.mood_logs),
-    [user?.kv?.mood_logs]
+      () => getMostRecentMood(user?.kv?.mood_logs),
+      [user?.kv?.mood_logs]
   );
-
   const recentSymptoms = useMemo(
-    () => getRecentSymptoms(user?.kv?.symptom_logs, 3),
-    [user?.kv?.symptom_logs]
+      () => getRecentSymptoms(user?.kv?.symptom_logs, 3),
+      [user?.kv?.symptom_logs]
   );
   const cycleMetrics = useMemo(
-    () =>
-      calculateCycleMetrics(
+      () =>
+          calculateCycleMetrics(
+              user?.kv?.prev_cycle_start_date,
+              user?.kv?.avg_cycle_length_days || 28
+          ),
+      [
         user?.kv?.prev_cycle_start_date,
-        user?.kv?.avg_cycle_length_days || 28
-      ),
-    [
-      user?.kv?.prev_cycle_start_date,
-      user?.kv?.avg_cycle_length_days,
-      user?.kv?.avg_period_length_days,
-    ]
+        user?.kv?.avg_cycle_length_days,
+        user?.kv?.avg_period_length_days,
+      ]
   );
-
   const {
     daysUntilPeriod,
     ovulationDate,
@@ -87,284 +82,277 @@ export default function Dashboard() {
     progress,
     dayInCycle,
   } = cycleMetrics;
-
   const todayInsight = useMemo(
-    () =>
-      getCyclePhaseInsight(
+      () =>
+          getCyclePhaseInsight(
+              dayInCycle,
+              ovulationDate,
+              user?.kv?.avg_period_length_days ?? 6,
+              user?.kv?.avg_cycle_length_days ?? 28,
+              language
+          ),
+      [
         dayInCycle,
         ovulationDate,
-        user?.kv?.avg_period_length_days ?? 6,
-        user?.kv?.avg_cycle_length_days ?? 28,
-        language
-      ),
-    [
-      dayInCycle,
-      ovulationDate,
-      user?.kv?.avg_period_length_days,
-      user?.kv?.avg_cycle_length_days,
-      language,
-    ]
+        user?.kv?.avg_period_length_days,
+        user?.kv?.avg_cycle_length_days,
+        language,
+      ]
   );
-
   const formattedNextPeriod = `${MONTH_NAMES_EN[
-    nextPeriodDate.getMonth()
-  ].slice(0, 3)} ${nextPeriodDate.getDate()}`;
+      nextPeriodDate.getMonth()
+      ].slice(0, 3)} ${nextPeriodDate.getDate()}`;
 
   const formattedToday = currentDate.toLocaleDateString('en-US', {
     month: 'short',
     day: 'numeric',
     year: 'numeric',
   });
-
   const circumference = 2 * Math.PI * RING_RADIUS;
   const strokeDashoffset = circumference * (1 - progress);
-
   const handleAddLog = () => {
     router.push({
       pathname: '/tabs/LogEntryScreen',
       params: { lang: language, userId: userId },
     });
   };
-
   const handleRefresh = useCallback(async () => {
     if (refetchUser) {
+      console.log('🔄 Manual refresh triggered');
       await refetchUser();
+      lastFetchRef.current = Date.now();
     }
   }, [refetchUser]);
-
   const moodData = mostRecentMood ? MOOD_CONFIG[mostRecentMood] : null;
   const remainingSymptoms =
-    recentSymptoms.length > 3 ? recentSymptoms.length - 3 : 0;
-
+      recentSymptoms.length > 3 ? recentSymptoms.length - 3 : 0;
+  if (!user && isFetchingUser) {
+    return (
+        <View style={[styles.container, { paddingTop: insets.top, justifyContent: 'center', alignItems: 'center' }]}>
+          <ActivityIndicator size="large" color="#FF5C8D" />
+          <Text style={{ marginTop: 16, color: '#666', fontSize: 16 }}>
+            {language === 'sw' ? 'Inapakia...' : 'Loading...'}
+          </Text>
+        </View>
+    );
+  }
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl
-            refreshing={isFetchingUser}
-            onRefresh={handleRefresh}
-            tintColor="#FF5C8D"
-            colors={['#FF5C8D']}
-          />
-        }
-      >
-        <LinearGradient
-          colors={['#FD5A7E', '#FF7DAA']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.header}
+      <View style={[styles.container, { paddingTop: insets.top }]}>
+        <ScrollView
+            showsVerticalScrollIndicator={false}
+            refreshControl={
+              <RefreshControl
+                  refreshing={isFetchingUser}
+                  onRefresh={handleRefresh}
+                  tintColor="#FF5C8D"
+                  colors={['#FF5C8D']}
+              />
+            }
         >
-          <Text style={styles.greeting}>
-            {language === 'sw' ? 'Habari' : 'Hi'},{' '}
-            {user?.kv?.first_name || (language === 'sw' ? 'rafiki' : 'there')}
-          </Text>
-          <Text style={styles.subtitle}>
-            {language === 'sw'
-              ? 'Hii ni muhtasari wa mzunguko wako'
-              : "Here's your cycle overview"}
-          </Text>
-        </LinearGradient>
-
-        <View style={styles.statsCard}>
-          <Text style={[styles.statTitle]}>
-            {language === 'sw' ? 'Muhtasari wa Mzunguko' : 'Cycle Overview'}
-          </Text>
-
-          <View style={styles.statRow}>
-            <View style={styles.statItem}>
-              <Text style={[styles.statValue, { color: '#FF597D' }]}>
-                {daysUntilPeriod}
-              </Text>
-              <Text style={styles.statLabel}>
-                {language === 'sw' ? 'Siku' : 'days'}
-              </Text>
-              <Text style={styles.statSub}>
-                {language === 'sw' ? 'Hedhi ijayo' : 'Next period'}
-              </Text>
-              <Text style={styles.statDate}>{formattedNextPeriod}</Text>
-            </View>
-
-            <View style={styles.statItem}>
-              <Text style={[styles.statValue, { color: '#1DA8AD' }]}>
-                {daysUntilOvulation}
-              </Text>
-              <Text style={styles.statLabel}>
-                {language === 'sw' ? 'Siku' : 'days'}
-              </Text>
-              <Text style={styles.statSub}>
-                {language === 'sw' ? 'Uzazi' : 'Ovulation'}
-              </Text>
-              <View style={styles.iconRow}>
-                <Ionicons name="moon" color="#555" size={12} />
+          <LinearGradient
+              colors={['#FD5A7E', '#FF7DAA']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.header}
+          >
+            <Text style={styles.greeting}>
+              {language === 'sw' ? 'Habari' : 'Hi'},{' '}
+              {user?.kv?.first_name || (language === 'sw' ? 'rafiki' : 'there')}
+            </Text>
+            <Text style={styles.subtitle}>
+              {language === 'sw'
+                  ? 'Hii ni muhtasari wa mzunguko wako'
+                  : "Here's your cycle overview"}
+            </Text>
+          </LinearGradient>
+          <View style={styles.statsCard}>
+            <Text style={[styles.statTitle]}>
+              {language === 'sw' ? 'Muhtasari wa Mzunguko' : 'Cycle Overview'}
+            </Text>
+            <View style={styles.statRow}>
+              <View style={styles.statItem}>
+                <Text style={[styles.statValue, { color: '#FF597D' }]}>
+                  {daysUntilPeriod}
+                </Text>
+                <Text style={styles.statLabel}>
+                  {language === 'sw' ? 'Siku' : 'days'}
+                </Text>
+                <Text style={styles.statSub}>
+                  {language === 'sw' ? 'Hedhi ijayo' : 'Next period'}
+                </Text>
+                <Text style={styles.statDate}>{formattedNextPeriod}</Text>
+              </View>
+              <View style={styles.statItem}>
+                <Text style={[styles.statValue, { color: '#1DA8AD' }]}>
+                  {daysUntilOvulation}
+                </Text>
+                <Text style={styles.statLabel}>
+                  {language === 'sw' ? 'Siku' : 'days'}
+                </Text>
+                <Text style={styles.statSub}>
+                  {language === 'sw' ? 'Uzazi' : 'Ovulation'}
+                </Text>
+                <View style={styles.iconRow}>
+                  <Ionicons name="moon" color="#555" size={12} />
+                  <Text style={styles.statDate}>
+                    {language === 'sw' ? 'Karibu' : 'Coming'}
+                  </Text>
+                </View>
+              </View>
+              <View style={styles.statItem}>
+                <Text style={[styles.statValue, { color: '#A855F7' }]}>
+                  {fertileDaysRemaining}
+                </Text>
+                <Text style={styles.statLabel}>
+                  {language === 'sw' ? 'Siku' : 'days'}
+                </Text>
+                <Text style={styles.statSub}>
+                  {language === 'sw' ? 'Dirisha' : 'Fertile'}
+                </Text>
                 <Text style={styles.statDate}>
-                  {language === 'sw' ? 'Karibu' : 'Coming'}
+                  {fertileDaysRemaining > 0
+                      ? language === 'sw'
+                          ? 'Nafasi'
+                          : 'Active'
+                      : language === 'sw'
+                          ? 'Imepita'
+                          : 'Passed'}
                 </Text>
               </View>
             </View>
-
-            <View style={styles.statItem}>
-              <Text style={[styles.statValue, { color: '#A855F7' }]}>
-                {fertileDaysRemaining}
-              </Text>
-              <Text style={styles.statLabel}>
-                {language === 'sw' ? 'Siku' : 'days'}
-              </Text>
-              <Text style={styles.statSub}>
-                {language === 'sw' ? 'Dirisha' : 'Fertile'}
-              </Text>
-              <Text style={styles.statDate}>
-                {fertileDaysRemaining > 0
-                  ? language === 'sw'
-                    ? 'Nafasi'
-                    : 'Active'
-                  : language === 'sw'
-                  ? 'Imepita'
-                  : 'Passed'}
-              </Text>
-            </View>
           </View>
-        </View>
-
-        <View style={styles.ringContainer}>
-          <Svg height="120" width="120">
-            <Circle
-              cx="60"
-              cy="60"
-              r={RING_RADIUS}
-              stroke="#FFD5E5"
-              strokeWidth={RING_STROKE}
-              fill="none"
-            />
-            <Circle
-              cx="60"
-              cy="60"
-              r={RING_RADIUS}
-              stroke="#FF5C8D"
-              strokeWidth={RING_STROKE}
-              strokeDasharray={circumference}
-              strokeDashoffset={strokeDashoffset}
-              strokeLinecap="round"
-              fill="none"
-              transform={`rotate(-90 60 60)`}
-            />
-          </Svg>
-          <Text style={styles.ringText}>{daysUntilPeriod}</Text>
-          <Text style={styles.ringSubtext}>
-            {language === 'sw' ? 'siku' : 'days'}
-          </Text>
-        </View>
-
-        <View style={styles.insightCard}>
-          <View style={styles.insightHeader}>
-            <Ionicons name="bulb-outline" size={22} color="#FFB703" />
-            <Text style={styles.insightTitle}>
-              {language === 'sw' ? 'Maarifa ya Leo' : "Today's Insight"} -{' '}
-              {todayInsight.phase} {language === 'sw' ? 'Awamu' : 'Phase'}
+          <View style={styles.ringContainer}>
+            <Svg height="120" width="120">
+              <Circle
+                  cx="60"
+                  cy="60"
+                  r={RING_RADIUS}
+                  stroke="#FFD5E5"
+                  strokeWidth={RING_STROKE}
+                  fill="none"
+              />
+              <Circle
+                  cx="60"
+                  cy="60"
+                  r={RING_RADIUS}
+                  stroke="#FF5C8D"
+                  strokeWidth={RING_STROKE}
+                  strokeDasharray={circumference}
+                  strokeDashoffset={strokeDashoffset}
+                  strokeLinecap="round"
+                  fill="none"
+                  transform={`rotate(-90 60 60)`}
+              />
+            </Svg>
+            <Text style={styles.ringText}>{daysUntilPeriod}</Text>
+            <Text style={styles.ringSubtext}>
+              {language === 'sw' ? 'siku' : 'days'}
             </Text>
           </View>
-          <Text style={styles.insightText}>{todayInsight.text}</Text>
-          <Text style={styles.cycleDayText}>
-            {language === 'sw' ? 'Siku' : 'Day'} {dayInCycle}{' '}
-            {language === 'sw' ? 'ya mzunguko' : 'of cycle'}
-          </Text>
-        </View>
-
-        <View style={styles.logCard}>
-          <View style={styles.logHeader}>
-            <Text style={styles.logTitle}>
-              {language === 'sw' ? 'Rekodi ya Leo' : "Today's Log"}
-            </Text>
-            <TouchableOpacity onPress={handleAddLog}>
-              <Ionicons name="create-outline" size={18} color="#555" />
-            </TouchableOpacity>
-          </View>
-
-          <Text style={styles.logDate}>{formattedToday}</Text>
-
-          {moodData ? (
-            <View style={styles.moodRow}>
-              <View style={styles.moodIcon}>
-                <Text style={styles.moodEmoji}>{moodData.emoji}</Text>
-              </View>
-              <View>
-                <Text style={styles.moodText}>{moodData.label}</Text>
-                <Text style={styles.moodSub}>
-                  {language === 'sw'
-                    ? 'Hisia ya hivi karibuni'
-                    : 'Most recent mood'}
-                </Text>
-              </View>
+          <View style={styles.insightCard}>
+            <View style={styles.insightHeader}>
+              <Ionicons name="bulb-outline" size={22} color="#FFB703" />
+              <Text style={styles.insightTitle}>
+                {language === 'sw' ? 'Maarifa ya Leo' : "Today's Insight"} -{' '}
+                {todayInsight.phase} {language === 'sw' ? 'Awamu' : 'Phase'}
+              </Text>
             </View>
-          ) : (
-            <TouchableOpacity style={styles.emptyMood} onPress={handleAddLog}>
-              <Ionicons name="happy-outline" size={20} color="#999" />
-              <Text style={styles.emptyText}>
-                {language === 'sw' ? 'Ongeza hisia yako' : 'Add your mood'}
+            <Text style={styles.insightText}>{todayInsight.text}</Text>
+            <Text style={styles.cycleDayText}>
+              {language === 'sw' ? 'Siku' : 'Day'} {dayInCycle}{' '}
+              {language === 'sw' ? 'ya mzunguko' : 'of cycle'}
+            </Text>
+          </View>
+          <View style={styles.logCard}>
+            <View style={styles.logHeader}>
+              <Text style={styles.logTitle}>
+                {language === 'sw' ? 'Rekodi ya Leo' : "Today's Log"}
               </Text>
-            </TouchableOpacity>
-          )}
+              <TouchableOpacity onPress={handleAddLog}>
+                <Ionicons name="create-outline" size={18} color="#555" />
+              </TouchableOpacity>
+            </View>
+            <Text style={styles.logDate}>{formattedToday}</Text>
+            {moodData ? (
+                <View style={styles.moodRow}>
+                  <View style={styles.moodIcon}>
+                    <Text style={styles.moodEmoji}>{moodData.emoji}</Text>
+                  </View>
+                  <View>
+                    <Text style={styles.moodText}>{moodData.label}</Text>
+                    <Text style={styles.moodSub}>
+                      {language === 'sw'
+                          ? 'Hisia ya hivi karibuni'
+                          : 'Most recent mood'}
+                    </Text>
+                  </View>
+                </View>
+            ) : (
+                <TouchableOpacity style={styles.emptyMood} onPress={handleAddLog}>
+                  <Ionicons name="happy-outline" size={20} color="#999" />
+                  <Text style={styles.emptyText}>
+                    {language === 'sw' ? 'Ongeza hisia yako' : 'Add your mood'}
+                  </Text>
+                </TouchableOpacity>
+            )}
+            {recentSymptoms.length > 0 ? (
+                <>
+                  <Text style={styles.symptomTitle}>
+                    {language === 'sw'
+                        ? 'Dalili za Hivi Karibuni'
+                        : 'Recent Symptoms'}
+                  </Text>
+                  <View style={styles.symptomRow}>
+                    {recentSymptoms.slice(0, 3).map((symptom) => {
+                      const config = SYMPTOM_CONFIG[symptom];
+                      if (!config) return null;
 
-          {recentSymptoms.length > 0 ? (
-            <>
-              <Text style={styles.symptomTitle}>
-                {language === 'sw'
-                  ? 'Dalili za Hivi Karibuni'
-                  : 'Recent Symptoms'}
-              </Text>
-              <View style={styles.symptomRow}>
-                {recentSymptoms.slice(0, 3).map((symptom) => {
-                  const config = SYMPTOM_CONFIG[symptom];
-                  if (!config) return null;
-
-                  return (
-                    <View key={symptom} style={styles.symptomCircle}>
-                      <Ionicons
-                        name={config.icon}
-                        size={18}
-                        color={config.color}
-                      />
-                      <Text style={styles.symptomLabel}>{config.label}</Text>
-                    </View>
-                  );
-                })}
-
-                {remainingSymptoms > 0 && (
+                      return (
+                          <View key={symptom} style={styles.symptomCircle}>
+                            <Ionicons
+                                name={config.icon}
+                                size={18}
+                                color={config.color}
+                            />
+                            <Text style={styles.symptomLabel}>{config.label}</Text>
+                          </View>
+                      );
+                    })}
+                    {remainingSymptoms > 0 && (
+                        <TouchableOpacity
+                            style={styles.moreCircle}
+                            onPress={handleAddLog}
+                        >
+                          <Text style={styles.moreText}>
+                            +{remainingSymptoms}{' '}
+                            {language === 'sw' ? 'zaidi' : 'more'}
+                          </Text>
+                        </TouchableOpacity>
+                    )}
+                  </View>
+                </>
+            ) : (
+                <>
+                  <Text style={styles.symptomTitle}>
+                    {language === 'sw' ? 'Dalili' : 'Symptoms'}
+                  </Text>
                   <TouchableOpacity
-                    style={styles.moreCircle}
-                    onPress={handleAddLog}
+                      style={styles.emptySymptoms}
+                      onPress={handleAddLog}
                   >
-                    <Text style={styles.moreText}>
-                      +{remainingSymptoms}{' '}
-                      {language === 'sw' ? 'zaidi' : 'more'}
+                    <Ionicons name="add-circle-outline" size={20} color="#999" />
+                    <Text style={styles.emptyText}>
+                      {language === 'sw' ? 'Ongeza dalili' : 'Add symptoms'}
                     </Text>
                   </TouchableOpacity>
-                )}
-              </View>
-            </>
-          ) : (
-            <>
-              <Text style={styles.symptomTitle}>
-                {language === 'sw' ? 'Dalili' : 'Symptoms'}
-              </Text>
-              <TouchableOpacity
-                style={styles.emptySymptoms}
-                onPress={handleAddLog}
-              >
-                <Ionicons name="add-circle-outline" size={20} color="#999" />
-                <Text style={styles.emptyText}>
-                  {language === 'sw' ? 'Ongeza dalili' : 'Add symptoms'}
-                </Text>
-              </TouchableOpacity>
-            </>
-          )}
-        </View>
-      </ScrollView>
-      <NavbarCard language={language} userId={userId} />
-    </View>
+                </>
+            )}
+          </View>
+        </ScrollView>
+        <NavbarCard language={language} userId={userId} />
+      </View>
   );
 }
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
