@@ -161,7 +161,7 @@ export default function Dashboard() {
             </Text>
             <Text style={styles.subtitle}>
               {language === 'sw'
-                  ? 'Hii ni muhtasari wa mzunguko wako'
+                  ? 'Huu ni muhtasari wa mzunguko wako'
                   : "Here's your cycle overview"}
             </Text>
           </LinearGradient>
@@ -178,7 +178,7 @@ export default function Dashboard() {
                   {language === 'sw' ? 'Siku' : 'days'}
                 </Text>
                 <Text style={styles.statSub}>
-                  {language === 'sw' ? 'Hedhi ijayo' : 'Next period'}
+                  {language === 'sw' ? 'Siku za hedhi zinazokuja' : 'Next period'}
                 </Text>
                 <Text style={styles.statDate}>{formattedNextPeriod}</Text>
               </View>
@@ -190,7 +190,7 @@ export default function Dashboard() {
                   {language === 'sw' ? 'Siku' : 'days'}
                 </Text>
                 <Text style={styles.statSub}>
-                  {language === 'sw' ? 'Uzazi' : 'Ovulation'}
+                  {language === 'sw' ? 'Kupevuka kwa yai kutatokea baada ya' : 'Ovulation'}
                 </Text>
                 <View style={styles.iconRow}>
                   <Ionicons name="moon" color="#555" size={12} />
@@ -207,7 +207,7 @@ export default function Dashboard() {
                   {language === 'sw' ? 'Siku' : 'days'}
                 </Text>
                 <Text style={styles.statSub}>
-                  {language === 'sw' ? 'Dirisha' : 'Fertile'}
+                  {language === 'sw' ? 'Kipindi chenye uwezekano mkubwa wa kutunga mimba' : 'Fertile'}
                 </Text>
                 <Text style={styles.statDate}>
                   {fertileDaysRemaining > 0
@@ -253,7 +253,7 @@ export default function Dashboard() {
             <View style={styles.insightHeader}>
               <Ionicons name="bulb-outline" size={22} color="#FFB703" />
               <Text style={styles.insightTitle}>
-                {language === 'sw' ? 'Maarifa ya Leo' : "Today's Insight"} -{' '}
+                {language === 'sw' ? 'Dondoo za leo' : "Today's Insight"} -{' '}
                 {todayInsight.phase} {language === 'sw' ? 'Awamu' : 'Phase'}
               </Text>
             </View>
