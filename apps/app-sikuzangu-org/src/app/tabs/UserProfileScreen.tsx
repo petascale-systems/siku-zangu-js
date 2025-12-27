@@ -112,7 +112,7 @@ export default function Profile() {
       id: 'notifications',
       icon: '🔔',
       label: 'Notifications',
-      labelSw: 'Arifa',
+      labelSw: 'Taarifa',
       onPress: () =>
           router.push({
             pathname: 'tabs/NotificationsScreen',
@@ -156,7 +156,7 @@ export default function Profile() {
       id: 'logout',
       icon: 'exit-outline',
       label: 'Logout',
-      labelSw: 'Ondoka',
+      labelSw: 'Toka',
       onPress: handleLogout,
       isDanger: true,
     },

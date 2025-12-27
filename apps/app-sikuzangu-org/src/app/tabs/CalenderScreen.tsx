@@ -236,22 +236,22 @@ export default function Calendar() {
               />
               <LegendItem
                   color="#D245D2"
-                  label={language === 'en' ? 'Ovulation' : 'Ovulation'}
+                  label={language === 'en' ? 'Ovulation' : 'Kupevuka kwa yai  '}
               />
               <LegendItem
                   color="#27B3B3"
-                  label={language === 'en' ? 'Fertility' : 'Uzazi'}
+                  label={language === 'en' ? 'Fertility' : 'Kipindi chenye uwezekano mkubwa wa kutunga mimba'}
               />
               <LegendItem
                   color="#FF5E87"
-                  label={language === 'en' ? 'Predicted' : 'Inatabiriwa'}
+                  label={language === 'en' ? 'Predicted' : 'Imetabiriwa'}
                   dotted
               />
             </View>
           </View>
           <View style={styles.row}>
             <InfoCard
-                title={language === 'en' ? 'Cycle Length' : 'Urefu wa Mzunguko'}
+                title={language === 'en' ? 'Cycle Length' : 'Urefu wa Mzunguko wa Hedhi'}
                 value={String(user?.kv?.avg_cycle_length_days || 28)}
                 unit={language === 'en' ? 'days' : 'siku'}
                 icon="calendar-outline"
@@ -259,7 +259,7 @@ export default function Calendar() {
                 graph
             />
             <InfoCard
-                title={language === 'en' ? 'Next Period' : 'Hedhi Ijayo'}
+                title={language === 'en' ? 'Next Period' : 'Hedhi Inayofuata'}
                 value={
                   daysUntilPeriod === 0
                       ? language === 'en'
@@ -279,30 +279,30 @@ export default function Calendar() {
               <>
                 <PhaseCard
                     title={
-                      language === 'en' ? 'Ovulation Phase' : 'Awamu ya Ovulation'
+                      language === 'en' ? 'Ovulation Phase' : 'Kipindi cha kupevuka kwa yai    '
                     }
                     date={
                       language === 'en'
                           ? `Expected on ${formatDate(ovulationDate, monthNames)}`
-                          : `Inatarajiwa ${formatDate(ovulationDate, monthNames)}`
+                          : `Kinatarajiwa tarehe ${formatDate(ovulationDate, monthNames)}`
                     }
                     description={
                       language === 'en'
                           ? 'Your body releases an egg — the most fertile day in your cycle.'
-                          : 'Mwili wako hutoa yai — siku ya uzazi zaidi katika mzunguko wako.'
+                          : 'Mwili wako huachilia yai – siku yenye nafasi kubwa zaidi ya mimba kutungwa katika mzunguko wako.'
                     }
                     color="#9B59B6"
                     icon="flower-outline"
                 />
                 <PhaseCard
                     title={
-                      language === 'en' ? 'Fertility Window' : 'Dirisha la Uzazi'
+                      language === 'en' ? 'Fertility Window' : 'Kipindi chenye uwezekano mkubwa wa kutunga mimba'
                     }
                     date={formatDateRange(fertilityStart, fertilityEnd, monthNames)}
                     description={
                       language === 'en'
                           ? 'Best chance of getting pregnant during this window.'
-                          : 'Nafasi bora ya kupata mimba wakati huu.'
+                          : 'Uwezekano mkubwa wa kutunga mimba'
                     }
                     color="#1ABC9C"
                     icon="sparkles-outline"
