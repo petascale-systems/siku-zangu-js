@@ -3,21 +3,17 @@ import {useCallback, useEffect, useRef, useState} from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {Animated, ImageBackground, StyleSheet} from 'react-native';
 import {ACCESS_TOKEN_KEY} from '@siku-zangu/react';
-import {useFirebaseCrashlytics} from '@siku-zangu/react-native';
+import {useFirebaseCrashlytics, isOnboardingComplete} from '@siku-zangu/react-native';
+
+const LANGUAGE_KEY = 'language';
 
 export default function RootLayout() {
-    const [isReady, setIsReady] = useState(false);
-    const [isLoggedIn, setIsLoggedIn] = useState(false);
-    const [onboardingComplete, setOnboardingComplete] = useState(false);
-    const [hasSeenLanguageScreen, setHasSeenLanguageScreen] = useState(false);
-    const [userId, setUserId] = useState<string | null>(null);
-    const [language, setLanguage] = useState<string>('en');
     const [appIsReady, setAppIsReady] = useState(false);
-
     const fadeAnim = useRef(new Animated.Value(1)).current;
-    const hasNavigated = useRef(false);
     const router = useRouter();
+    const [userId, setUserId] = useState<string | null>(null);
     const crashlytics = useFirebaseCrashlytics(userId);
+    const hasNavigated = useRef(false);
 
     const onLayoutRootView = useCallback(async () => {
         if (appIsReady) {
@@ -30,93 +26,90 @@ export default function RootLayout() {
     }, [appIsReady, fadeAnim]);
 
     useEffect(() => {
-        Promise.all([AsyncStorage.getItem('language'), AsyncStorage.getItem(ACCESS_TOKEN_KEY)])
-            .then(([lang, token]) => {
-                setHasSeenLanguageScreen(!!token);
-                setLanguage(lang || 'en');
+        const bootstrapApp = async () => {
+            if (hasNavigated.current) return;
 
-                const parsed = JSON.parse(token || '{}');
-                if (!parsed?.token || !parsed?.expires_in || !parsed.user || !parsed.user.user_id) {
-                    router.push('/auth/LoginScreen');
+            try {
+                const [savedLanguage, storedToken] = await Promise.all([
+                    AsyncStorage.getItem(LANGUAGE_KEY),
+                    AsyncStorage.getItem(ACCESS_TOKEN_KEY),
+                ]);
+
+                const currentLanguage = savedLanguage || 'en';
+                if (!savedLanguage) {
+                    await AsyncStorage.setItem(LANGUAGE_KEY, currentLanguage);
+                }
+                if (!storedToken) {
+                    hasNavigated.current = true;
+                    router.replace({
+                        pathname: '/auth/LoginScreen',
+                        params: { lang: currentLanguage },
+                    });
                     return;
                 }
-
-                if (Date.now() >= parsed.expires_in * 1000) return Promise.reject('Token has expired');
-                setIsLoggedIn(true);
+                const parsed = JSON.parse(storedToken);
+                if (!parsed?.token || !parsed?.expires_in || !parsed?.user?.user_id) {
+                    await AsyncStorage.removeItem(ACCESS_TOKEN_KEY);
+                    hasNavigated.current = true;
+                    router.replace({
+                        pathname: '/auth/LoginScreen',
+                        params: { lang: currentLanguage },
+                    });
+                    return;
+                }
+                const isExpired = Date.now() >= parsed.expires_in * 1000;
+                if (isExpired) {
+                    await AsyncStorage.removeItem(ACCESS_TOKEN_KEY);
+                    hasNavigated.current = true;
+                    router.replace({
+                        pathname: '/auth/LoginScreen',
+                        params: { lang: currentLanguage },
+                    });
+                    return;
+                }
                 setUserId(parsed.user.user_id);
-                setOnboardingComplete(true);
-                router.push('/tabs/HomeScreen');
-            })
-            .catch(() => AsyncStorage
-                .removeItem(ACCESS_TOKEN_KEY)
-                .then(() => router.push('/auth/LoginScreen')))
-            .finally(() => setAppIsReady(true));
-        // const bootstrapAsync = async () => {
-        //     const startTime = Date.now();
-        //
-        //     try {
-        //         const [savedLang, storedToken] = await Promise.all([
-        //             AsyncStorage.getItem('language'),
-        //             AsyncStorage.getItem(ACCESS_TOKEN_KEY),
-        //         ]);
-        //
-        //         setHasSeenLanguageScreen(!!savedLang);
-        //         setLanguage(savedLang || 'en');
-        //         if (storedToken) {
-        //             const parsed = JSON.parse(storedToken);
-        //             if (parsed?.token && parsed?.expires_in) {
-        //                 const isExpired = Date.now() >= parsed.expires_in * 1000;
-        //                 if (!isExpired && parsed.user?.user_id) {
-        //                     setIsLoggedIn(true);
-        //                     setUserId(parsed.user.user_id);
-        //                     const completed = await isOnboardingComplete(parsed.user.user_id);
-        //                     setOnboardingComplete(completed);
-        //                 } else {
-        //                     await AsyncStorage.removeItem(ACCESS_TOKEN_KEY);
-        //                 }
-        //             }
-        //         }
-        //     } catch (e) {
-        //         console.error('Bootstrap error:', e);
-        //         if (e instanceof Error) {
-        //             crashlytics.logError(e, 'Bootstrap failed');
-        //         }
-        //     } finally {
-        //         const loadTime = Date.now() - startTime;
-        //         const minDisplayTime = 500;
-        //         if (loadTime < minDisplayTime) {
-        //             setTimeout(() => {
-        //                 setIsReady(true);
-        //             }, minDisplayTime - loadTime);
-        //         } else {
-        //             setIsReady(true);
-        //         }
-        //     }
-        // };
-        // bootstrapAsync();
+                const hasCompletedOnboarding = await isOnboardingComplete(parsed.user.user_id);
+
+                hasNavigated.current = true;
+                if (!hasCompletedOnboarding) {
+                    router.replace({
+                        pathname: '/onboarding/UpdatingNamesScreen',
+                        params: {
+                            lang: currentLanguage,
+                            userId: parsed.user.user_id,
+                        },
+                    });
+                } else {
+                    router.replace({
+                        pathname: '/tabs/HomeScreen',
+                        params: {
+                            lang: currentLanguage,
+                            userId: parsed.user.user_id,
+                        },
+                    });
+                }
+
+            } catch (error) {
+                if (error instanceof Error) {
+                    crashlytics.logError(error, 'Bootstrap failed');
+                }
+                await AsyncStorage.removeItem(ACCESS_TOKEN_KEY);
+                const lang = await AsyncStorage.getItem(LANGUAGE_KEY);
+                hasNavigated.current = true;
+                router.replace({
+                    pathname: '/auth/LoginScreen',
+                    params: { lang: lang || 'en' },
+                });
+            } finally {
+                setTimeout(() => {
+                    setAppIsReady(true);
+                }, 500);
+            }
+        };
+
+        bootstrapApp();
     }, []);
-    // useEffect(() => {
-    //     if (!isReady || hasNavigated.current) return;
-    //     hasNavigated.current = true;
-    //     if (!hasSeenLanguageScreen) {
-    //         router.replace('/LanguageScreen');
-    //     } else if (!isLoggedIn) {
-    //         router.replace('/auth');
-    //     } else if (!onboardingComplete && userId) {
-    //         router.replace({
-    //             pathname: '/onboarding/UpdatingNamesScreen',
-    //             params: {lang: language, userId: userId},
-    //         });
-    //     } else if (userId) {
-    //         router.replace({
-    //             pathname: '/tabs/HomeScreen',
-    //             params: {lang: language, userId: userId},
-    //         });
-    //     }
-    //     setTimeout(() => {
-    //         setAppIsReady(true);
-    //     }, 400);
-    // }, [isReady, hasSeenLanguageScreen, isLoggedIn, onboardingComplete, userId, language, router]);
+
     return (
         <>
             <Stack

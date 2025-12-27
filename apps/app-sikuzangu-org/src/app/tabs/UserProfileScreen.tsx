@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef, useCallback } from 'react';
 import {
   View,
   Text,
@@ -7,12 +7,14 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Alert,
+  RefreshControl,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useAccessToken } from '@siku-zangu/react';
+import { useAccessToken, useUser } from '@siku-zangu/react'; // Import useUser
 import { NavbarCard } from '@siku-zangu/react-native';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter, useFocusEffect } from 'expo-router';
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 interface MenuItem {
   id: string;
@@ -23,53 +25,78 @@ interface MenuItem {
   onPress?: () => void;
   isDanger?: boolean;
 }
-
 export default function Profile() {
   const router = useRouter();
   const params = useLocalSearchParams();
   const insets = useSafeAreaInsets();
-
   const language = (params.lang as 'en' | 'sw') ?? 'en';
   const userId = params.userId as string;
-  const { user, logoutUser, isLoggingOut } = useAccessToken();
+  const { user, refetchUser, isFetchingUser } = useUser(userId);
+  const { logoutUser, isLoggingOut } = useAccessToken();
 
+  const lastFetchRef = useRef<number>(0);
+  const STALE_TIME = 3 * 60 * 1000;
+  const LANGUAGE_KEY = 'language';
+  useFocusEffect(
+      useCallback(() => {
+        const now = Date.now();
+        const timeSinceLastFetch = now - lastFetchRef.current;
+        const isStale = timeSinceLastFetch > STALE_TIME;
+
+        if (userId && refetchUser && (!user || isStale)) {
+          refetchUser();
+          lastFetchRef.current = now;
+        } else {
+        }
+      }, [userId, refetchUser, user])
+  );
+  const handleRefresh = useCallback(async () => {
+    if (refetchUser) {
+      await refetchUser();
+      lastFetchRef.current = Date.now();
+    }
+  }, [refetchUser]);
   const memberSince = user?.created_at
-    ? new Date(user.created_at).toLocaleDateString('en-US', {
+      ? new Date(user.created_at).toLocaleDateString('en-US', {
         month: 'short',
         year: 'numeric',
       })
-    : 'Aug 2025';
+      : 'Aug 2025';
 
   function handleLogout() {
     Alert.alert(
-      language === 'sw' ? 'Thibitisha Kutoka' : 'Confirm Logout',
-      language === 'sw'
-        ? 'Je, una uhakika unataka kutoka?'
-        : 'Are you sure you want to logout?',
-      [
-        {
-          text: language === 'sw' ? 'Ghairi' : 'Cancel',
-          style: 'cancel',
-        },
-        {
-          text: language === 'sw' ? 'Ondoka' : 'Logout',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await logoutUser();
-              router.push('/auth/LoginScreen');
-            } catch (e: any) {
-              Alert.alert(
-                language === 'sw' ? 'Hitilafu' : 'Error',
-                e.message ||
-                  (language === 'sw'
-                    ? 'Imeshindwa kutoka. Tafadhali jaribu tena.'
-                    : 'Failed to logout. Please try again.')
-              );
-            }
+        language === 'sw' ? 'Thibitisha Kutoka' : 'Confirm Logout',
+        language === 'sw'
+            ? 'Je, una uhakika unataka kutoka?'
+            : 'Are you sure you want to logout?',
+        [
+          {
+            text: language === 'sw' ? 'Ghairi' : 'Cancel',
+            style: 'cancel',
           },
-        },
-      ]
+          {
+            text: language === 'sw' ? 'Ondoka' : 'Logout',
+            style: 'destructive',
+            onPress: async () => {
+              try {
+                await AsyncStorage.setItem(LANGUAGE_KEY, language);
+                await logoutUser();
+                router.replace({
+                  pathname: '/auth/LoginScreen',
+                  params: { lang: language },
+                });
+              } catch (e: any) {
+                Alert.alert(
+                    language === 'sw' ? 'Hitilafu' : 'Error',
+                    e.message ||
+                    (language === 'sw'
+                        ? 'Imeshindwa kutoka. Tafadhali jaribu tena.'
+                        : 'Failed to logout. Please try again.')
+                );
+              }
+            },
+          },
+        ]
     );
   }
 
@@ -87,10 +114,10 @@ export default function Profile() {
       label: 'Notifications',
       labelSw: 'Arifa',
       onPress: () =>
-        router.push({
-          pathname: 'tabs/NotificationsScreen',
-          params: { lang: language, userId },
-        }),
+          router.push({
+            pathname: 'tabs/NotificationsScreen',
+            params: { lang: language, userId },
+          }),
     },
     {
       id: 'pin',
@@ -98,10 +125,10 @@ export default function Profile() {
       label: 'Change PIN',
       labelSw: 'Badilisha PIN',
       onPress: () =>
-        router.push({
-          pathname: 'tabs/ChangePinScreen',
-          params: { lang: language, userId },
-        }),
+          router.push({
+            pathname: 'tabs/ChangePinScreen',
+            params: { lang: language, userId },
+          }),
     },
     {
       id: 'cycle',
@@ -109,10 +136,10 @@ export default function Profile() {
       label: 'Update Cycle Info',
       labelSw: 'Sasisha Taarifa za Mzunguko',
       onPress: () =>
-        router.push({
-          pathname: 'tabs/LogEntryScreen',
-          params: { lang: language, userId },
-        }),
+          router.push({
+            pathname: 'tabs/LogEntryScreen',
+            params: { lang: language, userId },
+          }),
     },
     {
       id: 'delete',
@@ -120,10 +147,10 @@ export default function Profile() {
       label: 'Delete Account',
       labelSw: 'Futa Akaunti',
       onPress: () =>
-        router.push({
-          pathname: 'tabs/DeleteAccountScreen',
-          params: { lang: language, userId },
-        }),
+          router.push({
+            pathname: 'tabs/DeleteAccountScreen',
+            params: { lang: language, userId },
+          }),
     },
     {
       id: 'logout',
@@ -134,77 +161,99 @@ export default function Profile() {
       isDanger: true,
     },
   ];
-
   const handleBack = () => router.back();
-
+  if (!user && isFetchingUser) {
+    return (
+        <View style={[styles.container, { paddingTop: insets.top, justifyContent: 'center', alignItems: 'center' }]}>
+          <ActivityIndicator size="large" color="#FF5C8D" />
+          <Text style={{ marginTop: 16, color: '#666', fontSize: 16 }}>
+            {language === 'sw' ? 'Inapakia...' : 'Loading...'}
+          </Text>
+        </View>
+    );
+  }
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={handleBack}>
-          <Ionicons name="arrow-back" size={24} color="#000" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Profile</Text>
-        <View style={{ width: 32 }} />
-      </View>
-
-      <ScrollView showsVerticalScrollIndicator={false}>
-        <View style={styles.profileCard}>
-          <View style={styles.avatarContainer}>
-            <View style={styles.avatar}>
-              <Text style={styles.avatarEmoji}>👩</Text>
-            </View>
-          </View>
-          <Text style={styles.userName}>
-            {user?.kv?.first_name || 'Guest'} {user?.kv?.last_name || ''}
+      <View style={[styles.container, { paddingTop: insets.top }]}>
+        <View style={styles.header}>
+          <TouchableOpacity style={styles.backButton} onPress={handleBack}>
+            <Ionicons name="arrow-back" size={24} color="#000" />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>
+            {language === 'sw' ? 'Wasifu' : 'Profile'}
           </Text>
-          <Text style={styles.memberSince}>
-            {language === 'sw' ? 'Mwanachama tangu' : 'Member since'}{' '}
-            {memberSince}
-          </Text>
+          <View style={{ width: 32 }} />
         </View>
-        <View style={styles.menuContainer}>
-          {menuItems.map((item, index) => (
-            <TouchableOpacity
-              key={item.id}
-              style={[
-                styles.menuItem,
-                index === menuItems.length - 1 && styles.menuItemLast,
-              ]}
-              onPress={item.onPress}
-              disabled={item.id === 'logout' && isLoggingOut}
-            >
-              <View style={styles.menuLeft}>
-                {item.icon === 'exit-outline' ? (
-                  <View style={styles.iconContainer}>
-                    {isLoggingOut && item.id === 'logout' ? (
-                      <ActivityIndicator size="small" color="#FF597D" />
-                    ) : (
-                      <Ionicons
-                        name={item.icon as any}
-                        size={22}
-                        color="#FF597D"
-                      />
-                    )}
-                  </View>
-                ) : (
-                  <View style={styles.iconContainer}>
-                    <Text style={styles.menuEmoji}>{item.icon}</Text>
-                  </View>
-                )}
-                <Text
-                  style={[styles.menuLabel, item.isDanger && styles.dangerText]}
-                >
-                  {language === 'sw' ? item.labelSw : item.label}
-                </Text>
+
+        <ScrollView
+            showsVerticalScrollIndicator={false}
+            refreshControl={
+              <RefreshControl
+                  refreshing={isFetchingUser}
+                  onRefresh={handleRefresh}
+                  tintColor="#FF5C8D"
+                  colors={['#FF5C8D']}
+              />
+            }
+        >
+          <View style={styles.profileCard}>
+            <View style={styles.avatarContainer}>
+              <View style={styles.avatar}>
+                <Text style={styles.avatarEmoji}>👩</Text>
               </View>
-              <Ionicons name="chevron-forward" size={20} color="#999" />
-            </TouchableOpacity>
-          ))}
-        </View>
-      </ScrollView>
+            </View>
+            <Text style={styles.userName}>
+              {user?.kv?.first_name || (language === 'sw' ? 'Mgeni' : 'Guest')}{' '}
+              {user?.kv?.last_name || ''}
+            </Text>
+            <Text style={styles.memberSince}>
+              {language === 'sw' ? 'Mwanachama tangu' : 'Member since'}{' '}
+              {memberSince}
+            </Text>
+          </View>
 
-      <NavbarCard language={language} userId={userId} />
-    </View>
+          <View style={styles.menuContainer}>
+            {menuItems.map((item, index) => (
+                <TouchableOpacity
+                    key={item.id}
+                    style={[
+                      styles.menuItem,
+                      index === menuItems.length - 1 && styles.menuItemLast,
+                    ]}
+                    onPress={item.onPress}
+                    disabled={item.id === 'logout' && isLoggingOut}
+                >
+                  <View style={styles.menuLeft}>
+                    {item.icon === 'exit-outline' ? (
+                        <View style={styles.iconContainer}>
+                          {isLoggingOut && item.id === 'logout' ? (
+                              <ActivityIndicator size="small" color="#FF597D" />
+                          ) : (
+                              <Ionicons
+                                  name={item.icon as any}
+                                  size={22}
+                                  color="#FF597D"
+                              />
+                          )}
+                        </View>
+                    ) : (
+                        <View style={styles.iconContainer}>
+                          <Text style={styles.menuEmoji}>{item.icon}</Text>
+                        </View>
+                    )}
+                    <Text
+                        style={[styles.menuLabel, item.isDanger && styles.dangerText]}
+                    >
+                      {language === 'sw' ? item.labelSw : item.label}
+                    </Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={20} color="#999" />
+                </TouchableOpacity>
+            ))}
+          </View>
+        </ScrollView>
+
+        <NavbarCard language={language} userId={userId} />
+      </View>
   );
 }
 
@@ -270,7 +319,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 20,
     borderRadius: 16,
     overflow: 'hidden',
-    marginBottom: 30,
+    marginBottom: 100,
   },
   menuItem: {
     flexDirection: 'row',

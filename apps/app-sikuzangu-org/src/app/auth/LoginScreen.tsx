@@ -5,12 +5,12 @@ import {isOnboardingComplete, PrimaryButton} from '@siku-zangu/react-native';
 import {Ionicons} from '@expo/vector-icons';
 import {useAccessToken} from '@siku-zangu/react';
 import {APIError} from '@siku-zangu/core';
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function LoginScreen() {
     const router = useRouter();
     const params = useLocalSearchParams();
     const {loginUser, isLoggingIn, error} = useAccessToken();
-
     const [phone, setPhone] = useState('');
     const [pin, setPin] = useState('');
     const [secure, setSecure] = useState(true);
@@ -20,6 +20,18 @@ export default function LoginScreen() {
     const language = (params.lang as 'en' | 'sw') ?? 'en';
     const displayCountryCode = '+255';
     const storageCountryCode = 'TZ';
+    const LANGUAGE_KEY = 'language';
+
+    useEffect(() => {
+        const saveLanguage = async () => {
+            try {
+                await AsyncStorage.setItem(LANGUAGE_KEY, language);
+            } catch (error) {
+                console.error('Failed to save language:', error);
+            }
+        };
+        saveLanguage();
+    }, [language]);
 
     useEffect(() => {
         const phoneNumber = phone.replace(/\D/g, '');
@@ -115,33 +127,27 @@ export default function LoginScreen() {
             }
 
             const userId = accessToken.user.user_id;
-             const hasCompletedOnboarding = await isOnboardingComplete(userId);
-            router.push({
-                pathname: '/tabs/HomeScreen',
-                params: {
-                    lang: language,
-                    userId: userId,
-                },
-            });
-             if (!hasCompletedOnboarding) {
-               router.push({
-                 pathname: '/onboarding/UpdatingNamesScreen',
-                params: {
-                  lang: language,
-                userId: userId,
-                },
-               });
+            await AsyncStorage.setItem(LANGUAGE_KEY, language);
+            const hasCompletedOnboarding = await isOnboardingComplete(userId);
+
+            if (!hasCompletedOnboarding) {
+                router.replace({
+                    pathname: '/onboarding/UpdatingNamesScreen',
+                    params: {
+                        lang: language,
+                        userId: userId,
+                    },
+                });
             } else {
-               router.push({
-               pathname: '/tabs/HomeScreen',
-               params: {
-                lang: language,
-                userId: userId,
-                },
-               });
-             }
-        } catch
-            (e: any) {
+                router.replace({
+                    pathname: '/tabs/HomeScreen',
+                    params: {
+                        lang: language,
+                        userId: userId,
+                    },
+                });
+            }
+        } catch (e: any) {
             const errorMessage =
                 (e as APIError).issues?.map((issue: any) => issue.message).join(', ') ||
                 (e as APIError).message ||
