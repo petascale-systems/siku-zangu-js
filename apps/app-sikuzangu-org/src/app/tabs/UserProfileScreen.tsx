@@ -106,7 +106,10 @@ export default function Profile() {
       icon: '🔄',
       label: 'Change Language',
       labelSw: 'Badilisha Lugha',
-      onPress: () => router.push('/LanguageScreen'),
+      onPress: () => router.push({
+        pathname: '/LanguageScreen',
+        params: { lang: language, userId }, // Pass current language and userId
+      }),
     },
     {
       id: 'notifications',
