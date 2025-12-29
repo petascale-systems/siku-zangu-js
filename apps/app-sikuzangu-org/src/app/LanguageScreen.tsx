@@ -1,61 +1,93 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, Alert } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LanguageCard } from '@siku-zangu/react-native';
 import { PrimaryButton } from '@siku-zangu/react-native';
+import { useAccessToken } from '@siku-zangu/react';
 
 export default function LanguageScreen() {
   const [selectedLang, setSelectedLang] = useState<'en' | 'sw'>('en');
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+  const params = useLocalSearchParams();
+  const { user } = useAccessToken();
+
+  const currentLang = (params.lang as 'en' | 'sw') || 'en';
+  const userId = params.userId as string;
+  useEffect(() => {
+    const loadLanguage = async () => {
+      try {
+        const savedLang = await AsyncStorage.getItem('language');
+        if (savedLang === 'en' || savedLang === 'sw') {
+          setSelectedLang(savedLang);
+        } else if (currentLang) {
+          setSelectedLang(currentLang);
+        }
+      } catch (error) {
+      }
+    };
+    loadLanguage();
+  }, [currentLang]);
 
   const handleContinue = async () => {
     setIsLoading(true);
     try {
       await AsyncStorage.setItem('language', selectedLang);
-      router.push({
-        pathname: '/auth/RegisterScreen',
-        params: { lang: selectedLang },
-      });
+      if (user) {
+        router.replace({
+          pathname: '/tabs/UserProfileScreen',
+          params: { lang: selectedLang, userId },
+        });
+      } else {
+        router.push({
+          pathname: '/auth/RegisterScreen',
+          params: { lang: selectedLang },
+        });
+      }
     } catch (error) {
-      Alert.alert('Error', 'Failed to save language preference');
+      Alert.alert(
+          selectedLang === 'en' ? 'Error' : 'Hitilafu',
+          selectedLang === 'en'
+              ? 'Failed to save language preference'
+              : 'Imeshindwa kuhifadhi lugha'
+      );
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>
-        {selectedLang === 'en'
-          ? 'Your Cycle. Your Health. Your Language'
-          : 'Mzunguko Wako. Afya Yako. Lugha Yako'}
-      </Text>
-      <LanguageCard
-        flag={require('../../assets/images/uk.png')}
-        title="English"
-        subtitle="Welcome"
-        selected={selectedLang === 'en'}
-        onPress={() => setSelectedLang('en')}
-      />
-      <LanguageCard
-        flag={require('../../assets/images/tz.png')}
-        title="Kiswahili"
-        subtitle="Karibu"
-        selected={selectedLang === 'sw'}
-        onPress={() => setSelectedLang('sw')}
-      />
-      <PrimaryButton
-        title={
-          selectedLang === 'en'
-            ? 'Continue in English'
-            : 'Endelea Kwa Kiswahili'
-        }
-        onPress={handleContinue}
-        disabled={isLoading}
-      />
-    </View>
+      <View style={styles.container}>
+        <Text style={styles.title}>
+          {selectedLang === 'en'
+              ? 'Your Cycle. Your Health. Your Language'
+              : 'Mzunguko Wako. Afya Yako. Lugha Yako'}
+        </Text>
+        <LanguageCard
+            flag={require('../../assets/images/uk.png')}
+            title="English"
+            subtitle="Welcome"
+            selected={selectedLang === 'en'}
+            onPress={() => setSelectedLang('en')}
+        />
+        <LanguageCard
+            flag={require('../../assets/images/tz.png')}
+            title="Kiswahili"
+            subtitle="Karibu"
+            selected={selectedLang === 'sw'}
+            onPress={() => setSelectedLang('sw')}
+        />
+        <PrimaryButton
+            title={
+              selectedLang === 'en'
+                  ? 'Continue in English'
+                  : 'Endelea Kwa Kiswahili'
+            }
+            onPress={handleContinue}
+            disabled={isLoading}
+        />
+      </View>
   );
 }
 

@@ -7,6 +7,10 @@ import {
   TouchableOpacity,
   StyleSheet,
   Alert,
+  Keyboard,
+  ScrollView,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { PrimaryButton } from '@siku-zangu/react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -25,84 +29,80 @@ export default function RegisterScreen() {
   const language = (params.lang as 'en' | 'sw') ?? 'en';
   const displayCountryCode = '+255';
   const storageCountryCode = 'TZ';
-
   useEffect(() => {
     const phoneNumber = phone.replace(/\D/g, '');
     if (phone.length === 0) {
       setPhoneError(
-        language === 'en'
-          ? 'Phone number is required'
-          : 'Nambari ya simu inahitajika'
+          language === 'en'
+              ? 'Phone number is required'
+              : 'Nambari ya simu inahitajika'
       );
     } else if (!/^\d{6,12}$/.test(phoneNumber)) {
       setPhoneError(
-        language === 'en' ? 'Enter 6-12 digits' : 'Ingiza tarakimu 6-12'
+          language === 'en' ? 'Enter 6-12 digits' : 'Ingiza tarakimu 6-12'
       );
     } else if (/[^0-9\s-]/.test(phone)) {
       setPhoneError(
-        language === 'en'
-          ? 'Only digits, spaces, or dashes allowed'
-          : 'Tarakimu, nafasi, au viunganishi pekee vinavyoruhusiwa'
+          language === 'en'
+              ? 'Only digits, spaces, or dashes allowed'
+              : 'Tarakimu, nafasi, au viunganishi pekee vinavyoruhusiwa'
       );
     } else {
       setPhoneError('');
     }
   }, [phone, language]);
-
   useEffect(() => {
     if (pin.length === 0) {
       setPinError(
-        language === 'en' ? 'PIN is required' : 'Nenosiri linahitajika'
+          language === 'en' ? 'PIN is required' : 'Nenosiri linahitajika'
       );
     } else if (!/^\d{4}$/.test(pin)) {
       setPinError(
-        language === 'en' ? 'Enter exactly 4 digits' : 'Ingiza tarakimu 4 haswa'
+          language === 'en' ? 'Enter exactly 4 digits' : 'Ingiza tarakimu 4 haswa'
       );
     } else {
       setPinError('');
     }
   }, [pin, language]);
-
   const handleRegister = async () => {
     const phoneNumber = phone.replace(/\D/g, '');
     const storedPhoneNumber = `${storageCountryCode} ${phoneNumber}`;
 
     if (!phone) {
       setPhoneError(
-        language === 'en'
-          ? 'Phone number is required'
-          : 'Nambari ya simu inahitajika'
+          language === 'en'
+              ? 'Phone number is required'
+              : 'Nambari ya simu inahitajika'
       );
       Alert.alert(
-        language === 'en' ? 'Error' : 'Hitilafu',
-        language === 'en'
-          ? 'Please enter a valid phone number'
-          : 'Tafadhali ingiza nambari ya simu sahihi'
+          language === 'en' ? 'Error' : 'Hitilafu',
+          language === 'en'
+              ? 'Please enter a valid phone number'
+              : 'Tafadhali ingiza nambari ya simu sahihi'
       );
       return;
     }
     if (!pin) {
       setPinError(
-        language === 'en' ? 'PIN is required' : 'Nenosiri linahitajika'
+          language === 'en' ? 'PIN is required' : 'Nenosiri linahitajika'
       );
       Alert.alert(
-        language === 'en' ? 'Error' : 'Hitilafu',
-        language === 'en'
-          ? 'Please enter a valid PIN'
-          : 'Tafadhali ingiza nenosiri sahihi'
+          language === 'en' ? 'Error' : 'Hitilafu',
+          language === 'en'
+              ? 'Please enter a valid PIN'
+              : 'Tafadhali ingiza nenosiri sahihi'
       );
       return;
     }
     if (phoneError || pinError) {
       Alert.alert(
-        language === 'en' ? 'Error' : 'Hitilafu',
-        language === 'en'
-          ? 'Please fix errors before registering'
-          : 'Tafadhali sahihisha makosa kabla ya kujisajili'
+          language === 'en' ? 'Error' : 'Hitilafu',
+          language === 'en'
+              ? 'Please fix errors before registering'
+              : 'Tafadhali sahihisha makosa kabla ya kujisajili'
       );
       return;
     }
-
     try {
       const payload = {
         kv: {
@@ -114,152 +114,160 @@ export default function RegisterScreen() {
       };
       await upsertUser(payload);
       Alert.alert(
-        language === 'en' ? 'Success' : 'Mafanikio',
-        language === 'en' ? 'Account created!' : 'Akaunti imefunguliwa!',
-        [
-          {
-            text: language === 'en' ? 'OK' : 'Sawa',
-            onPress: () =>
-              router.push({
-                pathname: '/auth/LoginScreen',
-                params: {
-                  lang: language,
-                },
-              }),
-          },
-        ]
+          language === 'en' ? 'Success' : 'Mafanikio',
+          language === 'en' ? 'Account created!' : 'Akaunti imefunguliwa!',
+          [
+            {
+              text: language === 'en' ? 'OK' : 'Sawa',
+              onPress: () =>
+                  router.push({
+                    pathname: '/auth/LoginScreen',
+                    params: {
+                      lang: language,
+                    },
+                  }),
+            },
+          ]
       );
     } catch (e: any) {
       const errorMessage =
-        e.details ||
-        e.message ||
-        (e.status === 400
-          ? language === 'en'
-            ? 'Invalid input format'
-            : 'Muundo wa ingizo si sahihi'
-          : e.status === 409
-          ? language === 'en'
-            ? 'Phone number already taken'
-            : 'Nambari ya simu tayari imechukuliwa'
-          : language === 'en'
-          ? 'Registration failed'
-          : 'Usajili umeshindwa');
+          e.details ||
+          e.message ||
+          (e.status === 400
+              ? language === 'en'
+                  ? 'Invalid input format'
+                  : 'Muundo wa ingizo si sahihi'
+              : e.status === 409
+                  ? language === 'en'
+                      ? 'Phone number already taken'
+                      : 'Nambari ya simu tayari imechukuliwa'
+                  : language === 'en'
+                      ? 'Registration failed'
+                      : 'Usajili umeshindwa');
       Alert.alert(language === 'en' ? 'Error' : 'Hitilafu', errorMessage);
     }
   };
-
   const goToLogin = () => {
+    Keyboard.dismiss();
     router.push({
       pathname: '/auth/LoginScreen',
       params: { lang: language },
     });
   };
-
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>
-        {language === 'en' ? 'Register' : 'Jisajili'}
-      </Text>
-      <Text style={styles.subtitle}>
-        {language === 'en'
-          ? 'Create your account to start tracking\nyour menstrual cycle.'
-          : 'Fungua akaunti yako kuanza kufuatilia\nmzunguko wako wa hedhi.'}
-      </Text>
-      <View style={styles.formBox}>
-        <View style={styles.fieldWrapper}>
-          <Text style={styles.label}>
-            {language === 'en' ? 'Phone Number' : 'Nambari ya Simu'}
+      <KeyboardAvoidingView
+          style={styles.container}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      >
+        <ScrollView
+            contentContainerStyle={styles.scrollContent}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+        >
+          <Text style={styles.title}>
+            {language === 'en' ? 'Register' : 'Jisajili'}
           </Text>
-          <View
-            style={[
-              styles.phoneWrapper,
-              phoneError ? styles.errorBorder : null,
-            ]}
-          >
-            <Text style={styles.countryCode}>{displayCountryCode}</Text>
-            <TextInput
-              style={[styles.input, styles.phoneInput]}
-              placeholder={language === 'en' ? '712345678' : '712345678'}
-              keyboardType="phone-pad"
-              value={phone}
-              onChangeText={(text) => {
-                if (/^[0-9\s-]*$/.test(text)) {
-                  setPhone(text);
+          <Text style={styles.subtitle}>
+            {language === 'en'
+                ? 'Create your account to start tracking\nyour menstrual cycle.'
+                : 'Fungua akaunti yako kuanza kufuatilia\nmzunguko wako wa hedhi.'}
+          </Text>
+          <View style={styles.formBox}>
+            <View style={styles.fieldWrapper}>
+              <Text style={styles.label}>
+                {language === 'en' ? 'Phone Number' : 'Nambari ya Simu'}
+              </Text>
+              <View
+                  style={[
+                    styles.phoneWrapper,
+                    phoneError ? styles.errorBorder : null,
+                  ]}
+              >
+                <Text style={styles.countryCode}>{displayCountryCode}</Text>
+                <TextInput
+                    style={[styles.input, styles.phoneInput]}
+                    placeholder={language === 'en' ? '712345678' : '712345678'}
+                    keyboardType="phone-pad"
+                    value={phone}
+                    onChangeText={(text) => {
+                      if (/^[0-9\s-]*$/.test(text)) {
+                        setPhone(text);
+                      }
+                    }}
+                    maxLength={12}
+                    accessibilityLabel={
+                      language === 'en' ? 'Phone Number' : 'Nambari ya Simu'
+                    }
+                />
+              </View>
+              {phoneError ? (
+                  <Text style={styles.errorText}>{phoneError}</Text>
+              ) : null}
+            </View>
+            <View style={styles.fieldWrapper}>
+              <Text style={styles.label}>
+                {language === 'en' ? 'PIN' : 'Nenosiri'}
+              </Text>
+              <View
+                  style={[styles.pinWrapper, pinError ? styles.errorBorder : null]}
+              >
+                <TextInput
+                    style={[
+                      styles.input,
+                      { flex: 1, borderWidth: 0, marginBottom: 0 },
+                    ]}
+                    placeholder={
+                      language === 'en'
+                          ? 'Enter 4-digit PIN'
+                          : 'Ingiza nenosiri la tarakimu 4'
+                    }
+                    secureTextEntry={secure}
+                    value={pin}
+                    onChangeText={(text) => {
+                      if (/^\d*$/.test(text)) {
+                        setPin(text);
+                      }
+                    }}
+                    keyboardType="numeric"
+                    maxLength={4}
+                    accessibilityLabel={language === 'en' ? 'PIN' : 'Nenosiri'}
+                />
+                <TouchableOpacity onPress={() => setSecure(!secure)}>
+                  <Ionicons
+                      name={secure ? 'eye-off-outline' : 'eye-outline'}
+                      size={22}
+                      color="gray"
+                      accessibilityLabel={
+                        language === 'en'
+                            ? 'Toggle PIN visibility'
+                            : 'Badilisha kuonekana kwa nenosiri'
+                      }
+                  />
+                </TouchableOpacity>
+              </View>
+              {pinError ? <Text style={styles.errorText}>{pinError}</Text> : null}
+            </View>
+            <PrimaryButton
+                title={language === 'en' ? 'Register' : 'Jisajili'}
+                onPress={handleRegister}
+                disabled={
+                    !!phoneError || !!pinError || !phone || !pin || isUpsertingUser
                 }
-              }}
-              maxLength={12}
-              accessibilityLabel={
-                language === 'en' ? 'Phone Number' : 'Nambari ya Simu'
-              }
+                accessibilityLabel={language === 'en' ? 'Register' : 'Jisajili'}
             />
           </View>
-          {phoneError ? (
-            <Text style={styles.errorText}>{phoneError}</Text>
-          ) : null}
-        </View>
-        <View style={styles.fieldWrapper}>
-          <Text style={styles.label}>
-            {language === 'en' ? 'PIN' : 'Nenosiri'}
-          </Text>
-          <View
-            style={[styles.pinWrapper, pinError ? styles.errorBorder : null]}
-          >
-            <TextInput
-              style={[
-                styles.input,
-                { flex: 1, borderWidth: 0, marginBottom: 0 },
-              ]}
-              placeholder={
-                language === 'en'
-                  ? 'Enter 4-digit PIN'
-                  : 'Ingiza nenosiri la tarakimu 4'
-              }
-              secureTextEntry={secure}
-              value={pin}
-              onChangeText={(text) => {
-                if (/^\d*$/.test(text)) {
-                  setPin(text);
-                }
-              }}
-              keyboardType="numeric"
-              maxLength={4}
-              accessibilityLabel={language === 'en' ? 'PIN' : 'Nenosiri'}
-            />
-            <TouchableOpacity onPress={() => setSecure(!secure)}>
-              <Ionicons
-                name={secure ? 'eye-off-outline' : 'eye-outline'}
-                size={22}
-                color="gray"
-                accessibilityLabel={
-                  language === 'en'
-                    ? 'Toggle PIN visibility'
-                    : 'Badilisha kuonekana kwa nenosiri'
-                }
-              />
+          <Text style={styles.footer}>
+            {language === 'en'
+                ? 'Already have an Account? '
+                : 'Tayari una Akaunti? '}
+            <TouchableOpacity onPress={goToLogin}>
+              <Text style={styles.loginLink}>
+                {language === 'en' ? 'Log in' : 'Ingia'}
+              </Text>
             </TouchableOpacity>
-          </View>
-          {pinError ? <Text style={styles.errorText}>{pinError}</Text> : null}
-        </View>
-        <PrimaryButton
-          title={language === 'en' ? 'Register' : 'Jisajili'}
-          onPress={handleRegister}
-          disabled={
-            !!phoneError || !!pinError || !phone || !pin || isUpsertingUser
-          }
-          accessibilityLabel={language === 'en' ? 'Register' : 'Jisajili'}
-        />
-      </View>
-      <Text style={styles.footer}>
-        {language === 'en'
-          ? 'Already have an Account? '
-          : 'Tayari una Akaunti? '}
-        <TouchableOpacity onPress={goToLogin}>
-          <Text style={styles.loginLink}>
-            {language === 'en' ? 'Log in' : 'Ingia'}
           </Text>
-        </TouchableOpacity>
-      </Text>
-    </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
   );
 }
 
@@ -267,6 +275,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#FFF4EC',
+  },
+  scrollContent: {
+    flexGrow: 1,
     alignItems: 'center',
     paddingVertical: 16,
     paddingHorizontal: 16,
