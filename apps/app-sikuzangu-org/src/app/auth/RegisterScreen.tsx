@@ -29,6 +29,7 @@ export default function RegisterScreen() {
   const language = (params.lang as 'en' | 'sw') ?? 'en';
   const displayCountryCode = '+255';
   const storageCountryCode = 'TZ';
+
   useEffect(() => {
     const phoneNumber = phone.replace(/\D/g, '');
     if (phone.length === 0) {
@@ -130,23 +131,29 @@ export default function RegisterScreen() {
           ]
       );
     } catch (e: any) {
-      const errorMessage =
-          e.details ||
-          e.message ||
-          (e.status === 400
-              ? language === 'en'
-                  ? 'Invalid input format'
-                  : 'Muundo wa ingizo si sahihi'
-              : e.status === 409
-                  ? language === 'en'
-                      ? 'Phone number already taken'
-                      : 'Nambari ya simu tayari imechukuliwa'
-                  : language === 'en'
-                      ? 'Registration failed'
-                      : 'Usajili umeshindwa');
+      let errorMessage = '';
+      if (e.status === 400) {
+        errorMessage = language === 'en'
+            ? 'Invalid input format'
+            : 'Muundo wa ingizo si sahihi';
+      } else if (e.status === 409) {
+        errorMessage = language === 'en'
+            ? 'Phone number already taken'
+            : 'Nambari ya simu tayari imechukuliwa';
+      } else if (e.details) {
+        errorMessage = e.details;
+      } else if (e.message) {
+        errorMessage = e.message;
+      } else {
+        errorMessage = language === 'en'
+            ? 'Registration failed. Please try again.'
+            : 'Usajili umeshindwa. Tafadhali jaribu tena.';
+      }
+
       Alert.alert(language === 'en' ? 'Error' : 'Hitilafu', errorMessage);
     }
   };
+
   const goToLogin = () => {
     Keyboard.dismiss();
     router.push({
