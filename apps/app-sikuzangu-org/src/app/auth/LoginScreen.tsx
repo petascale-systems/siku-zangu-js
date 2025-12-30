@@ -123,6 +123,7 @@ export default function LoginScreen() {
             const userId = accessToken.user.user_id;
             await AsyncStorage.setItem(LANGUAGE_KEY, language);
             const hasCompletedOnboarding = await isOnboardingComplete(userId);
+
             if (!hasCompletedOnboarding) {
                 router.replace({
                     pathname: '/onboarding/UpdatingNamesScreen',
@@ -141,20 +142,27 @@ export default function LoginScreen() {
                 });
             }
         } catch (e: any) {
-            const errorMessage =
-                (e as APIError).issues?.map((issue: any) => issue.message).join(', ') ||
-                (e as APIError).message ||
-                (e.status === 401
-                    ? language === 'en'
-                        ? 'Invalid phone number or PIN'
-                        : 'Nambari ya simu au nenosiri si sahihi'
-                    : e.status === 400
-                        ? language === 'en'
-                            ? 'Invalid input format'
-                            : 'Muundo wa ingizo si sahihi'
-                        : language === 'en'
-                            ? 'Login failed'
-                            : 'Kuingia kumeshindwa');
+            let errorMessage = '';
+            if (e.status === 401) {
+                errorMessage = language === 'en'
+                    ? 'Invalid phone number or PIN'
+                    : 'Nambari ya simu au nenosiri si sahihi';
+            } else if (e.status === 400) {
+                errorMessage = language === 'en'
+                    ? 'Invalid input format'
+                    : 'Muundo wa ingizo si sahihi';
+            } else if ((e as APIError).issues?.length) {
+                errorMessage = (e as APIError).issues
+                    .map((issue: any) => issue.message)
+                    .join(', ');
+            } else if ((e as APIError).message) {
+                errorMessage = (e as APIError).message;
+            } else {
+                errorMessage = language === 'en'
+                    ? 'Login failed. Please try again.'
+                    : 'Kuingia kumeshindwa. Tafadhali jaribu tena.';
+            }
+
             Alert.alert(language === 'en' ? 'Error' : 'Hitilafu', errorMessage);
         }
     };
@@ -181,6 +189,7 @@ export default function LoginScreen() {
                         ? 'Welcome back! Track your menstrual \n cycle.'
                         : 'Karibu tena! Fuatilia mzunguko \n wako wa hedhi.'}
                 </Text>
+
                 <View style={styles.formBox}>
                     <View style={styles.fieldWrapper}>
                         <Text style={styles.label}>
@@ -261,6 +270,7 @@ export default function LoginScreen() {
                             {language === 'en' ? 'Forgot PIN?' : 'Umesahau Nenosiri?'}
                         </Text>
                     </TouchableOpacity>
+
                     <PrimaryButton
                         title={language === 'en' ? 'Login' : 'Ingia'}
                         onPress={handleLogin}
@@ -280,6 +290,7 @@ export default function LoginScreen() {
         </KeyboardAvoidingView>
     );
 }
+
 const styles = StyleSheet.create({
     container: {
         flex: 1,
