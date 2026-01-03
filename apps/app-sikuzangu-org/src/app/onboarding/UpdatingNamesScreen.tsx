@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
+  Alert, Linking,
   ScrollView,
   StyleSheet,
   Text,
@@ -232,7 +232,9 @@ export default function UpdatingNamesScreen() {
           : 'Tujua jinsi faragha inavyokuwa muhimu kwako. Ndiyo maana hatutoi data bila idhini.'}
       </Text>
       <TouchableOpacity>
-        <Text style={styles.privacyLink}>
+        <Text style={styles.privacyLink}
+              onPress={() => Linking.openURL('https://sikuzangu.org/privacy-policy')}
+        >
           {language === 'en' ? 'Privacy Policy' : 'Sera ya Faragha'}
         </Text>
       </TouchableOpacity>
