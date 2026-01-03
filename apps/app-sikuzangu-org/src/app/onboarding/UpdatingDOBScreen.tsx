@@ -9,6 +9,7 @@ import {
   Text,
   TouchableOpacity,
   View,
+  Linking,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useUser } from '@siku-zangu/react';
@@ -334,28 +335,35 @@ export default function UpdatingDOBScreen() {
             ? 'Knowing your age helps us give you better tips.'
             : 'Kujua umri wako hutusaidia kukupa ushauri bora.'}
         </Text>
-
         {renderDateDisplay()}
         {renderPicker()}
-
         <Text style={styles.termsText}>
           {language === 'en' ? (
-            <>
-              Review our{' '}
-              <Text style={styles.termsConditions}>Terms and Conditions</Text>{' '}
-              to learn about the minimum age requirement. You can change your
-              answer on your profile any time.
-            </>
+              <>
+                Review our{' '}
+                <Text
+                    style={styles.termsConditions}
+                    onPress={() => Linking.openURL('https://sikuzangu.org/terms-of-service')}
+                >
+                  Terms and Conditions
+                </Text>{' '}
+                to learn about the minimum age requirement. You can change your
+                answer on your profile any time.
+              </>
           ) : (
-            <>
-              Angalia{' '}
-              <Text style={styles.termsConditions}>Sheria na Masharti</Text>{' '}
-              yetu kujua kuhusu umri wa chini unaohitajika. Unaweza kubadilisha
-              jibu lako wakati wowote katika profaili yako.
-            </>
+              <>
+                Angalia{' '}
+                <Text
+                    style={styles.termsConditions}
+                    onPress={() => Linking.openURL('https://sikuzangu.org/terms-of-service')}
+                >
+                  Sheria na Masharti
+                </Text>{' '}
+                yetu kujua kuhusu umri wa chini unaohitajika. Unaweza kubadilisha
+                jibu lako wakati wowote katika profaili yako.
+              </>
           )}
         </Text>
-
         <TouchableOpacity
           style={[
             styles.nextButton,

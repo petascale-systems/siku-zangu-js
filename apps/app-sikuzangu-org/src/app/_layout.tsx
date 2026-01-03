@@ -19,7 +19,7 @@ export default function RootLayout() {
         if (appIsReady) {
             Animated.timing(fadeAnim, {
                 toValue: 0,
-                duration: 300,
+                duration: 800,
                 useNativeDriver: true,
             }).start();
         }
@@ -103,7 +103,7 @@ export default function RootLayout() {
             } finally {
                 setTimeout(() => {
                     setAppIsReady(true);
-                }, 500);
+                }, 3000);
             }
         };
 
