@@ -1,13 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
-  Alert, Linking,
+  Alert,
+  Linking,
   ScrollView,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
   View,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useUser } from '@siku-zangu/react';
@@ -23,7 +26,7 @@ export default function UpdatingNamesScreen() {
   const language = (params.lang as 'en' | 'sw') ?? 'en';
   const userId = params.userId as string;
   const { upsertUser, isUpsertingUser, error, user, isFetchingUser } =
-    useUser(userId);
+      useUser(userId);
 
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
@@ -41,48 +44,35 @@ export default function UpdatingNamesScreen() {
   const validateName = (name: string, field: 'first' | 'last'): string => {
     if (field === 'first' && name.length === 0) {
       return language === 'en'
-        ? 'First name is required'
-        : 'Jina la kwanza linahitajika';
+          ? 'First name is required'
+          : 'Jina la kwanza linahitajika';
     }
     if (field === 'last' && name.length === 0) {
       return '';
     }
     if (name.length > 50) {
       return language === 'en'
-        ? `${
-            field === 'first' ? 'First' : 'Last'
+          ? `${
+              field === 'first' ? 'First' : 'Last'
           } name must be at most 50 characters`
-        : `${
-            field === 'first' ? 'Jina la kwanza' : 'Jina la mwisho'
+          : `${
+              field === 'first' ? 'Jina la kwanza' : 'Jina la mwisho'
           } linapaswa kuwa hadi herufi 50`;
-    }
-    if (name.length > 0 && /[^A-Za-z\s]/.test(name)) {
-      return language === 'en'
-        ? `${
-            field === 'first' ? 'First' : 'Last'
-          } name must contain only letters`
-        : `${
-            field === 'first' ? 'Jina la kwanza' : 'Jina la mwisho'
-          } linapaswa kuwa na herufi pekee`;
     }
     return '';
   };
 
   const handleFirstNameChange = (text: string) => {
-    if (/^[A-Za-z\s]*$/.test(text)) {
-      setFirstName(text);
-      if (hasAttemptedSave) {
-        setFirstNameError(validateName(text, 'first'));
-      }
+    setFirstName(text);
+    if (hasAttemptedSave) {
+      setFirstNameError(validateName(text, 'first'));
     }
   };
 
   const handleLastNameChange = (text: string) => {
-    if (/^[A-Za-z\s]*$/.test(text)) {
-      setLastName(text);
-      if (hasAttemptedSave) {
-        setLastNameError(validateName(text, 'last'));
-      }
+    setLastName(text);
+    if (hasAttemptedSave) {
+      setLastNameError(validateName(text, 'last'));
     }
   };
 
@@ -97,20 +87,20 @@ export default function UpdatingNamesScreen() {
 
     if (firstError || lastError) {
       Alert.alert(
-        language === 'en' ? 'Error' : 'Hitilafu',
-        language === 'en'
-          ? 'Please fix errors before saving'
-          : 'Tafadhali sahihisha makosa kabla ya kuhifadhi'
+          language === 'en' ? 'Error' : 'Hitilafu',
+          language === 'en'
+              ? 'Please fix errors before saving'
+              : 'Tafadhali sahihisha makosa kabla ya kuhifadhi'
       );
       return;
     }
 
     if (!userId) {
       Alert.alert(
-        language === 'en' ? 'Error' : 'Hitilafu',
-        language === 'en'
-          ? 'User ID not available'
-          : 'Kitambulisho cha mtumiaji hakipatikani'
+          language === 'en' ? 'Error' : 'Hitilafu',
+          language === 'en'
+              ? 'User ID not available'
+              : 'Kitambulisho cha mtumiaji hakipatikani'
       );
       return;
     }
@@ -135,136 +125,170 @@ export default function UpdatingNamesScreen() {
       });
     } catch (e: any) {
       const errorMessage =
-        e.message ||
-        (language === 'en'
-          ? 'Failed to update names'
-          : 'Imeshindwa kubadilisha majina');
+          e.message ||
+          (language === 'en'
+              ? 'Failed to update names'
+              : 'Imeshindwa kubadilisha majina');
       Alert.alert(language === 'en' ? 'Error' : 'Hitilafu', errorMessage);
     }
   };
 
   const isFormValid =
-    firstName.trim().length > 0 && !firstNameError && !lastNameError;
+      firstName.trim().length > 0 && !firstNameError && !lastNameError;
 
   if (isFetchingUser) {
     return (
-      <View style={[styles.container, styles.centerContent]}>
-        <ActivityIndicator size="large" color="#FF4081" />
-        <Text style={styles.loadingText}>
-          {language === 'en' ? 'Loading...' : 'Inapakia...'}
-        </Text>
-      </View>
+        <View style={[styles.container, styles.centerContent]}>
+          <ActivityIndicator size="large" color="#FF4081" />
+          <Text style={styles.loadingText}>
+            {language === 'en' ? 'Loading...' : 'Inapakia...'}
+          </Text>
+        </View>
     );
   }
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <TouchableOpacity
-        style={styles.backButton}
-        onPress={() => router.back()}
-        accessibilityLabel={language === 'en' ? 'Go back' : 'Rudi nyuma'}
+      <KeyboardAvoidingView
+          style={styles.keyboardView}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
       >
-        <Ionicons name="arrow-back" size={24} color="black" />
-      </TouchableOpacity>
-
-      <Text style={styles.title}>
-        {language === 'en' ? 'Set up your profile' : 'Weka profaili yako'}
-      </Text>
-      <Text style={styles.subtitle}>
-        {language === 'en'
-          ? "Let's get to know you better!"
-          : 'Tukujue vizuri zaidi!'}
-      </Text>
-
-      <View style={styles.formContainer}>
-        <View style={styles.inputWrapper}>
-          <Text style={styles.label}>
-            {language === 'en'
-              ? 'First name (required)'
-              : 'Jina la kwanza (lazima)'}
-          </Text>
-          <TextInput
-            style={[styles.input, firstNameError ? styles.errorBorder : null]}
-            value={firstName}
-            onChangeText={handleFirstNameChange}
-            placeholder={
-              language === 'en' ? 'Enter first name' : 'Ingiza jina la kwanza'
-            }
-            maxLength={50}
-            accessibilityLabel={
-              language === 'en' ? 'First name' : 'Jina la kwanza'
-            }
-            editable={!isUpsertingUser}
-          />
-          {firstNameError ? (
-            <Text style={styles.errorText}>{firstNameError}</Text>
-          ) : null}
-        </View>
-
-        <View style={styles.inputWrapper}>
-          <Text style={styles.label}>
-            {language === 'en'
-              ? 'Last name (optional)'
-              : 'Jina la mwisho (si lazima)'}
-          </Text>
-          <TextInput
-            style={[styles.input, lastNameError ? styles.errorBorder : null]}
-            value={lastName}
-            onChangeText={handleLastNameChange}
-            placeholder={
-              language === 'en' ? 'Enter last name' : 'Ingiza jina la mwisho'
-            }
-            maxLength={50}
-            accessibilityLabel={
-              language === 'en' ? 'Last name' : 'Jina la mwisho'
-            }
-            editable={!isUpsertingUser}
-          />
-          {lastNameError ? (
-            <Text style={styles.errorText}>{lastNameError}</Text>
-          ) : null}
-        </View>
-      </View>
-
-      <Text style={styles.privacyText}>
-        {language === 'en'
-          ? "We know how much privacy matters to you. That's why we never share data without consent."
-          : 'Tujua jinsi faragha inavyokuwa muhimu kwako. Ndiyo maana hatutoi data bila idhini.'}
-      </Text>
-      <TouchableOpacity>
-        <Text style={styles.privacyLink}
-              onPress={() => Linking.openURL('https://sikuzangu.org/privacy-policy')}
+        <ScrollView
+            contentContainerStyle={styles.scrollContainer}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
         >
-          {language === 'en' ? 'Privacy Policy' : 'Sera ya Faragha'}
-        </Text>
-      </TouchableOpacity>
+          <View style={styles.container}>
+            <TouchableOpacity
+                style={styles.backButton}
+                onPress={() => router.back()}
+                accessibilityLabel={language === 'en' ? 'Go back' : 'Rudi nyuma'}
+            >
+              <Ionicons name="arrow-back" size={24} color="black" />
+            </TouchableOpacity>
 
-      <TouchableOpacity
-        style={[
-          styles.nextButton,
-          (!isFormValid || isUpsertingUser || !userId) &&
-            styles.nextButtonDisabled,
-        ]}
-        onPress={handleSave}
-        disabled={!isFormValid || isUpsertingUser || !userId}
-        accessibilityLabel={language === 'en' ? 'Next' : 'Ijayo'}
-      >
-        {isUpsertingUser ? (
-          <ActivityIndicator size="small" color="#fff" />
-        ) : (
-          <Text style={styles.nextButtonText}>
-            {language === 'en' ? 'NEXT' : 'IJAYO'}
-          </Text>
-        )}
-      </TouchableOpacity>
-    </ScrollView>
+            <Text style={styles.title}>
+              {language === 'en' ? 'Set up your profile' : 'Weka profaili yako'}
+            </Text>
+            <Text style={styles.subtitle}>
+              {language === 'en'
+                  ? "Let's get to know you better!"
+                  : 'Tukujue vizuri zaidi!'}
+            </Text>
+
+            <View style={styles.formContainer}>
+              <View style={styles.inputWrapper}>
+                <Text style={styles.label}>
+                  {language === 'en'
+                      ? 'First name (required)'
+                      : 'Jina la kwanza (lazima)'}
+                </Text>
+                <TextInput
+                    style={[
+                      styles.input,
+                      firstNameError ? styles.errorBorder : null,
+                    ]}
+                    value={firstName}
+                    onChangeText={handleFirstNameChange}
+                    placeholder={
+                      language === 'en'
+                          ? 'Enter first name'
+                          : 'Ingiza jina la kwanza'
+                    }
+                    placeholderTextColor="#999"
+                    maxLength={50}
+                    accessibilityLabel={
+                      language === 'en' ? 'First name' : 'Jina la kwanza'
+                    }
+                    editable={!isUpsertingUser}
+                />
+                {firstNameError ? (
+                    <Text style={styles.errorText}>{firstNameError}</Text>
+                ) : null}
+              </View>
+
+              <View style={styles.inputWrapper}>
+                <Text style={styles.label}>
+                  {language === 'en'
+                      ? 'Last name (optional)'
+                      : 'Jina la mwisho (si lazima)'}
+                </Text>
+                <TextInput
+                    style={[styles.input, lastNameError ? styles.errorBorder : null]}
+                    value={lastName}
+                    onChangeText={handleLastNameChange}
+                    placeholder={
+                      language === 'en'
+                          ? 'Enter last name'
+                          : 'Ingiza jina la mwisho'
+                    }
+                    placeholderTextColor="#999"
+                    maxLength={50}
+                    accessibilityLabel={
+                      language === 'en' ? 'Last name' : 'Jina la mwisho'
+                    }
+                    editable={!isUpsertingUser}
+                />
+                {lastNameError ? (
+                    <Text style={styles.errorText}>{lastNameError}</Text>
+                ) : null}
+              </View>
+            </View>
+
+            <Text style={styles.privacyText}>
+              {language === 'en'
+                  ? "We know how much privacy matters to you. That's why we never share data without consent."
+                  : 'Tujua jinsi faragha inavyokuwa muhimu kwako. Ndiyo maana hatutoi data bila idhini.'}
+            </Text>
+            <TouchableOpacity>
+              <Text
+                  style={styles.privacyLink}
+                  onPress={() =>
+                      Linking.openURL('https://sikuzangu.org/privacy-policy')
+                  }
+              >
+                {language === 'en' ? 'Privacy Policy' : 'Sera ya Faragha'}
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+                style={[
+                  styles.nextButton,
+                  (!isFormValid || isUpsertingUser || !userId) &&
+                  styles.nextButtonDisabled,
+                ]}
+                onPress={handleSave}
+                disabled={!isFormValid || isUpsertingUser || !userId}
+                accessibilityLabel={language === 'en' ? 'Next' : 'Ijayo'}
+            >
+              {isUpsertingUser ? (
+                  <ActivityIndicator size="small" color="#FD5A7E" />
+              ) : (
+                  <>
+                    <Text style={styles.nextButtonText}>
+                      {language === 'en' ? 'Next' : 'Ijayo'}
+                    </Text>
+                    <Ionicons name="arrow-forward" size={20} color="#FD5A7E" />
+                  </>
+              )}
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flexGrow: 1,
+  keyboardView: {
+    flex: 1,
     backgroundColor: '#FFF5F2',
+  },
+  scrollContainer: {
+    flexGrow: 1,
+    paddingBottom: 40,
+  },
+  container: {
+    flex: 1,
     padding: 20,
   },
   centerContent: {
@@ -318,14 +342,17 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#777',
     marginBottom: 5,
+    fontFamily: 'Inter',
+    fontWeight: '500',
   },
   input: {
     borderWidth: 1,
     borderColor: '#f4a5a5',
     borderRadius: 8,
-    padding: 10,
+    padding: 12,
     fontSize: 16,
     backgroundColor: '#fff',
+    fontFamily: 'Inter',
   },
   errorBorder: {
     borderColor: '#E66386',
@@ -335,6 +362,7 @@ const styles = StyleSheet.create({
     color: '#E66386',
     fontSize: 12,
     marginTop: 5,
+    fontFamily: 'Inter',
   },
   privacyText: {
     fontSize: 12,
@@ -344,35 +372,44 @@ const styles = StyleSheet.create({
     fontWeight: '400',
     color: '#645F5F',
     textAlign: 'center',
+    lineHeight: 18,
   },
   privacyLink: {
     color: '#E66386',
     fontFamily: 'Inter',
     fontStyle: 'normal',
-    fontWeight: '400',
+    fontWeight: '600',
     fontSize: 12,
     textAlign: 'center',
     marginVertical: 10,
     textDecorationLine: 'underline',
   },
   nextButton: {
-    backgroundColor: '#FD5A7E',
-    fontFamily: 'Inter',
-    fontStyle: 'normal',
-    fontWeight: '600',
-    paddingVertical: 15,
-    borderRadius: 24,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1.5,
+    borderColor: '#FD5A7E',
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 14,
+    borderRadius: 24,
     marginTop: 30,
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 4,
+    elevation: 2,
   },
   nextButtonDisabled: {
-    backgroundColor: '#FFB6C1',
-    opacity: 0.6,
+    backgroundColor: '#F5F5F5',
+    borderColor: '#CCCCCC',
   },
   nextButtonText: {
-    color: '#fff',
+    color: '#FD5A7E',
     fontWeight: '600',
     fontSize: 16,
     fontStyle: 'normal',
+    fontFamily: 'Inter',
   },
 });
