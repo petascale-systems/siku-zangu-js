@@ -13,7 +13,7 @@ export default function FeaturesPage() {
   return (
     <div className="bg-primary-base">
       <WebsiteNav logo={logo} />
-      <section className="w-full px-4 sm:px-6 lg:px-8 py-12 sm:py-16 md:py-20">
+      <section className="w-full px-4 sm:px-6 lg:px-8 py-12 sm:py-16 md:py-20 pt-20 sm:pt-24 md:pt-28">
         <div className="flex flex-col lg:flex-row items-center justify-between gap-8 lg:gap-12 max-w-7xl mx-auto px-4">
           <div className="flex-1 text-center lg:text-left space-y-6">
             <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 leading-tight">
