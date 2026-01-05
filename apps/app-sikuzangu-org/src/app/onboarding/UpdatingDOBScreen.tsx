@@ -228,7 +228,10 @@ export default function UpdatingDOBScreen() {
         >
           {selectedYear}
         </Text>
-        <Text style={styles.dateSegmentLabel}>
+        <Text style={[
+          styles.dateSegmentLabel,
+          activePicker === 'day' && styles.activeDateSegmentLabel,
+        ]}>
           {language === 'en' ? 'YEAR' : 'MWAKA'}
         </Text>
       </TouchableOpacity>
@@ -273,11 +276,11 @@ export default function UpdatingDOBScreen() {
               onPress={() => setSelectedMonth(month.value)}
             >
               <Text
-                style={[
-                  styles.pickerItemText,
-                  selectedMonth === month.value &&
-                    styles.selectedPickerItemText,
-                ]}
+                  style={[
+                styles.pickerItemText,
+                styles.monthPickerItemText,
+                selectedMonth === month.value && styles.selectedMonthPickerItemText,
+              ]}
               >
                 {month.label}
               </Text>
@@ -498,6 +501,30 @@ const styles = StyleSheet.create({
   selectedPickerItemText: {
     color: '#FD5A7E',
     fontWeight: '700',
+  },
+  activeDateSegmentLabel: {
+    color: '#FFFFFF',
+    opacity: 0.9,
+  },
+  monthPickerItem: {
+    paddingVertical: 14,
+  },
+  selectedMonthPickerItem: {
+    backgroundColor: '#FFE8EE',
+    borderRadius: 12,
+    marginHorizontal: 10,
+  },
+  monthPickerItemText: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#333333',
+    letterSpacing: 0.3,
+  },
+  selectedMonthPickerItemText: {
+    color: '#FD5A7E',
+    fontWeight: '700',
+    fontSize: 22,
+    letterSpacing: 0.5,
   },
   termsText: {
     fontSize: 14,

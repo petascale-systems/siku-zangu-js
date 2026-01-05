@@ -30,13 +30,13 @@ export default function UpdatingPeriodScreen() {
   const currentDate = new Date();
   const [selectedDay, setSelectedDay] = useState<number>(currentDate.getDate());
   const [selectedMonth, setSelectedMonth] = useState<number>(
-    currentDate.getMonth()
+      currentDate.getMonth()
   );
   const [selectedYear, setSelectedYear] = useState<number>(
-    currentDate.getFullYear()
+      currentDate.getFullYear()
   );
   const [activePicker, setActivePicker] = useState<'day' | 'month' | 'year'>(
-    'day'
+      'day'
   );
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -97,18 +97,18 @@ export default function UpdatingPeriodScreen() {
   };
 
   const days = Array.from(
-    { length: getDaysInMonth(selectedMonth, selectedYear) },
-    (_, i) => i + 1
+      { length: getDaysInMonth(selectedMonth, selectedYear) },
+      (_, i) => i + 1
   );
   const years = Array.from(
-    { length: 4 },
-    (_, i) => currentDate.getFullYear() - 3 + i
+      { length: 4 },
+      (_, i) => currentDate.getFullYear() - 3 + i
   );
 
   const formatDateToISO = (
-    day: number,
-    month: number,
-    year: number
+      day: number,
+      month: number,
+      year: number
   ): string => {
     const monthStr = String(month + 1).padStart(2, '0');
     const dayStr = String(day).padStart(2, '0');
@@ -118,16 +118,16 @@ export default function UpdatingPeriodScreen() {
   const isValidDate = (day: number, month: number, year: number): boolean => {
     const date = new Date(year, month, day);
     return (
-      date.getFullYear() === year &&
-      date.getMonth() === month &&
-      date.getDate() === day
+        date.getFullYear() === year &&
+        date.getMonth() === month &&
+        date.getDate() === day
     );
   };
 
   const isNotFutureDate = (
-    day: number,
-    month: number,
-    year: number
+      day: number,
+      month: number,
+      year: number
   ): boolean => {
     const selectedDate = new Date(year, month, day);
     return selectedDate <= currentDate;
@@ -136,39 +136,39 @@ export default function UpdatingPeriodScreen() {
   const handleSave = async () => {
     if (!userId) {
       Alert.alert(
-        language === 'en' ? 'Error' : 'Hitilafu',
-        language === 'en'
-          ? 'User ID not found'
-          : 'Kitambulisho cha mtumiaji hakipatikani'
+          language === 'en' ? 'Error' : 'Hitilafu',
+          language === 'en'
+              ? 'User ID not found'
+              : 'Kitambulisho cha mtumiaji hakipatikani'
       );
       return;
     }
 
     if (!isValidDate(selectedDay, selectedMonth, selectedYear)) {
       Alert.alert(
-        language === 'en' ? 'Invalid Date' : 'Tarehe si sahihi',
-        language === 'en'
-          ? 'Please select a valid date'
-          : 'Tafadhali chagua tarehe sahihi'
+          language === 'en' ? 'Invalid Date' : 'Tarehe si sahihi',
+          language === 'en'
+              ? 'Please select a valid date'
+              : 'Tafadhali chagua tarehe sahihi'
       );
       return;
     }
 
     if (!isNotFutureDate(selectedDay, selectedMonth, selectedYear)) {
       Alert.alert(
-        language === 'en' ? 'Future Date' : 'Tarehe ya baadaye',
-        language === 'en'
-          ? 'Period date cannot be in the future'
-          : 'Tarehe ya hedhi haiwezi kuwa siku zijazo'
+          language === 'en' ? 'Future Date' : 'Tarehe ya baadaye',
+          language === 'en'
+              ? 'Period date cannot be in the future'
+              : 'Tarehe ya hedhi haiwezi kuwa siku zijazo'
       );
       return;
     }
 
     try {
       const prev_cycle_start_date = formatDateToISO(
-        selectedDay,
-        selectedMonth,
-        selectedYear
+          selectedDay,
+          selectedMonth,
+          selectedYear
       );
       const updateData: User = { kv: { prev_cycle_start_date } };
       await upsertUser(updateData);
@@ -181,157 +181,174 @@ export default function UpdatingPeriodScreen() {
       });
     } catch (error: any) {
       const errorMessage =
-        error.message ||
-        (language === 'en'
-          ? 'Failed to save date'
-          : 'Imeshindwa kuhifadhi tarehe');
+          error.message ||
+          (language === 'en'
+              ? 'Failed to save date'
+              : 'Imeshindwa kuhifadhi tarehe');
       Alert.alert(language === 'en' ? 'Error' : 'Hitilafu', errorMessage);
     }
   };
 
   const renderDateDisplay = () => (
-    <View style={styles.dateDisplay}>
-      <TouchableOpacity
-        style={[
-          styles.dateSegment,
-          activePicker === 'day' && styles.activeDateSegment,
-        ]}
-        onPress={() => setActivePicker('day')}
-      >
-        <Text
-          style={[
-            styles.dateSegmentText,
-            activePicker === 'day' && styles.activeDateSegmentText,
-          ]}
+      <View style={styles.dateDisplay}>
+        <TouchableOpacity
+            style={[
+              styles.dateSegment,
+              activePicker === 'day' && styles.activeDateSegment,
+            ]}
+            onPress={() => setActivePicker('day')}
         >
-          {selectedDay}
-        </Text>
-        <Text style={styles.dateSegmentLabel}>
-          {language === 'en' ? 'DAY' : 'SIKU'}
-        </Text>
-      </TouchableOpacity>
+          <Text
+              style={[
+                styles.dateSegmentText,
+                activePicker === 'day' && styles.activeDateSegmentText,
+              ]}
+          >
+            {selectedDay}
+          </Text>
+          <Text
+              style={[
+                styles.dateSegmentLabel,
+                activePicker === 'day' && styles.activeDateSegmentLabel,
+              ]}
+          >
+            {language === 'en' ? 'DAY' : 'SIKU'}
+          </Text>
+        </TouchableOpacity>
 
-      <View style={styles.dateSeparator}>
-        <Text style={styles.dateSeparatorText}>/</Text>
+        <View style={styles.dateSeparator}>
+          <Text style={styles.dateSeparatorText}>/</Text>
+        </View>
+
+        <TouchableOpacity
+            style={[
+              styles.dateSegment,
+              activePicker === 'month' && styles.activeDateSegment,
+            ]}
+            onPress={() => setActivePicker('month')}
+        >
+          <Text
+              style={[
+                styles.dateSegmentText,
+                activePicker === 'month' && styles.activeDateSegmentText,
+              ]}
+          >
+            {months[selectedMonth].short}
+          </Text>
+          <Text
+              style={[
+                styles.dateSegmentLabel,
+                activePicker === 'month' && styles.activeDateSegmentLabel,
+              ]}
+          >
+            {language === 'en' ? 'MONTH' : 'MWEZI'}
+          </Text>
+        </TouchableOpacity>
+
+        <View style={styles.dateSeparator}>
+          <Text style={styles.dateSeparatorText}>/</Text>
+        </View>
+
+        <TouchableOpacity
+            style={[
+              styles.dateSegment,
+              activePicker === 'year' && styles.activeDateSegment,
+            ]}
+            onPress={() => setActivePicker('year')}
+        >
+          <Text
+              style={[
+                styles.dateSegmentText,
+                activePicker === 'year' && styles.activeDateSegmentText,
+              ]}
+          >
+            {selectedYear}
+          </Text>
+          <Text
+              style={[
+                styles.dateSegmentLabel,
+                activePicker === 'year' && styles.activeDateSegmentLabel,
+              ]}
+          >
+            {language === 'en' ? 'YEAR' : 'MWAKA'}
+          </Text>
+        </TouchableOpacity>
       </View>
-
-      <TouchableOpacity
-        style={[
-          styles.dateSegment,
-          activePicker === 'month' && styles.activeDateSegment,
-        ]}
-        onPress={() => setActivePicker('month')}
-      >
-        <Text
-          style={[
-            styles.dateSegmentText,
-            activePicker === 'month' && styles.activeDateSegmentText,
-          ]}
-        >
-          {months[selectedMonth].short}
-        </Text>
-        <Text style={styles.dateSegmentLabel}>
-          {language === 'en' ? 'MONTH' : 'MWEZI'}
-        </Text>
-      </TouchableOpacity>
-
-      <View style={styles.dateSeparator}>
-        <Text style={styles.dateSeparatorText}>/</Text>
-      </View>
-
-      <TouchableOpacity
-        style={[
-          styles.dateSegment,
-          activePicker === 'year' && styles.activeDateSegment,
-        ]}
-        onPress={() => setActivePicker('year')}
-      >
-        <Text
-          style={[
-            styles.dateSegmentText,
-            activePicker === 'year' && styles.activeDateSegmentText,
-          ]}
-        >
-          {selectedYear}
-        </Text>
-        <Text style={styles.dateSegmentLabel}>
-          {language === 'en' ? 'YEAR' : 'MWAKA'}
-        </Text>
-      </TouchableOpacity>
-    </View>
   );
 
   const renderPicker = () => (
-    <View style={styles.pickerContainer}>
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.pickerScrollContent}
-      >
-        {activePicker === 'day' &&
-          days.map((day) => (
-            <TouchableOpacity
-              key={day}
-              style={[
-                styles.pickerItem,
-                selectedDay === day && styles.selectedPickerItem,
-              ]}
-              onPress={() => setSelectedDay(day)}
-            >
-              <Text
-                style={[
-                  styles.pickerItemText,
-                  selectedDay === day && styles.selectedPickerItemText,
-                ]}
-              >
-                {day}
-              </Text>
-            </TouchableOpacity>
-          ))}
+      <View style={styles.pickerContainer}>
+        <ScrollView
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={styles.pickerScrollContent}
+        >
+          {activePicker === 'day' &&
+              days.map((day) => (
+                  <TouchableOpacity
+                      key={day}
+                      style={[
+                        styles.pickerItem,
+                        selectedDay === day && styles.selectedPickerItem,
+                      ]}
+                      onPress={() => setSelectedDay(day)}
+                  >
+                    <Text
+                        style={[
+                          styles.pickerItemText,
+                          selectedDay === day && styles.selectedPickerItemText,
+                        ]}
+                    >
+                      {day}
+                    </Text>
+                  </TouchableOpacity>
+              ))}
 
-        {activePicker === 'month' &&
-          months.map((month) => (
-            <TouchableOpacity
-              key={month.value}
-              style={[
-                styles.pickerItem,
-                selectedMonth === month.value && styles.selectedPickerItem,
-              ]}
-              onPress={() => setSelectedMonth(month.value)}
-            >
-              <Text
-                style={[
-                  styles.pickerItemText,
-                  selectedMonth === month.value &&
-                    styles.selectedPickerItemText,
-                ]}
-              >
-                {month.label}
-              </Text>
-            </TouchableOpacity>
-          ))}
+          {activePicker === 'month' &&
+              months.map((month) => (
+                  <TouchableOpacity
+                      key={month.value}
+                      style={[
+                        styles.pickerItem,
+                        styles.monthPickerItem,
+                        selectedMonth === month.value && styles.selectedMonthPickerItem,
+                      ]}
+                      onPress={() => setSelectedMonth(month.value)}
+                  >
+                    <Text
+                        style={[
+                          styles.pickerItemText,
+                          styles.monthPickerItemText,
+                          selectedMonth === month.value &&
+                          styles.selectedMonthPickerItemText,
+                        ]}
+                    >
+                      {month.label}
+                    </Text>
+                  </TouchableOpacity>
+              ))}
 
-        {activePicker === 'year' &&
-          years.map((year) => (
-            <TouchableOpacity
-              key={year}
-              style={[
-                styles.pickerItem,
-                selectedYear === year && styles.selectedPickerItem,
-              ]}
-              onPress={() => setSelectedYear(year)}
-            >
-              <Text
-                style={[
-                  styles.pickerItemText,
-                  selectedYear === year && styles.selectedPickerItemText,
-                ]}
-              >
-                {year}
-              </Text>
-            </TouchableOpacity>
-          ))}
-      </ScrollView>
-    </View>
+          {activePicker === 'year' &&
+              years.map((year) => (
+                  <TouchableOpacity
+                      key={year}
+                      style={[
+                        styles.pickerItem,
+                        selectedYear === year && styles.selectedPickerItem,
+                      ]}
+                      onPress={() => setSelectedYear(year)}
+                  >
+                    <Text
+                        style={[
+                          styles.pickerItemText,
+                          selectedYear === year && styles.selectedPickerItemText,
+                        ]}
+                    >
+                      {year}
+                    </Text>
+                  </TouchableOpacity>
+              ))}
+        </ScrollView>
+      </View>
   );
 
   const getDateContext = () => {
@@ -348,66 +365,66 @@ export default function UpdatingPeriodScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      <TouchableOpacity
-        style={styles.backButton}
-        onPress={() => router.back()}
-        accessibilityLabel={language === 'en' ? 'Go back' : 'Rudi nyuma'}
-      >
-        <Ionicons name="arrow-back" size={24} color="black" />
-      </TouchableOpacity>
-
-      <Animated.View
-        style={[
-          styles.content,
-          {
-            opacity: fadeAnim,
-            transform: [{ translateY: slideAnim }],
-          },
-        ]}
-      >
-        <View style={styles.header}>
-          <Text style={styles.title}>
-            {language === 'en'
-              ? 'First day of your last period?'
-              : 'Siku ya kwanza ya hedhi yako ya mwisho?'}
-          </Text>
-
-          <Text style={styles.subtitle}>
-            {language === 'en'
-              ? 'Not sure? Give us your best guess.'
-              : 'Huna uhakika? Toa makadirio yako bora.'}
-          </Text>
-        </View>
-
-        {renderDateDisplay()}
-
-        <View style={styles.dateContext}>
-          <Ionicons name="calendar-outline" size={16} color="#FD5A7E" />
-          <Text style={styles.dateContextText}>{getDateContext()}</Text>
-        </View>
-
-        {renderPicker()}
-
+      <View style={styles.container}>
         <TouchableOpacity
-          style={[
-            styles.nextButton,
-            isUpsertingUser && styles.nextButtonDisabled,
-          ]}
-          onPress={handleSave}
-          disabled={isUpsertingUser}
-          accessibilityLabel={language === 'en' ? 'Next' : 'Ijayo'}
+            style={styles.backButton}
+            onPress={() => router.back()}
+            accessibilityLabel={language === 'en' ? 'Go back' : 'Rudi nyuma'}
         >
-          {isUpsertingUser ? (
-            <ActivityIndicator size="small" color="#fff" />
-          ) : (
-            <Text style={styles.nextButtonText}>
-              {language === 'en' ? 'NEXT' : 'IJAYO'}
-            </Text>
-          )}
+          <Ionicons name="arrow-back" size={24} color="black" />
         </TouchableOpacity>
-      </Animated.View>
-    </View>
+
+        <Animated.View
+            style={[
+              styles.content,
+              {
+                opacity: fadeAnim,
+                transform: [{ translateY: slideAnim }],
+              },
+            ]}
+        >
+          <View style={styles.header}>
+            <Text style={styles.title}>
+              {language === 'en'
+                  ? 'First day of your last period?'
+                  : 'Siku ya kwanza ya hedhi yako ya mwisho?'}
+            </Text>
+
+            <Text style={styles.subtitle}>
+              {language === 'en'
+                  ? 'Not sure? Give us your best guess.'
+                  : 'Huna uhakika? Toa makadirio yako bora.'}
+            </Text>
+          </View>
+
+          {renderDateDisplay()}
+
+          <View style={styles.dateContext}>
+            <Ionicons name="calendar-outline" size={16} color="#FD5A7E" />
+            <Text style={styles.dateContextText}>{getDateContext()}</Text>
+          </View>
+
+          {renderPicker()}
+
+          <TouchableOpacity
+              style={[
+                styles.nextButton,
+                isUpsertingUser && styles.nextButtonDisabled,
+              ]}
+              onPress={handleSave}
+              disabled={isUpsertingUser}
+              accessibilityLabel={language === 'en' ? 'Next' : 'Ijayo'}
+          >
+            {isUpsertingUser ? (
+                <ActivityIndicator size="small" color="#fff" />
+            ) : (
+                <Text style={styles.nextButtonText}>
+                  {language === 'en' ? 'NEXT' : 'IJAYO'}
+                </Text>
+            )}
+          </TouchableOpacity>
+        </Animated.View>
+      </View>
   );
 }
 
@@ -488,6 +505,10 @@ const styles = StyleSheet.create({
     marginTop: 10,
     fontFamily: 'Inter',
   },
+  activeDateSegmentLabel: {
+    color: '#FFFFFF',
+    opacity: 0.9,
+  },
   dateSeparator: {
     paddingHorizontal: 8,
   },
@@ -540,6 +561,26 @@ const styles = StyleSheet.create({
   selectedPickerItemText: {
     color: '#FD5A7E',
     fontWeight: '700',
+  },
+  monthPickerItem: {
+    paddingVertical: 14,
+  },
+  selectedMonthPickerItem: {
+    backgroundColor: '#FFE8EE',
+    borderRadius: 12,
+    marginHorizontal: 10,
+  },
+  monthPickerItemText: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#333333',
+    letterSpacing: 0.3,
+  },
+  selectedMonthPickerItemText: {
+    color: '#FD5A7E',
+    fontWeight: '700',
+    fontSize: 22,
+    letterSpacing: 0.5,
   },
   nextButton: {
     backgroundColor: '#FD5A7E',
