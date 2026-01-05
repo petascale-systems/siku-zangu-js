@@ -164,78 +164,90 @@ export default function UpdatingDOBScreen() {
   };
 
   const renderDateDisplay = () => (
-    <View style={styles.dateDisplay}>
-      <TouchableOpacity
-        style={[
-          styles.dateSegment,
-          activePicker === 'day' && styles.activeDateSegment,
-        ]}
-        onPress={() => setActivePicker('day')}
-      >
-        <Text
-          style={[
-            styles.dateSegmentText,
-            activePicker === 'day' && styles.activeDateSegmentText,
-          ]}
+      <View style={styles.dateDisplay}>
+        <TouchableOpacity
+            style={[
+              styles.dateSegment,
+              activePicker === 'day' && styles.activeDateSegment,
+            ]}
+            onPress={() => setActivePicker('day')}
         >
-          {selectedDay}
-        </Text>
-        <Text style={styles.dateSegmentLabel}>
-          {language === 'en' ? 'DAY' : 'SIKU'}
-        </Text>
-      </TouchableOpacity>
+          <Text
+              style={[
+                styles.dateSegmentText,
+                activePicker === 'day' && styles.activeDateSegmentText,
+              ]}
+          >
+            {selectedDay}
+          </Text>
+          <Text
+              style={[
+                styles.dateSegmentLabel,
+                activePicker === 'day' && styles.activeDateSegmentLabel,
+              ]}
+          >
+            {language === 'en' ? 'DAY' : 'SIKU'}
+          </Text>
+        </TouchableOpacity>
 
-      <View style={styles.dateSeparator}>
-        <Text style={styles.dateSeparatorText}>/</Text>
+        <View style={styles.dateSeparator}>
+          <Text style={styles.dateSeparatorText}>/</Text>
+        </View>
+
+        <TouchableOpacity
+            style={[
+              styles.dateSegment,
+              activePicker === 'month' && styles.activeDateSegment,
+            ]}
+            onPress={() => setActivePicker('month')}
+        >
+          <Text
+              style={[
+                styles.dateSegmentText,
+                activePicker === 'month' && styles.activeDateSegmentText,
+              ]}
+          >
+            {months[selectedMonth].short}
+          </Text>
+          <Text
+              style={[
+                styles.dateSegmentLabel,
+                activePicker === 'month' && styles.activeDateSegmentLabel,
+              ]}
+          >
+            {language === 'en' ? 'MONTH' : 'MWEZI'}
+          </Text>
+        </TouchableOpacity>
+
+        <View style={styles.dateSeparator}>
+          <Text style={styles.dateSeparatorText}>/</Text>
+        </View>
+
+        <TouchableOpacity
+            style={[
+              styles.dateSegment,
+              activePicker === 'year' && styles.activeDateSegment,
+            ]}
+            onPress={() => setActivePicker('year')}
+        >
+          <Text
+              style={[
+                styles.dateSegmentText,
+                activePicker === 'year' && styles.activeDateSegmentText,
+              ]}
+          >
+            {selectedYear}
+          </Text>
+          <Text
+              style={[
+                styles.dateSegmentLabel,
+                activePicker === 'year' && styles.activeDateSegmentLabel,
+              ]}
+          >
+            {language === 'en' ? 'YEAR' : 'MWAKA'}
+          </Text>
+        </TouchableOpacity>
       </View>
-
-      <TouchableOpacity
-        style={[
-          styles.dateSegment,
-          activePicker === 'month' && styles.activeDateSegment,
-        ]}
-        onPress={() => setActivePicker('month')}
-      >
-        <Text
-          style={[
-            styles.dateSegmentText,
-            activePicker === 'month' && styles.activeDateSegmentText,
-          ]}
-        >
-          {months[selectedMonth].short}
-        </Text>
-        <Text style={styles.dateSegmentLabel}>
-          {language === 'en' ? 'MONTH' : 'MWEZI'}
-        </Text>
-      </TouchableOpacity>
-
-      <View style={styles.dateSeparator}>
-        <Text style={styles.dateSeparatorText}>/</Text>
-      </View>
-
-      <TouchableOpacity
-        style={[
-          styles.dateSegment,
-          activePicker === 'year' && styles.activeDateSegment,
-        ]}
-        onPress={() => setActivePicker('year')}
-      >
-        <Text
-          style={[
-            styles.dateSegmentText,
-            activePicker === 'year' && styles.activeDateSegmentText,
-          ]}
-        >
-          {selectedYear}
-        </Text>
-        <Text style={[
-          styles.dateSegmentLabel,
-          activePicker === 'day' && styles.activeDateSegmentLabel,
-        ]}>
-          {language === 'en' ? 'YEAR' : 'MWAKA'}
-        </Text>
-      </TouchableOpacity>
-    </View>
   );
 
   const renderPicker = () => (
@@ -379,9 +391,12 @@ export default function UpdatingDOBScreen() {
           {isUpsertingUser ? (
             <ActivityIndicator size="small" color="#fff" />
           ) : (
-            <Text style={styles.nextButtonText}>
-              {language === 'en' ? 'NEXT' : 'IJAYO'}
-            </Text>
+    <>
+      <Text style={styles.nextButtonText}>
+        {language === 'en' ? 'NEXT' : 'IJAYO'}
+      </Text>
+      <Ionicons name="arrow-forward" size={20} color="#FFFFFF" />
+    </>
           )}
         </TouchableOpacity>
       </Animated.View>
@@ -458,9 +473,13 @@ const styles = StyleSheet.create({
   dateSegmentLabel: {
     fontSize: 12,
     fontWeight: '500',
-    color: '#999999',
+    color: '#000000',
     marginTop: 10,
     fontFamily: 'Inter',
+  },
+  activeDateSegmentLabel: {
+    color: '#FFFFFF',
+    opacity: 0.9,
   },
   dateSeparator: {
     paddingHorizontal: 8,
@@ -502,10 +521,6 @@ const styles = StyleSheet.create({
     color: '#FD5A7E',
     fontWeight: '700',
   },
-  activeDateSegmentLabel: {
-    color: '#FFFFFF',
-    opacity: 0.9,
-  },
   monthPickerItem: {
     paddingVertical: 14,
   },
@@ -542,22 +557,27 @@ const styles = StyleSheet.create({
   },
   nextButton: {
     backgroundColor: '#FD5A7E',
-    fontFamily: 'Inter',
-    fontStyle: 'normal',
-    fontWeight: '600',
-    paddingVertical: 15,
-    borderRadius: 24,
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 14,
+    borderRadius: 24,
     marginTop: 30,
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 4,
+    elevation: 2,
   },
   nextButtonDisabled: {
     backgroundColor: '#FFB6C1',
-    opacity: 0.6,
   },
   nextButtonText: {
-    color: '#fff',
+    color: '#FFFFFF',
     fontWeight: '600',
     fontSize: 16,
     fontStyle: 'normal',
+    fontFamily: 'Inter',
   },
 });
