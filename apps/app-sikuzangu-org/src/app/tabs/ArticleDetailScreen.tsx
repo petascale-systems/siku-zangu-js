@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback, useMemo } from 'react';
 import {
   View,
@@ -12,22 +11,20 @@ import {
 } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useArticle} from '@siku-zangu/react';
+import { useArticle } from '@siku-zangu/react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import RenderHTML from 'react-native-render-html';
+
 const ARTICLE_COVER_IMAGE_API_PATH = (articleId: string) => {
   const baseUrl = 'https://sikuzangu.org/';
   return `${baseUrl}/api/articles/${articleId}/cover-image`;
-}
+};
+
 const translations = {
   en: {
     loadingArticle: 'Loading article...',
     articleNotFound: 'Article not found',
     goBack: 'Go Back',
-    saveArticle: 'Save Article',
-    share: 'Share',
-    relatedArticles: 'Related Articles',
-    comingSoon: 'Coming soon...',
     lastUpdated: 'Last updated:',
     noContent: 'No content available.',
     categories: {
@@ -43,10 +40,6 @@ const translations = {
     loadingArticle: 'Inapakia makala...',
     articleNotFound: 'Makala haijapatikana',
     goBack: 'Rudi Nyuma',
-    saveArticle: 'Hifadhi Makala',
-    share: 'Shiriki',
-    relatedArticles: 'Makala Zinazohusiana',
-    comingSoon: 'Inakuja hivi karibuni...',
     lastUpdated: 'Imesasishwa mwisho:',
     noContent: 'Hakuna maudhui yanayopatikana.',
     categories: {
@@ -59,6 +52,7 @@ const translations = {
     },
   },
 };
+
 const categoryIcons: Record<
     string,
     {
@@ -95,10 +89,12 @@ const categoryIcons: Record<
     color: '#FF4C7C',
   },
 };
+
 interface ArticleCoverImageProps {
   coverImageUrl: string | null;
   title?: string;
 }
+
 const ArticleCoverImage: React.FC<ArticleCoverImageProps> = ({
                                                                coverImageUrl,
                                                                title,
@@ -109,6 +105,7 @@ const ArticleCoverImage: React.FC<ArticleCoverImageProps> = ({
   if (!coverImageUrl) {
     return null;
   }
+
   return (
       <View style={styles.coverImageContainer}>
         {loading && (
@@ -159,6 +156,7 @@ export default function ArticleDetailScreen() {
   const t = translations[language];
 
   const handleBack = useCallback(() => router.back(), [router]);
+
   const getIconForCategory = useCallback((category?: string) => {
     const iconData =
         categoryIcons[category || 'default'] || categoryIcons['default'];
@@ -172,6 +170,7 @@ export default function ArticleDetailScreen() {
         />
     );
   }, []);
+
   const getCoverImageUrl = useCallback(
       (articleId?: string, hasCoverImage?: boolean) => {
         if (!articleId || !hasCoverImage) return null;
@@ -180,6 +179,7 @@ export default function ArticleDetailScreen() {
       },
       []
   );
+
   const formatDate = useCallback(
       (dateString?: string) => {
         if (!dateString) return '';
@@ -193,6 +193,7 @@ export default function ArticleDetailScreen() {
       },
       [language]
   );
+
   const getCategoryName = useCallback(
       (category: string) => {
         return t.categories[category as keyof typeof t.categories] || category;
@@ -204,6 +205,7 @@ export default function ArticleDetailScreen() {
       () => getCoverImageUrl(article?.article_id, article?.kv?.has_cover_image),
       [article, getCoverImageUrl]
   );
+
   const tagsStyles = {
     body: {
       color: '#333',
@@ -328,7 +330,6 @@ export default function ArticleDetailScreen() {
             >
               <Ionicons name="arrow-back" size={24} color="#000" />
             </TouchableOpacity>
-            <View style={{ width: 32 }} />
           </View>
           <View style={styles.centerContent}>
             <ActivityIndicator size="large" color="#FF4C7C" />
@@ -337,6 +338,7 @@ export default function ArticleDetailScreen() {
         </View>
     );
   }
+
   if (!article) {
     return (
         <View style={[styles.container, { paddingTop: insets.top }]}>
@@ -349,7 +351,6 @@ export default function ArticleDetailScreen() {
             >
               <Ionicons name="arrow-back" size={24} color="#000" />
             </TouchableOpacity>
-            <View style={{ width: 32 }} />
           </View>
           <View style={styles.centerContent}>
             <Ionicons name="alert-circle-outline" size={64} color="#FF4C7C" />
@@ -366,6 +367,7 @@ export default function ArticleDetailScreen() {
         </View>
     );
   }
+
   return (
       <View style={[styles.container, { paddingTop: insets.top }]}>
         <View style={styles.header}>
@@ -377,28 +379,14 @@ export default function ArticleDetailScreen() {
           >
             <Ionicons name="arrow-back" size={24} color="#000" />
           </TouchableOpacity>
-          <View style={styles.headerRight}>
-            <TouchableOpacity
-                style={styles.iconButton}
-                accessibilityRole="button"
-                accessibilityLabel={t.saveArticle}
-            >
-              <Ionicons name="bookmark-outline" size={22} color="#FF4C7C" />
-            </TouchableOpacity>
-            <TouchableOpacity
-                style={styles.iconButton}
-                accessibilityRole="button"
-                accessibilityLabel={t.share}
-            >
-              <Ionicons name="share-social-outline" size={22} color="#FF4C7C" />
-            </TouchableOpacity>
-          </View>
         </View>
+
         <ScrollView
             showsVerticalScrollIndicator={false}
             contentContainerStyle={styles.scrollContent}
         >
           <ArticleCoverImage coverImageUrl={coverImageUrl} title={article.kv?.title} />
+
           <View style={styles.articleHeader}>
             {article.kv?.category && (
                 <View style={styles.categoryBadge}>
@@ -410,9 +398,11 @@ export default function ArticleDetailScreen() {
                   </Text>
                 </View>
             )}
+
             <Text style={styles.articleTitle}>
               {article.kv?.title || 'Untitled Article'}
             </Text>
+
             <View style={styles.metaContainer}>
               {article.kv?.author && (
                   <View style={styles.metaItem}>
@@ -429,6 +419,7 @@ export default function ArticleDetailScreen() {
                   </View>
               )}
             </View>
+
             {article.kv?.status && article.kv.status !== 'published' && (
                 <View
                     style={[
@@ -443,7 +434,9 @@ export default function ArticleDetailScreen() {
                 </View>
             )}
           </View>
+
           <View style={styles.divider} />
+
           <View style={styles.contentContainer}>
             {article.kv?.content ? (
                 <RenderHTML
@@ -459,40 +452,18 @@ export default function ArticleDetailScreen() {
                 <Text style={styles.noContentText}>{t.noContent}</Text>
             )}
           </View>
+
           <View style={styles.footer}>
             <Text style={styles.footerText}>
               {t.lastUpdated}{' '}
               {formatDate(article.updated_at || article.created_at)}
             </Text>
           </View>
-          <View style={styles.actionButtons}>
-            <TouchableOpacity
-                style={styles.actionButton}
-                accessibilityRole="button"
-                accessibilityLabel={t.saveArticle}
-            >
-              <Ionicons name="bookmark-outline" size={20} color="#FF4C7C" />
-              <Text style={styles.actionButtonText}>{t.saveArticle}</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-                style={[styles.actionButton, styles.shareButton]}
-                accessibilityRole="button"
-                accessibilityLabel={t.share}
-            >
-              <Ionicons name="share-social-outline" size={20} color="#fff" />
-              <Text style={[styles.actionButtonText, { color: '#fff' }]}>
-                {t.share}
-              </Text>
-            </TouchableOpacity>
-          </View>
-          <View style={styles.relatedSection}>
-            <Text style={styles.relatedTitle}>{t.relatedArticles}</Text>
-            <Text style={styles.relatedSubtext}>{t.comingSoon}</Text>
-          </View>
         </ScrollView>
       </View>
   );
 }
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -507,13 +478,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFF5F2',
   },
   backButton: {
-    padding: 6,
-  },
-  headerRight: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  iconButton: {
     padding: 6,
   },
   scrollContent: {
@@ -665,47 +629,5 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#999',
     fontStyle: 'italic',
-  },
-  actionButtons: {
-    flexDirection: 'row',
-    gap: 12,
-    paddingHorizontal: 20,
-    marginTop: 12,
-  },
-  actionButton: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#fff',
-    borderRadius: 24,
-    paddingVertical: 14,
-    gap: 8,
-    borderWidth: 1.5,
-    borderColor: '#FF4C7C',
-  },
-  shareButton: {
-    backgroundColor: '#FF4C7C',
-    borderColor: '#FF4C7C',
-  },
-  actionButtonText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#FF4C7C',
-  },
-  relatedSection: {
-    paddingHorizontal: 20,
-    paddingTop: 32,
-    paddingBottom: 16,
-  },
-  relatedTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#333',
-    marginBottom: 8,
-  },
-  relatedSubtext: {
-    fontSize: 14,
-    color: '#999',
   },
 });
