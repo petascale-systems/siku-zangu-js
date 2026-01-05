@@ -59,42 +59,6 @@ const translations = {
   },
 };
 
-const categoryIcons: Record<
-    string,
-    {
-      icon: string;
-      library: 'Ionicons' | 'MaterialCommunityIcons';
-      color: string;
-    }
-> = {
-  'body-education': {
-    icon: 'brain',
-    library: 'MaterialCommunityIcons',
-    color: '#FF4C7C',
-  },
-  'birth-control': {
-    icon: 'male-female-outline',
-    library: 'Ionicons',
-    color: '#9C27B0',
-  },
-  lifestyle: { icon: 'flower-outline', library: 'Ionicons', color: '#FF6B9D' },
-  nutrition: {
-    icon: 'nutrition-outline',
-    library: 'Ionicons',
-    color: '#4CAF50',
-  },
-  'mental-health': {
-    icon: 'happy-outline',
-    library: 'Ionicons',
-    color: '#2196F3',
-  },
-  exercise: { icon: 'fitness-outline', library: 'Ionicons', color: '#FF9800' },
-  default: {
-    icon: 'document-text-outline',
-    library: 'Ionicons',
-    color: '#FF4C7C',
-  },
-};
 
 const stripHtml = (html: string): string => {
   return html.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').trim();
@@ -190,26 +154,6 @@ export default function InsightsScreen() {
       },
       [router, language, userId]
   );
-  const getIconForCategory = useCallback((category?: string) => {
-    const iconData =
-        categoryIcons[category || 'default'] || categoryIcons['default'];
-    const IconComponent =
-        iconData.library === 'Ionicons' ? Ionicons : MaterialCommunityIcons;
-    return (
-        <IconComponent
-            name={iconData.icon as any}
-            size={26}
-            color={iconData.color}
-        />
-    );
-  }, []);
-  const getCategoryName = useCallback(
-      (category?: string) => {
-        if (!category) return '';
-        return t.categories[category as keyof typeof t.categories] || category;
-      },
-      [t]
-  );
   const renderArticleCard = useCallback(
       (article: Article, index: number) => {
         const isPink = index % 3 === 1;
@@ -233,11 +177,6 @@ export default function InsightsScreen() {
                   title={article.kv?.title}
                   style={styles.coverImage}
               />
-              <View
-                  style={[styles.iconCircle, isPink && { backgroundColor: '#fff' }]}
-              >
-                {getIconForCategory(article.kv?.category)}
-              </View>
               <Text style={[styles.title, isPink && { color: '#fff' }]}>
                 {article.kv?.title || t.untitledArticle}
               </Text>
@@ -272,7 +211,7 @@ export default function InsightsScreen() {
             </TouchableOpacity>
         );
       },
-      [handleArticlePress, getIconForCategory, t]
+      [handleArticlePress]
   );
   const articles = useMemo(
       () => articlesPage?.items || [],

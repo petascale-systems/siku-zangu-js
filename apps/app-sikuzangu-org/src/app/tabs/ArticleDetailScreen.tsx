@@ -53,43 +53,6 @@ const translations = {
   },
 };
 
-const categoryIcons: Record<
-    string,
-    {
-      icon: string;
-      library: 'Ionicons' | 'MaterialCommunityIcons';
-      color: string;
-    }
-> = {
-  'body-education': {
-    icon: 'brain',
-    library: 'MaterialCommunityIcons',
-    color: '#FF4C7C',
-  },
-  'birth-control': {
-    icon: 'male-female-outline',
-    library: 'Ionicons',
-    color: '#9C27B0',
-  },
-  lifestyle: { icon: 'flower-outline', library: 'Ionicons', color: '#FF6B9D' },
-  nutrition: {
-    icon: 'nutrition-outline',
-    library: 'Ionicons',
-    color: '#4CAF50',
-  },
-  'mental-health': {
-    icon: 'happy-outline',
-    library: 'Ionicons',
-    color: '#2196F3',
-  },
-  exercise: { icon: 'fitness-outline', library: 'Ionicons', color: '#FF9800' },
-  default: {
-    icon: 'document-text-outline',
-    library: 'Ionicons',
-    color: '#FF4C7C',
-  },
-};
-
 interface ArticleCoverImageProps {
   coverImageUrl: string | null;
   title?: string;
@@ -156,21 +119,6 @@ export default function ArticleDetailScreen() {
   const t = translations[language];
 
   const handleBack = useCallback(() => router.back(), [router]);
-
-  const getIconForCategory = useCallback((category?: string) => {
-    const iconData =
-        categoryIcons[category || 'default'] || categoryIcons['default'];
-    const IconComponent =
-        iconData.library === 'Ionicons' ? Ionicons : MaterialCommunityIcons;
-    return (
-        <IconComponent
-            name={iconData.icon as any}
-            size={32}
-            color={iconData.color}
-        />
-    );
-  }, []);
-
   const getCoverImageUrl = useCallback(
       (articleId?: string, hasCoverImage?: boolean) => {
         if (!articleId || !hasCoverImage) return null;
@@ -194,12 +142,7 @@ export default function ArticleDetailScreen() {
       [language]
   );
 
-  const getCategoryName = useCallback(
-      (category: string) => {
-        return t.categories[category as keyof typeof t.categories] || category;
-      },
-      [t]
-  );
+
 
   const coverImageUrl = useMemo(
       () => getCoverImageUrl(article?.article_id, article?.kv?.has_cover_image),
@@ -388,16 +331,7 @@ export default function ArticleDetailScreen() {
           <ArticleCoverImage coverImageUrl={coverImageUrl} title={article.kv?.title} />
 
           <View style={styles.articleHeader}>
-            {article.kv?.category && (
-                <View style={styles.categoryBadge}>
-                  <View style={styles.categoryIcon}>
-                    {getIconForCategory(article.kv.category)}
-                  </View>
-                  <Text style={styles.categoryText}>
-                    {getCategoryName(article.kv.category)}
-                  </Text>
-                </View>
-            )}
+
 
             <Text style={styles.articleTitle}>
               {article.kv?.title || 'Untitled Article'}
@@ -542,28 +476,6 @@ const styles = StyleSheet.create({
   articleHeader: {
     paddingHorizontal: 20,
     paddingTop: 20,
-  },
-  categoryBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    alignSelf: 'flex-start',
-    backgroundColor: '#fff',
-    borderRadius: 20,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    marginBottom: 16,
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  categoryIcon: {
-    marginRight: 6,
-  },
-  categoryText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#333',
   },
   articleTitle: {
     fontSize: 26,
