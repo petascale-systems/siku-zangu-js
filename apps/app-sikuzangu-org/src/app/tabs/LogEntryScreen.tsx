@@ -177,9 +177,14 @@ export default function LogEntry() {
 
   const [lastPeriodDays, setLastPeriodDays] = useState<number | null>(null);
   const [avgCycleDays, setAvgCycleDays] = useState<number | null>(null);
-  const [selectedDay, setSelectedDay] = useState<number | null>(null);
-  const [selectedMonth, setSelectedMonth] = useState<number | null>(null);
-  const [selectedYear, setSelectedYear] = useState<number | null>(null);
+  const currentDate = new Date();
+  const [selectedDay, setSelectedDay] = useState<number>(currentDate.getDate());
+  const [selectedMonth, setSelectedMonth] = useState<number>(
+      currentDate.getMonth()
+  );
+  const [selectedYear, setSelectedYear] = useState<number>(
+      currentDate.getFullYear()
+  );
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(50)).current;
@@ -291,6 +296,14 @@ export default function LogEntry() {
       date.getDate() === day
     );
   };
+  const isNotFutureDate = (
+      day: number,
+      month: number,
+      year: number
+  ): boolean => {
+    const selectedDate = new Date(year, month, day);
+    return selectedDate <= currentDate;
+  };
 
   const renderPicker = (
     label: string,
@@ -375,6 +388,15 @@ export default function LogEntry() {
         language === 'en'
           ? 'Please select a valid date.'
           : 'Tafadhali chagua tarehe sahihi.'
+      );
+      return;
+    }
+    if (!isNotFutureDate(selectedDay, selectedMonth, selectedYear)) {
+      Alert.alert(
+          language === 'en' ? 'Future Date' : 'Tarehe ya baadaye',
+          language === 'en'
+              ? 'Period date cannot be in the future'
+              : 'Tarehe ya hedhi haiwezi kuwa siku zijazo'
       );
       return;
     }
