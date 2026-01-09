@@ -10,6 +10,11 @@
     "icon": "./assets/images/icon.png",
     "scheme": "org.sikuzangu.app",
     "userInterfaceStyle": "automatic",
+    "extra": {
+      "eas": {
+        "projectId": "b3b6b92e-a74e-21c8-7f02-1dc1e238fdc0"
+      }
+    },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "org.sikuzangu.app",
@@ -54,6 +59,15 @@
       "expo-asset",
       "@react-native-firebase/app",
       "@react-native-firebase/crashlytics",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/notification-icon.png",
+          "color": "#E66386",
+          "sounds": [],
+          "mode": "production"
+        }
+      ],
       [
         "expo-splash-screen",
         {

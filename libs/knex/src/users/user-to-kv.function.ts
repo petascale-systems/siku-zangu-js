@@ -61,6 +61,9 @@ export function userToKv(user: User) {
     if (user.kv.medication_logs !== undefined) {
         kvs.push({k: 'medication_logs', v: JSON.stringify(user.kv.medication_logs),});
     }
+    if (user.kv.fcm_token !== undefined) {
+        kvs.push(<Kv>{k: 'fcm_token', v: user.kv.medication_logs?.toString(),});
+    }
 
     return kvs;
 }

@@ -28,10 +28,10 @@ export const USER_TABLE_COLUMN_ALIASES = {
     selected_symptoms: '_selected_symptoms.v',
     selected_moods: '_selected_moods.v',
     selected_medications: '_selected_medications.v',
-
     symptom_logs: '_symptom_logs.v',
     mood_logs: '_mood_logs.v',
     medication_logs: '_medication_logs.v',
+    fcm_token: '_fcm_token.v'
 };
 export const USER_TABLE_COLUMN_ALIASES_WITH_PIN = {
     ...USER_TABLE_COLUMN_ALIASES,
@@ -60,7 +60,8 @@ export function buildUserTableJoins(db: Knex | Knex.Transaction) {
         .leftJoin('s_user_kv as _selected_medications', DATABASE.raw('_selected_medications.id_user=_u.id_user and _selected_medications.k="selected_medications"'))
         .leftJoin('s_user_kv as _symptom_logs', DATABASE.raw('_symptom_logs.id_user=_u.id_user and _symptom_logs.k="symptom_logs"'))
         .leftJoin('s_user_kv as _mood_logs', DATABASE.raw('_mood_logs.id_user=_u.id_user and _mood_logs.k="mood_logs"'))
-        .leftJoin('s_user_kv as _medication_logs', DATABASE.raw('_medication_logs.id_user=_u.id_user and _medication_logs.k="medication_logs"'));
+        .leftJoin('s_user_kv as _medication_logs', DATABASE.raw('_medication_logs.id_user=_u.id_user and _medication_logs.k="medication_logs"'))
+        .leftJoin('s_user_kv as _fcm_token', DATABASE.raw('_fcm_token.id_user=_u.id_user and _fcm_token.k="fcm_token"'));
 }
 
 export function buildUserTableJoinsWithPin(db: Knex | Knex.Transaction) {
@@ -95,6 +96,7 @@ export function rowToUser(row: any) {
             symptom_logs: row.symptom_logs ? JSON.parse(row.symptom_logs) : [],
             mood_logs: row.mood_logs ? JSON.parse(row.mood_logs) : [],
             medication_logs: row.medication_logs ? JSON.parse(row.medication_logs) : [],
+            fcm_token: row.fcm_token ?? undefined,
         },
     } as User;
 }

@@ -3,7 +3,9 @@ import {useCallback, useEffect, useRef, useState} from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {Animated, ImageBackground, StyleSheet} from 'react-native';
 import {ACCESS_TOKEN_KEY} from '@siku-zangu/react';
-import {useFirebaseCrashlytics, isOnboardingComplete} from '@siku-zangu/react-native';
+import {isOnboardingComplete, useNotifications} from '@siku-zangu/react-native';
+// Import Firebase config to initialize it before anything else
+import '../firebase.config';
 
 const LANGUAGE_KEY = 'language';
 
@@ -12,8 +14,27 @@ export default function RootLayout() {
     const fadeAnim = useRef(new Animated.Value(1)).current;
     const router = useRouter();
     const [userId, setUserId] = useState<string | null>(null);
-    const crashlytics = useFirebaseCrashlytics(userId);
     const hasNavigated = useRef(false);
+
+    // 🔔 Register for push notifications when userId is available
+    const {expoPushToken, notification} = useNotifications(userId || undefined);
+
+    // Log when push token is obtained
+    useEffect(() => {
+        if (expoPushToken && userId) {
+            console.log('✅ Push token registered for user:', userId);
+            console.log('📱 Token:', expoPushToken);
+        }
+    }, [expoPushToken, userId]);
+
+    // Handle notification taps
+    useEffect(() => {
+        if (notification) {
+            console.log('🔔 Notification received:', notification);
+            // TODO: Handle navigation based on notification data
+            // Example: router.push(`/some-screen/${notification.request.content.data.id}`);
+        }
+    }, [notification]);
 
     const onLayoutRootView = useCallback(async () => {
         if (appIsReady) {
@@ -39,6 +60,7 @@ export default function RootLayout() {
                 if (!savedLanguage) {
                     await AsyncStorage.setItem(LANGUAGE_KEY, currentLanguage);
                 }
+
                 if (!storedToken) {
                     hasNavigated.current = true;
                     router.replace({
@@ -47,6 +69,7 @@ export default function RootLayout() {
                     });
                     return;
                 }
+
                 const parsed = JSON.parse(storedToken);
                 if (!parsed?.token || !parsed?.expires_in || !parsed?.user?.user_id) {
                     await AsyncStorage.removeItem(ACCESS_TOKEN_KEY);
@@ -57,6 +80,7 @@ export default function RootLayout() {
                     });
                     return;
                 }
+
                 const isExpired = Date.now() >= parsed.expires_in * 1000;
                 if (isExpired) {
                     await AsyncStorage.removeItem(ACCESS_TOKEN_KEY);
@@ -67,7 +91,11 @@ export default function RootLayout() {
                     });
                     return;
                 }
+
+                // Set userId to trigger notification registration
+                console.log('👤 User authenticated:', parsed.user.user_id);
                 setUserId(parsed.user.user_id);
+
                 const hasCompletedOnboarding = await isOnboardingComplete(parsed.user.user_id);
 
                 hasNavigated.current = true;
@@ -90,9 +118,7 @@ export default function RootLayout() {
                 }
 
             } catch (error) {
-                if (error instanceof Error) {
-                    crashlytics.logError(error, 'Bootstrap failed');
-                }
+                console.error('❌ Bootstrap error:', error);
                 await AsyncStorage.removeItem(ACCESS_TOKEN_KEY);
                 const lang = await AsyncStorage.getItem(LANGUAGE_KEY);
                 hasNavigated.current = true;
