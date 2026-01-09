@@ -278,14 +278,16 @@ export default function LoginScreen() {
                         accessibilityLabel={language === 'en' ? 'Login' : 'Ingia'}
                     />
                 </View>
-                <Text style={styles.footer}>
-                    {language === 'en' ? "Don't have an Account? " : 'Huna akaunti? '}
+                <View style={styles.footerContainer}>
+                    <Text style={styles.footer}>
+                        {language === 'en' ? "Don't have an Account?" : 'Huna akaunti?'}
+                    </Text>
                     <TouchableOpacity onPress={goToRegister}>
                         <Text style={styles.loginLink}>
                             {language === 'en' ? 'Register' : 'Jisajili'}
                         </Text>
                     </TouchableOpacity>
-                </Text>
+                </View>
             </ScrollView>
         </KeyboardAvoidingView>
     );
@@ -386,6 +388,10 @@ const styles = StyleSheet.create({
         fontSize: 14,
         alignSelf: 'flex-end',
         marginBottom: 10,
+    },
+    footerContainer: {
+        alignItems: 'center',
+        gap: 4,
     },
     footer: {
         fontSize: 14,

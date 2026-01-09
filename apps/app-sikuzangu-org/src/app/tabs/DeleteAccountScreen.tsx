@@ -60,6 +60,7 @@ export default function DeleteAccountScreen() {
                     onPress: () =>
                       router.push({
                         pathname: '/auth/LoginScreen',
+                        params: { lang: language },
                       }),
                   },
                 ]

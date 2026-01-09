@@ -147,18 +147,18 @@ export default function LogEntry() {
           { value: 11, label: 'Dec' },
         ]
       : [
-          { value: 0, label: 'Jan' },
-          { value: 1, label: 'Feb' },
-          { value: 2, label: 'Mac' },
-          { value: 3, label: 'Apr' },
+          { value: 0, label: 'Januari' },
+          { value: 1, label: 'Februari' },
+          { value: 2, label: 'Machi' },
+          { value: 3, label: 'Aprili' },
           { value: 4, label: 'Mei' },
-          { value: 5, label: 'Jun' },
-          { value: 6, label: 'Jul' },
-          { value: 7, label: 'Ago' },
-          { value: 8, label: 'Sep' },
-          { value: 9, label: 'Okt' },
-          { value: 10, label: 'Nov' },
-          { value: 11, label: 'Des' },
+          { value: 5, label: 'Juni' },
+          { value: 6, label: 'Julai' },
+          { value: 7, label: 'Agosti' },
+          { value: 8, label: 'Septemba' },
+          { value: 9, label: 'Oktoba' },
+          { value: 10, label: 'Novemba' },
+          { value: 11, label: 'Desemba' },
         ];
 
   const [initialLastPeriodDays, setInitialLastPeriodDays] = useState<
