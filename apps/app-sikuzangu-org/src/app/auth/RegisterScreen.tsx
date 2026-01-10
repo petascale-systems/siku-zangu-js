@@ -263,16 +263,18 @@ export default function RegisterScreen() {
                 accessibilityLabel={language === 'en' ? 'Register' : 'Jisajili'}
             />
           </View>
-          <Text style={styles.footer}>
-            {language === 'en'
-                ? 'Already have an Account? '
-                : 'Tayari una Akaunti? '}
-            <TouchableOpacity onPress={goToLogin}>
-              <Text style={styles.loginLink}>
-                {language === 'en' ? 'Log in' : 'Ingia'}
-              </Text>
-            </TouchableOpacity>
-          </Text>
+         <View style={styles.footerContainer}>
+           <Text style={styles.footer}>
+             {language === 'en'
+                 ? 'Already have an Account? '
+                 : 'Tayari una Akaunti? '}
+           </Text>
+             <TouchableOpacity onPress={goToLogin}>
+               <Text style={styles.loginLink}>
+                 {language === 'en' ? 'Log in' : 'Ingia'}
+               </Text>
+             </TouchableOpacity>
+         </View>
         </ScrollView>
       </KeyboardAvoidingView>
   );
@@ -378,11 +380,13 @@ const styles = StyleSheet.create({
     borderColor: '#E66386',
     borderWidth: 2,
   },
+  footerContainer: {
+    alignItems: 'center',
+    gap: 4,
+  },
   footer: {
     fontSize: 14,
-    fontStyle: 'normal',
     fontWeight: '500',
-    fontFamily: 'Inter',
     textAlign: 'center',
     color: '#666666',
   },

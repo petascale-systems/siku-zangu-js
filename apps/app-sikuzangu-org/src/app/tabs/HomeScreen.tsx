@@ -251,7 +251,7 @@ export default function Dashboard() {
           </View>
           <View style={styles.insightCard}>
             <View style={styles.insightHeader}>
-              <Ionicons name="bulb-outline" size={22} color="#8B2F47" />
+              <Ionicons name="bulb-outline" size={22} color="#D97706" />
               <Text style={styles.insightTitle}>
                 {language === 'sw' ? 'Dondoo za leo' : "Today's Insight"} -{' '}
                 {todayInsight.phase} {language === 'sw' ? 'Awamu' : 'Phase'}
@@ -471,13 +471,13 @@ const styles = StyleSheet.create({
   },
   insightTitle: {
     fontWeight: '700',
-    color: '#5D1F35',
+    color: '#333333',
     fontSize: 15,
     fontStyle: 'normal',
     flexShrink: 1,
   },
   insightText: {
-    color: '#5D1F35',
+    color: '#333333',
     lineHeight: 20,
     fontSize: 14,
     fontFamily: 'inter',
@@ -485,7 +485,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   cycleDayText: {
-    color: '#7A2D45',
+    color: '#333333',
     fontSize: 12,
     fontWeight: '700',
     marginTop: 8,

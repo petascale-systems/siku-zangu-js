@@ -268,7 +268,7 @@ export default function UpdatingNamesScreen() {
                     <Text style={styles.nextButtonText}>
                       {language === 'en' ? 'Next' : 'Ijayo'}
                     </Text>
-                    <Ionicons name="arrow-forward" size={20} color="#FD5A7E" />
+                    <Ionicons name="arrow-forward" size={20} color="#FFFFFF" />
                   </>
               )}
             </TouchableOpacity>
@@ -385,9 +385,7 @@ const styles = StyleSheet.create({
     textDecorationLine: 'underline',
   },
   nextButton: {
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1.5,
-    borderColor: '#FD5A7E',
+    backgroundColor: '#FD5A7E',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -402,11 +400,10 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   nextButtonDisabled: {
-    backgroundColor: '#F5F5F5',
-    borderColor: '#CCCCCC',
+    backgroundColor: '#FFB6C1',
   },
   nextButtonText: {
-    color: '#FD5A7E',
+    color: '#FFFFFF',
     fontWeight: '600',
     fontSize: 16,
     fontStyle: 'normal',

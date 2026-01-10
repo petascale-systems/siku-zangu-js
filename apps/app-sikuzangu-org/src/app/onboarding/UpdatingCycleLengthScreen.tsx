@@ -247,9 +247,12 @@ export default function UpdatingCycleLengthScreen() {
           {isUpsertingUser ? (
             <ActivityIndicator size="small" color="#fff" />
           ) : (
-            <Text style={styles.nextButtonText}>
-              {language === 'en' ? 'NEXT' : 'IJAYO'}
-            </Text>
+              <>
+                <Text style={styles.nextButtonText}>
+                  {language === 'en' ? 'Next' : 'Ijayo'}
+                </Text>
+                <Ionicons name="arrow-forward" size={20} color="#FFFFFF" />
+              </>
           )}
         </TouchableOpacity>
       </Animated.View>
@@ -422,22 +425,27 @@ const styles = StyleSheet.create({
   },
   nextButton: {
     backgroundColor: '#FD5A7E',
-    fontFamily: 'Inter',
-    fontStyle: 'normal',
-    fontWeight: '600',
-    paddingVertical: 15,
-    borderRadius: 24,
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 14,
+    borderRadius: 24,
     marginTop: 30,
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 4,
+    elevation: 2,
   },
   nextButtonDisabled: {
     backgroundColor: '#FFB6C1',
-    opacity: 0.6,
   },
   nextButtonText: {
-    color: '#fff',
+    color: '#FFFFFF',
     fontWeight: '600',
     fontSize: 16,
     fontStyle: 'normal',
+    fontFamily: 'Inter',
   },
 });
