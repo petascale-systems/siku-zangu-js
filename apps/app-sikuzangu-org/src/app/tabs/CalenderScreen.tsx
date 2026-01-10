@@ -49,7 +49,7 @@ export default function Calendar() {
         const isStale = timeSinceLastFetch > STALE_TIME;
 
         if (userId && refetchUser && (!user || isStale)) {
-          refetchUser();
+          refetchUser(true);
           lastFetchRef.current = now;
         } else {
         }
@@ -96,7 +96,7 @@ export default function Calendar() {
   const handleBack = () => router.back();
   const handleRefresh = useCallback(async () => {
     if (refetchUser) {
-      await refetchUser();
+      await refetchUser(true);
       lastFetchRef.current = Date.now();
     }
   }, [refetchUser]);

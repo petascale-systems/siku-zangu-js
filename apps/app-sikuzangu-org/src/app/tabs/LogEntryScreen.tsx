@@ -1,8 +1,7 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
-  Animated,
   ScrollView,
   StyleSheet,
   Text,
@@ -14,7 +13,7 @@ import { useUser } from '@siku-zangu/react';
 import { UserKv } from '@siku-zangu/core';
 import { NavbarCard } from '@siku-zangu/react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 
 export default function LogEntry() {
   const router = useRouter();
@@ -23,7 +22,7 @@ export default function LogEntry() {
 
   const language = (params.lang as 'en' | 'sw') ?? 'en';
   const userId = params.userId as string;
-  const { upsertUser, isUpsertingUser, user, refetchUser } = useUser(userId);
+  const { upsertUser, isUpsertingUser, user, fetchError } = useUser(userId);
 
   const symptoms = [
     {
@@ -84,12 +83,6 @@ export default function LogEntry() {
       color: '#F3E5F5',
     },
     {
-      key: 'in_love',
-      label: language === 'en' ? 'In Love' : 'Mapenzi',
-      emoji: '😍',
-      color: '#FCE4EC',
-    },
-    {
       key: 'calm',
       label: language === 'en' ? 'Calm' : 'Utulivu',
       emoji: '😌',
@@ -131,45 +124,41 @@ export default function LogEntry() {
   ];
 
   const months =
-    language === 'en'
-      ? [
-          { value: 0, label: 'Jan' },
-          { value: 1, label: 'Feb' },
-          { value: 2, label: 'Mar' },
-          { value: 3, label: 'Apr' },
-          { value: 4, label: 'May' },
-          { value: 5, label: 'Jun' },
-          { value: 6, label: 'Jul' },
-          { value: 7, label: 'Aug' },
-          { value: 8, label: 'Sep' },
-          { value: 9, label: 'Oct' },
-          { value: 10, label: 'Nov' },
-          { value: 11, label: 'Dec' },
-        ]
-      : [
-          { value: 0, label: 'Januari' },
-          { value: 1, label: 'Februari' },
-          { value: 2, label: 'Machi' },
-          { value: 3, label: 'Aprili' },
-          { value: 4, label: 'Mei' },
-          { value: 5, label: 'Juni' },
-          { value: 6, label: 'Julai' },
-          { value: 7, label: 'Agosti' },
-          { value: 8, label: 'Septemba' },
-          { value: 9, label: 'Oktoba' },
-          { value: 10, label: 'Novemba' },
-          { value: 11, label: 'Desemba' },
-        ];
+      language === 'en'
+          ? [
+            { value: 0, label: 'Jan' },
+            { value: 1, label: 'Feb' },
+            { value: 2, label: 'Mar' },
+            { value: 3, label: 'Apr' },
+            { value: 4, label: 'May' },
+            { value: 5, label: 'Jun' },
+            { value: 6, label: 'Jul' },
+            { value: 7, label: 'Aug' },
+            { value: 8, label: 'Sep' },
+            { value: 9, label: 'Oct' },
+            { value: 10, label: 'Nov' },
+            { value: 11, label: 'Dec' },
+          ]
+          : [
+            { value: 0, label: 'Januari' },
+            { value: 1, label: 'Februari' },
+            { value: 2, label: 'Machi' },
+            { value: 3, label: 'Aprili' },
+            { value: 4, label: 'Mei' },
+            { value: 5, label: 'Juni' },
+            { value: 6, label: 'Julai' },
+            { value: 7, label: 'Agosti' },
+            { value: 8, label: 'Septemba' },
+            { value: 9, label: 'Oktoba' },
+            { value: 10, label: 'Novemba' },
+            { value: 11, label: 'Desemba' },
+          ];
 
-  const [initialLastPeriodDays, setInitialLastPeriodDays] = useState<
-    number | null
-  >(null);
-  const [initialAvgCycleDays, setInitialAvgCycleDays] = useState<number | null>(
-    null
-  );
-  const [initialDay, setInitialDay] = useState<number | null>(null);
-  const [initialMonth, setInitialMonth] = useState<number | null>(null);
-  const [initialYear, setInitialYear] = useState<number | null>(null);
+  const initialValuesRef = useRef({
+    lastPeriodDays: null as number | null,
+    avgCycleDays: null as number | null,
+    prevCycleStart: '' as string,
+  });
 
   const [selectedSymptoms, setSelectedSymptoms] = useState<string[]>([]);
   const [selectedMoods, setSelectedMoods] = useState<string[]>([]);
@@ -186,78 +175,45 @@ export default function LogEntry() {
       currentDate.getFullYear()
   );
 
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const slideAnim = useRef(new Animated.Value(50)).current;
-
-  useFocusEffect(
-    useCallback(() => {
-      if (userId && refetchUser) {
-        refetchUser();
-      }
-    }, [userId, refetchUser])
-  );
-
   useEffect(() => {
     if (!user?.kv) return;
     const periodDays = user.kv.avg_period_length_days ?? null;
     const cycleDays = user.kv.avg_cycle_length_days ?? null;
+    const prevDate = user.kv.prev_cycle_start_date || '';
 
     setLastPeriodDays(periodDays);
     setAvgCycleDays(cycleDays);
-    setInitialLastPeriodDays(periodDays);
-    setInitialAvgCycleDays(cycleDays);
-
-    if (user.kv.prev_cycle_start_date) {
-      const d = new Date(user.kv.prev_cycle_start_date);
+    initialValuesRef.current = {
+      lastPeriodDays: periodDays,
+      avgCycleDays: cycleDays,
+      prevCycleStart: prevDate,
+    };
+    if (prevDate) {
+      const d = new Date(prevDate);
       const day = d.getDate();
       const month = d.getMonth();
       const year = d.getFullYear();
-
       setSelectedDay(day);
       setSelectedMonth(month);
       setSelectedYear(year);
-      setInitialDay(day);
-      setInitialMonth(month);
-      setInitialYear(year);
     }
-
     setSelectedSymptoms([]);
     setSelectedMoods([]);
     setSelectedMedications([]);
   }, [user]);
-
-  const getDaysInMonth = (month: number | null, year: number | null) => {
-    if (month === null || !year) return 31;
+  const getDaysInMonth = (month: number, year: number) => {
     return new Date(year, month + 1, 0).getDate();
   };
-
   const days = Array.from(
-    { length: getDaysInMonth(selectedMonth, selectedYear) },
-    (_, i) => i + 1
+      { length: getDaysInMonth(selectedMonth, selectedYear) },
+      (_, i) => i + 1
   );
-
   const currentYear = new Date().getFullYear();
-  const years = Array.from({ length: 3 }, (_, i) => currentYear - 1 + i);
-
-  useEffect(() => {
-    Animated.parallel([
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 600,
-        useNativeDriver: true,
-      }),
-      Animated.timing(slideAnim, {
-        toValue: 0,
-        duration: 500,
-        useNativeDriver: true,
-      }),
-    ]).start();
-  }, []);
-
+  const years = Array.from({ length: currentYear - 1949 }, (_, i) => 1950 + i);
   const toggleSelection = (
-    list: string[],
-    setList: (v: string[]) => void,
-    key: string
+      list: string[],
+      setList: (v: string[]) => void,
+      key: string
   ) => {
     if (list.includes(key)) {
       setList(list.filter((item) => item !== key));
@@ -265,138 +221,128 @@ export default function LogEntry() {
       setList([...list, key]);
     }
   };
-
-  const onDateChange = (type: 'day' | 'month' | 'year', value: number) => {
-    if (type === 'day') setSelectedDay(value);
-    if (type === 'month') setSelectedMonth(value);
-    if (type === 'year') setSelectedYear(value);
+  const formatDateToISO = (): string => {
+    const monthStr = String(selectedMonth + 1).padStart(2, '0');
+    const dayStr = String(selectedDay).padStart(2, '0');
+    return `${selectedYear}-${monthStr}-${dayStr}`;
   };
-
-  const formatDateToISO = (
-    day: number | null,
-    month: number | null,
-    year: number | null
-  ): string => {
-    if (!day || month === null || !year) return '';
-    const monthStr = String(month + 1).padStart(2, '0');
-    const dayStr = String(day).padStart(2, '0');
-    return `${year}-${monthStr}-${dayStr}`;
-  };
-
-  const isValidDate = (
-    day: number | null,
-    month: number | null,
-    year: number | null
-  ): boolean => {
-    if (!day || month === null || !year) return false;
-    const date = new Date(year, month, day);
+  const isValidDate = (): boolean => {
+    const date = new Date(selectedYear, selectedMonth, selectedDay);
     return (
-      date.getFullYear() === year &&
-      date.getMonth() === month &&
-      date.getDate() === day
+        date.getFullYear() === selectedYear &&
+        date.getMonth() === selectedMonth &&
+        date.getDate() === selectedDay
     );
   };
-  const isNotFutureDate = (
-      day: number,
-      month: number,
-      year: number
-  ): boolean => {
-    const selectedDate = new Date(year, month, day);
+  const isNotFutureDate = (): boolean => {
+    const selectedDate = new Date(selectedYear, selectedMonth, selectedDay);
     return selectedDate <= currentDate;
   };
-
+  const hasChanges = (): boolean => {
+    const currentDateStr = formatDateToISO();
+    return (
+        selectedSymptoms.length > 0 ||
+        selectedMoods.length > 0 ||
+        selectedMedications.length > 0 ||
+        lastPeriodDays !== initialValuesRef.current.lastPeriodDays ||
+        avgCycleDays !== initialValuesRef.current.avgCycleDays ||
+        currentDateStr !== initialValuesRef.current.prevCycleStart
+    );
+  };
   const renderPicker = (
-    label: string,
-    options: number[],
-    selectedValue: number | null,
-    onSelect: (value: number) => void,
-    isMonth = false
+      label: string,
+      options: number[],
+      selectedValue: number,
+      onSelect: (value: number) => void,
+      isMonth = false
   ) => {
     return (
-      <View style={styles.pickerContainer}>
-        <Text style={styles.pickerLabel}>{label}</Text>
-        <ScrollView
-          style={styles.pickerScroll}
-          showsVerticalScrollIndicator={false}
-          nestedScrollEnabled={true}
-        >
-          {options.map((option) => {
-            const displayValue = isMonth
-              ? months[option].label
-              : option.toString();
-            const isSelected = selectedValue === option;
+        <View style={styles.pickerContainer}>
+          <Text style={styles.pickerLabel}>{label}</Text>
+          <ScrollView
+              style={styles.pickerScroll}
+              showsVerticalScrollIndicator={false}
+              nestedScrollEnabled={true}
+          >
+            {options.map((option) => {
+              const displayValue = isMonth
+                  ? months[option].label
+                  : option.toString();
+              const isSelected = selectedValue === option;
 
-            return (
-              <TouchableOpacity
-                key={option}
-                style={[
-                  styles.pickerOption,
-                  isSelected && styles.pickerOptionSelected,
-                ]}
-                onPress={() => onSelect(option)}
-              >
-                <Text
-                  style={[
-                    styles.pickerOptionText,
-                    isSelected && styles.pickerOptionTextSelected,
-                  ]}
-                >
-                  {displayValue}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
-        </ScrollView>
-      </View>
+              return (
+                  <TouchableOpacity
+                      key={option}
+                      style={[
+                        styles.pickerOption,
+                        isSelected && styles.pickerOptionSelected,
+                      ]}
+                      onPress={() => onSelect(option)}
+                  >
+                    <Text
+                        style={[
+                          styles.pickerOptionText,
+                          isSelected && styles.pickerOptionTextSelected,
+                        ]}
+                    >
+                      {displayValue}
+                    </Text>
+                  </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
+        </View>
     );
   };
 
   const handleSave = async () => {
     if (!lastPeriodDays) {
       Alert.alert(
-        language === 'en' ? 'Missing Information' : 'Taarifa Zinazokosekana',
-        language === 'en'
-          ? 'Please select how long your last period lasted.'
-          : 'Tafadhali chagua muda gani hedhi yako ya mwisho ilidumu.'
+          language === 'en' ? 'Missing Information' : 'Taarifa Zinazokosekana',
+          language === 'en'
+              ? 'Please select how long your last period lasted.'
+              : 'Tafadhali chagua muda gani hedhi yako ya mwisho ilidumu.'
       );
       return;
     }
 
     if (!avgCycleDays) {
       Alert.alert(
-        language === 'en' ? 'Missing Information' : 'Taarifa Zinazokosekana',
-        language === 'en'
-          ? 'Please select your average menstrual cycle length.'
-          : 'Tafadhali chagua urefu wa wastani wa mzunguko wako wa hedhi.'
+          language === 'en' ? 'Missing Information' : 'Taarifa Zinazokosekana',
+          language === 'en'
+              ? 'Please select your average menstrual cycle length.'
+              : 'Tafadhali chagua urefu wa wastani wa mzunguko wako wa hedhi.'
       );
       return;
     }
 
-    if (!selectedDay || selectedMonth === null || !selectedYear) {
+    if (!isValidDate()) {
       Alert.alert(
-        language === 'en' ? 'Invalid Date' : 'Tarehe si Sahihi',
-        language === 'en'
-          ? 'Please select a complete date for your last period start.'
-          : 'Tafadhali chagua tarehe kamili ya kuanza kwa hedhi yako ya mwisho.'
+          language === 'en' ? 'Invalid Date' : 'Tarehe si Sahihi',
+          language === 'en'
+              ? 'Please select a valid date.'
+              : 'Tafadhali chagua tarehe sahihi.'
       );
       return;
     }
 
-    if (!isValidDate(selectedDay, selectedMonth, selectedYear)) {
-      Alert.alert(
-        language === 'en' ? 'Invalid Date' : 'Tarehe si Sahihi',
-        language === 'en'
-          ? 'Please select a valid date.'
-          : 'Tafadhali chagua tarehe sahihi.'
-      );
-      return;
-    }
-    if (!isNotFutureDate(selectedDay, selectedMonth, selectedYear)) {
+    if (!isNotFutureDate()) {
       Alert.alert(
           language === 'en' ? 'Future Date' : 'Tarehe ya baadaye',
           language === 'en'
               ? 'Period date cannot be in the future'
               : 'Tarehe ya hedhi haiwezi kuwa siku zijazo'
+      );
+      return;
+    }
+
+    // Check if there are any changes
+    if (!hasChanges()) {
+      Alert.alert(
+          language === 'en' ? 'No Changes' : 'Hakuna Mabadiliko',
+          language === 'en'
+              ? 'Nothing new to save.'
+              : 'Hakuna mabadiliko ya kuhifadhi.'
       );
       return;
     }
@@ -426,62 +372,39 @@ export default function LogEntry() {
       }));
       updates.medication_logs = [...existingLogs, ...newLogs];
     }
-    if (lastPeriodDays !== initialLastPeriodDays) {
+    if (lastPeriodDays !== initialValuesRef.current.lastPeriodDays) {
       updates.avg_period_length_days = lastPeriodDays;
     }
-    if (avgCycleDays !== initialAvgCycleDays) {
+    if (avgCycleDays !== initialValuesRef.current.avgCycleDays) {
       updates.avg_cycle_length_days = avgCycleDays;
     }
-    const newDateStr = formatDateToISO(
-      selectedDay,
-      selectedMonth,
-      selectedYear
-    );
-    const initialDateStr = formatDateToISO(
-      initialDay,
-      initialMonth,
-      initialYear
-    );
-    if (newDateStr !== initialDateStr) {
+    const newDateStr = formatDateToISO();
+    if (newDateStr !== initialValuesRef.current.prevCycleStart) {
       updates.prev_cycle_start_date = newDateStr;
-    }
-
-    if (Object.keys(updates).length === 0) {
-      Alert.alert(
-        language === 'en' ? 'No Changes' : 'Hakuna Mabadiliko',
-        language === 'en'
-          ? 'No changes to save.'
-          : 'Hakuna mabadiliko ya kuhifadhi.'
-      );
-      return;
     }
 
     try {
       await upsertUser({ kv: updates });
 
       Alert.alert(
-        language === 'en' ? 'Success' : 'Mafanikio',
-        language === 'en' ? 'Log saved successfully!' : 'Rekodi imehifadhiwa!',
-        [{ text: 'OK' }]
+          language === 'en' ? 'Success' : 'Mafanikio',
+          language === 'en' ? 'Log saved successfully!' : 'Rekodi imehifadhiwa!',
+          [{ text: 'OK' }]
       );
+
+      // Update initial values ref
+      initialValuesRef.current = {
+        lastPeriodDays,
+        avgCycleDays,
+        prevCycleStart: newDateStr,
+      };
 
       setSelectedSymptoms([]);
       setSelectedMoods([]);
       setSelectedMedications([]);
-      if (updates.avg_period_length_days !== undefined) {
-        setInitialLastPeriodDays(lastPeriodDays);
-      }
-      if (updates.avg_cycle_length_days !== undefined) {
-        setInitialAvgCycleDays(avgCycleDays);
-      }
-      if (updates.prev_cycle_start_date) {
-        setInitialDay(selectedDay);
-        setInitialMonth(selectedMonth);
-        setInitialYear(selectedYear);
-      }
-      if (refetchUser) {
-        await refetchUser();
-      }
+
+      // Navigate back automatically
+      router.back();
     } catch (e: any) {
       Alert.alert('Error', e.message || 'Failed to save');
     }
@@ -490,27 +413,27 @@ export default function LogEntry() {
   const handleBack = () => router.back();
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={handleBack}>
-          <Ionicons name="arrow-back" size={24} color="#000" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>
-          {language === 'en' ? 'Log Entry' : 'Rekodi'}
-        </Text>
-        <View style={{ width: 32 }} />
-      </View>
+      <View style={[styles.container, { paddingTop: insets.top }]}>
+        <View style={styles.header}>
+          <TouchableOpacity style={styles.backButton} onPress={handleBack}>
+            <Ionicons name="arrow-back" size={24} color="#000" />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>
+            {language === 'en' ? 'Log Entry' : 'Rekodi'}
+          </Text>
+          <View style={{ width: 32 }} />
+        </View>
 
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}
-        nestedScrollEnabled={true}
-      >
-        <Animated.View
-          style={{
-            opacity: fadeAnim,
-            transform: [{ translateY: slideAnim }],
-          }}
+        {fetchError && (
+            <View style={styles.errorContainer}>
+              <Text style={styles.errorText}>{fetchError}</Text>
+            </View>
+        )}
+
+        <ScrollView
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={styles.scrollContent}
+            nestedScrollEnabled={true}
         >
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>
@@ -520,43 +443,43 @@ export default function LogEntry() {
               {symptoms.map((item) => {
                 const isSelected = selectedSymptoms.includes(item.key);
                 return (
-                  <TouchableOpacity
-                    key={item.key}
-                    style={[
-                      styles.symptomCard,
-                      isSelected && styles.symptomCardSelected,
-                    ]}
-                    onPress={() =>
-                      toggleSelection(
-                        selectedSymptoms,
-                        setSelectedSymptoms,
-                        item.key
-                      )
-                    }
-                  >
-                    <Ionicons
-                      name={item.icon as any}
-                      size={24}
-                      color={item.color}
-                    />
-                    <Text
-                      style={[
-                        styles.symptomLabel,
-                        isSelected && styles.symptomLabelSelected,
-                      ]}
+                    <TouchableOpacity
+                        key={item.key}
+                        style={[
+                          styles.symptomCard,
+                          isSelected && styles.symptomCardSelected,
+                        ]}
+                        onPress={() =>
+                            toggleSelection(
+                                selectedSymptoms,
+                                setSelectedSymptoms,
+                                item.key
+                            )
+                        }
                     >
-                      {item.label}
-                    </Text>
-                    {isSelected && (
-                      <View style={styles.checkmark}>
-                        <Ionicons
-                          name="checkmark-circle"
-                          size={20}
-                          color="#FD5A7E"
-                        />
-                      </View>
-                    )}
-                  </TouchableOpacity>
+                      <Ionicons
+                          name={item.icon as any}
+                          size={24}
+                          color={item.color}
+                      />
+                      <Text
+                          style={[
+                            styles.symptomLabel,
+                            isSelected && styles.symptomLabelSelected,
+                          ]}
+                      >
+                        {item.label}
+                      </Text>
+                      {isSelected && (
+                          <View style={styles.checkmark}>
+                            <Ionicons
+                                name="checkmark-circle"
+                                size={20}
+                                color="#FD5A7E"
+                            />
+                          </View>
+                      )}
+                    </TouchableOpacity>
                 );
               })}
             </View>
@@ -569,56 +492,56 @@ export default function LogEntry() {
             <View style={styles.cycleDetailCard}>
               <Text style={styles.cycleDetailLabel}>
                 {language === 'en'
-                  ? 'Last Period lasted for?'
-                  : 'Hedhi ya mwisho ilidumu kwa?'}
+                    ? 'Last Period lasted for?'
+                    : 'Hedhi ya mwisho ilidumu kwa?'}
               </Text>
               <View style={styles.daysSelector}>
                 {[5, 6, 7, 8, 9].map((day) => (
-                  <TouchableOpacity
-                    key={day}
-                    style={[
-                      styles.dayCircle,
-                      lastPeriodDays === day && styles.dayCircleSelected,
-                    ]}
-                    onPress={() => setLastPeriodDays(day)}
-                  >
-                    <Text
-                      style={[
-                        styles.dayText,
-                        lastPeriodDays === day && styles.dayTextSelected,
-                      ]}
+                    <TouchableOpacity
+                        key={day}
+                        style={[
+                          styles.dayCircle,
+                          lastPeriodDays === day && styles.dayCircleSelected,
+                        ]}
+                        onPress={() => setLastPeriodDays(day)}
                     >
-                      {day}
-                    </Text>
-                  </TouchableOpacity>
+                      <Text
+                          style={[
+                            styles.dayText,
+                            lastPeriodDays === day && styles.dayTextSelected,
+                          ]}
+                      >
+                        {day}
+                      </Text>
+                    </TouchableOpacity>
                 ))}
               </View>
             </View>
             <View style={styles.cycleDetailCard}>
               <Text style={styles.cycleDetailLabel}>
                 {language === 'en'
-                  ? 'My average menstrual cycle is?'
-                  : 'Mzunguko wangu wa wastani ni?'}
+                    ? 'My average menstrual cycle is?'
+                    : 'Mzunguko wangu wa wastani ni?'}
               </Text>
               <View style={styles.daysSelector}>
                 {[26, 27, 28, 29, 30].map((day) => (
-                  <TouchableOpacity
-                    key={day}
-                    style={[
-                      styles.dayCircle,
-                      avgCycleDays === day && styles.dayCircleSelected,
-                    ]}
-                    onPress={() => setAvgCycleDays(day)}
-                  >
-                    <Text
-                      style={[
-                        styles.dayText,
-                        avgCycleDays === day && styles.dayTextSelected,
-                      ]}
+                    <TouchableOpacity
+                        key={day}
+                        style={[
+                          styles.dayCircle,
+                          avgCycleDays === day && styles.dayCircleSelected,
+                        ]}
+                        onPress={() => setAvgCycleDays(day)}
                     >
-                      {day}
-                    </Text>
-                  </TouchableOpacity>
+                      <Text
+                          style={[
+                            styles.dayText,
+                            avgCycleDays === day && styles.dayTextSelected,
+                          ]}
+                      >
+                        {day}
+                      </Text>
+                    </TouchableOpacity>
                 ))}
               </View>
             </View>
@@ -632,33 +555,33 @@ export default function LogEntry() {
               {medications.map((item) => {
                 const isSelected = selectedMedications.includes(item.key);
                 return (
-                  <TouchableOpacity
-                    key={item.key}
-                    style={[
-                      styles.medicationCard,
-                      { backgroundColor: item.color },
-                      isSelected && styles.medicationCardSelected,
-                    ]}
-                    onPress={() =>
-                      toggleSelection(
-                        selectedMedications,
-                        setSelectedMedications,
-                        item.key
-                      )
-                    }
-                  >
-                    <Text style={styles.medicationIcon}>{item.icon}</Text>
-                    <Text style={styles.medicationLabel}>{item.label}</Text>
-                    {isSelected && (
-                      <View style={styles.medicationCheck}>
-                        <Ionicons
-                          name="checkmark-circle"
-                          size={18}
-                          color="#FD5A7E"
-                        />
-                      </View>
-                    )}
-                  </TouchableOpacity>
+                    <TouchableOpacity
+                        key={item.key}
+                        style={[
+                          styles.medicationCard,
+                          { backgroundColor: item.color },
+                          isSelected && styles.medicationCardSelected,
+                        ]}
+                        onPress={() =>
+                            toggleSelection(
+                                selectedMedications,
+                                setSelectedMedications,
+                                item.key
+                            )
+                        }
+                    >
+                      <Text style={styles.medicationIcon}>{item.icon}</Text>
+                      <Text style={styles.medicationLabel}>{item.label}</Text>
+                      {isSelected && (
+                          <View style={styles.medicationCheck}>
+                            <Ionicons
+                                name="checkmark-circle"
+                                size={18}
+                                color="#FD5A7E"
+                            />
+                          </View>
+                      )}
+                    </TouchableOpacity>
                 );
               })}
             </View>
@@ -672,27 +595,27 @@ export default function LogEntry() {
               {moods.map((item) => {
                 const isSelected = selectedMoods.includes(item.key);
                 return (
-                  <TouchableOpacity
-                    key={item.key}
-                    style={[
-                      styles.moodCard,
-                      { backgroundColor: item.color },
-                      isSelected && styles.moodCardSelected,
-                    ]}
-                    onPress={() =>
-                      toggleSelection(selectedMoods, setSelectedMoods, item.key)
-                    }
-                  >
-                    <Text style={styles.moodEmoji}>{item.emoji}</Text>
-                    <Text
-                      style={[
-                        styles.moodLabel,
-                        isSelected && styles.moodLabelSelected,
-                      ]}
+                    <TouchableOpacity
+                        key={item.key}
+                        style={[
+                          styles.moodCard,
+                          { backgroundColor: item.color },
+                          isSelected && styles.moodCardSelected,
+                        ]}
+                        onPress={() =>
+                            toggleSelection(selectedMoods, setSelectedMoods, item.key)
+                        }
                     >
-                      {item.label}
-                    </Text>
-                  </TouchableOpacity>
+                      <Text style={styles.moodEmoji}>{item.emoji}</Text>
+                      <Text
+                          style={[
+                            styles.moodLabel,
+                            isSelected && styles.moodLabelSelected,
+                          ]}
+                      >
+                        {item.label}
+                      </Text>
+                    </TouchableOpacity>
                 );
               })}
             </View>
@@ -701,66 +624,62 @@ export default function LogEntry() {
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>
               {language === 'en'
-                ? 'Start date of last period'
-                : 'Tarehe ya kuanza kwa hedhi ya mwisho'}
+                  ? 'Start date of last period'
+                  : 'Tarehe ya kuanza kwa hedhi ya mwisho'}
             </Text>
             <View style={styles.datePreview}>
               <Ionicons name="calendar-outline" size={18} color="#FF6B9D" />
               <Text style={styles.datePreviewText}>
-                {selectedDay && selectedMonth !== null && selectedYear
-                  ? `${selectedDay} ${months[selectedMonth].label} ${selectedYear}`
-                  : language === 'en'
-                  ? 'Select date'
-                  : 'Chagua tarehe'}
+                {`${selectedDay} ${months[selectedMonth].label} ${selectedYear}`}
               </Text>
             </View>
             <View style={styles.datePickerRow}>
               {renderPicker(
-                language === 'en' ? 'Day' : 'Siku',
-                days,
-                selectedDay,
-                (v) => onDateChange('day', v)
+                  language === 'en' ? 'Day' : 'Siku',
+                  days,
+                  selectedDay,
+                  setSelectedDay
               )}
               {renderPicker(
-                language === 'en' ? 'Month' : 'Mwezi',
-                Array.from({ length: 12 }, (_, i) => i),
-                selectedMonth,
-                (v) => onDateChange('month', v),
-                true
+                  language === 'en' ? 'Month' : 'Mwezi',
+                  Array.from({ length: 12 }, (_, i) => i),
+                  selectedMonth,
+                  setSelectedMonth,
+                  true
               )}
               {renderPicker(
-                language === 'en' ? 'Year' : 'Mwaka',
-                years,
-                selectedYear,
-                (v) => onDateChange('year', v)
+                  language === 'en' ? 'Year' : 'Mwaka',
+                  years,
+                  selectedYear,
+                  setSelectedYear
               )}
             </View>
           </View>
 
           <TouchableOpacity
-            style={[
-              styles.saveButton,
-              isUpsertingUser && styles.saveButtonDisabled,
-            ]}
-            onPress={handleSave}
-            disabled={isUpsertingUser}
-            accessibilityLabel={language === 'en' ? 'SAVE' : 'HIFADHI'}
+              style={[
+                styles.saveButton,
+                isUpsertingUser && styles.saveButtonDisabled,
+              ]}
+              onPress={handleSave}
+              disabled={isUpsertingUser}
+              accessibilityLabel={language === 'en' ? 'SAVE' : 'HIFADHI'}
           >
             {isUpsertingUser ? (
-              <ActivityIndicator size="small" color="#fff" />
+                <ActivityIndicator size="small" color="#fff" />
             ) : (
-              <Text style={styles.saveButtonText}>
-                {language === 'en' ? 'SAVE' : 'HIFADHI'}
-              </Text>
+                <Text style={styles.saveButtonText}>
+                  {language === 'en' ? 'SAVE' : 'HIFADHI'}
+                </Text>
             )}
           </TouchableOpacity>
-        </Animated.View>
-      </ScrollView>
+        </ScrollView>
 
-      <NavbarCard language={language} userId={userId} />
-    </View>
+        <NavbarCard language={language} userId={userId} />
+      </View>
   );
 }
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -781,6 +700,17 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#FD5A7E',
   },
+  errorContainer: {
+    padding: 16,
+    backgroundColor: '#FFEBEE',
+    margin: 16,
+    borderRadius: 12,
+  },
+  errorText: {
+    color: '#E53E3E',
+    textAlign: 'center',
+    fontWeight: '600',
+  },
   scrollContent: {
     paddingHorizontal: 20,
     paddingTop: 20,
@@ -795,7 +725,6 @@ const styles = StyleSheet.create({
     color: '#333333',
     fontFamily: 'Inter',
     fontStyle: 'normal',
-
     marginBottom: 15,
   },
   symptomsGrid: {
