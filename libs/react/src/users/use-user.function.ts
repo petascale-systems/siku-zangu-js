@@ -6,6 +6,7 @@ import {getJSON} from '../get-json.function';
 import {postJSON} from '../post-json.function';
 import {patchJSON} from '../patch-json.function';
 import {deleteJSON} from '../delete-json.function';
+import {useFocusEffect} from "expo-router";
 
 export const USERS_API_PATH = '/api/users';
 export const USER_BY_ID_API_PATH = (id: string) => `/api/users/${id}`;
@@ -39,50 +40,64 @@ export async function changeUserPin(
 }
 
 export function useUser(userId?: string) {
-    const [user, setUser] = useState<User>();
-    const [isFetchingUser, setIsFetchingUser] = useState(false);
+    const [user, setUser] = useState<User | undefined>(undefined);
+    const [isInitialFetching, setIsInitialFetching] = useState(true); // Only for first load
+    const [isBackgroundFetching, setIsBackgroundFetching] = useState(false); // Silent
     const [isUpsertingUser, setIsUpsertingUser] = useState(false);
     const [isDeletingUser, setIsDeletingUser] = useState(false);
     const [isChangingPin, setIsChangingPin] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
     const isFetchingRef = useRef(false);
+    const lastFetchRef = useRef<number>(0);
+    const MIN_DELAY_BETWEEN_REFRESHES = 30000;
 
-    const refetchUser = useCallback(async () => {
-        if (!userId || isFetchingRef.current) {
-            return;
-        }
+    const refetchUser = useCallback(async (isBackground = false) => {
+        if (!userId || isFetchingRef.current) return;
 
         isFetchingRef.current = true;
-        setIsFetchingUser(true);
+        const setLoading = isBackground ? setIsBackgroundFetching : setIsInitialFetching;
+        setLoading(true);
         setError(null);
 
         try {
             const fetchedUser = await fetchUserById(userId);
             setUser(fetchedUser);
+            lastFetchRef.current = Date.now();
             return fetchedUser;
         } catch (e: any) {
             const errorMessage = (e as APIError).message || 'Failed to fetch user';
             setError(errorMessage);
             throw e;
         } finally {
-            setIsFetchingUser(false);
+            setLoading(false);
             isFetchingRef.current = false;
         }
     }, [userId]);
+    useEffect(() => {
+        if (!userId) return;
+        refetchUser(false);
+    }, [userId, refetchUser]);
+    useFocusEffect(
+        useCallback(() => {
+            if (!userId || isFetchingRef.current) return;
+            const now = Date.now();
+            if (now - lastFetchRef.current > MIN_DELAY_BETWEEN_REFRESHES) {
+                refetchUser(true);
+            }
+        }, [userId, refetchUser])
+    );
 
-    async function upsertUser(userData: User): Promise<User | void> {
+    async function upsertUser(userData: Partial<User>): Promise<User | void> {
         setIsUpsertingUser(true);
         setError(null);
         try {
             let upsertedUser: User | void;
-
             if (userId) {
-                upsertedUser = await updateUser(userId, userData);
+                upsertedUser = await updateUser(userId, userData as User);
             } else {
                 upsertedUser = await createUser(userData as User);
             }
-
             if (upsertedUser) setUser(upsertedUser);
             return upsertedUser;
         } catch (e: any) {
@@ -90,14 +105,12 @@ export function useUser(userId?: string) {
                 (e as APIError).issues?.map((issue: any) => issue.error).join(', ') ||
                 (e as APIError).message ||
                 'Failed to upsert user';
-
             setError(errorMessage);
             throw e;
         } finally {
             setIsUpsertingUser(false);
         }
     }
-
     async function deleteUser(): Promise<void> {
         if (!userId) {
             return;
@@ -138,30 +151,11 @@ export function useUser(userId?: string) {
             setIsChangingPin(false);
         }
     }
-
-    useEffect(() => {
-        if (!userId) {
-            return;
-        }
-        setIsFetchingUser(true);
-        setError(null);
-
-        fetchUserById(userId)
-            .then((fetchedUser) => {
-                setUser(fetchedUser);
-            })
-            .catch((e: any) => {
-                const errorMessage = (e as APIError).message || 'Failed to fetch user';
-                setError(errorMessage);
-            })
-            .finally(() => {
-                setIsFetchingUser(false);
-            });
-    }, [userId]);
-
     return {
         user,
-        isFetchingUser,
+        isFetchingUser: isInitialFetching || isBackgroundFetching,
+        isInitialFetching,
+        isBackgroundFetching,
         isUpsertingUser,
         isDeletingUser,
         isChangingPin,
@@ -169,6 +163,6 @@ export function useUser(userId?: string) {
         upsertUser,
         deleteUser,
         changePin,
-        refetchUser,
+        refetchUser: (b: boolean) => refetchUser(false),
     };
 }

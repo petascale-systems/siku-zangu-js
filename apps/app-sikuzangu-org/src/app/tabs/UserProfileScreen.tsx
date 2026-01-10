@@ -14,7 +14,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAccessToken, useUser } from '@siku-zangu/react';
 import { NavbarCard } from '@siku-zangu/react-native';
 import { useLocalSearchParams, useRouter, useFocusEffect } from 'expo-router';
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 interface MenuItem {
   id: string;
@@ -25,76 +25,57 @@ interface MenuItem {
   onPress?: () => void;
   isDanger?: boolean;
 }
-
 export default function Profile() {
   const router = useRouter();
   const params = useLocalSearchParams();
   const insets = useSafeAreaInsets();
   const language = (params.lang as 'en' | 'sw') ?? 'en';
   const userId = params.userId as string;
-  const { user, refetchUser, isFetchingUser } = useUser(userId);
+  const { user, refetchUser, isInitialFetching, isBackgroundFetching, error } = useUser(userId);
   const { logoutUser, isLoggingOut } = useAccessToken();
-
   const lastFetchRef = useRef<number>(0);
-  const STALE_TIME = 3 * 60 * 1000;
-  const LANGUAGE_KEY = 'language';
+  const MIN_DELAY_BETWEEN_REFRESHES = 30000;
 
   useFocusEffect(
       useCallback(() => {
+        if (!userId || !refetchUser) return;
         const now = Date.now();
-        const timeSinceLastFetch = now - lastFetchRef.current;
-        const isStale = timeSinceLastFetch > STALE_TIME;
-
-        if (userId && refetchUser && (!user || isStale)) {
-          refetchUser();
+        if (now - lastFetchRef.current > MIN_DELAY_BETWEEN_REFRESHES) {
+          refetchUser(true);
           lastFetchRef.current = now;
         }
-      }, [userId, refetchUser, user])
+      }, [userId, refetchUser])
   );
 
   const handleRefresh = useCallback(async () => {
     if (refetchUser) {
-      await refetchUser();
+      await refetchUser(true);
       lastFetchRef.current = Date.now();
     }
   }, [refetchUser]);
 
   const memberSince = user?.created_at
-      ? new Date(user.created_at).toLocaleDateString('en-US', {
-        month: 'short',
-        year: 'numeric',
-      })
+      ? new Date(user.created_at).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
       : 'Aug 2025';
 
   function handleLogout() {
     Alert.alert(
         language === 'sw' ? 'Thibitisha Kutoka' : 'Confirm Logout',
-        language === 'sw'
-            ? 'Je, una uhakika unataka kutoka?'
-            : 'Are you sure you want to logout?',
+        language === 'sw' ? 'Je, una uhakika unataka kutoka?' : 'Are you sure you want to logout?',
         [
-          {
-            text: language === 'sw' ? 'Ghairi' : 'Cancel',
-            style: 'cancel',
-          },
+          { text: language === 'sw' ? 'Ghairi' : 'Cancel', style: 'cancel' },
           {
             text: language === 'sw' ? 'Ondoka' : 'Logout',
             style: 'destructive',
             onPress: async () => {
               try {
-                await AsyncStorage.setItem(LANGUAGE_KEY, language);
+                await AsyncStorage.setItem('language', language);
                 await logoutUser();
-                router.replace({
-                  pathname: '/auth/LoginScreen',
-                  params: { lang: language },
-                });
+                router.replace({ pathname: '/auth/LoginScreen', params: { lang: language } });
               } catch (e: any) {
                 Alert.alert(
                     language === 'sw' ? 'Hitilafu' : 'Error',
-                    e.message ||
-                    (language === 'sw'
-                        ? 'Imeshindwa kutoka. Tafadhali jaribu tena.'
-                        : 'Failed to logout. Please try again.')
+                    e.message || (language === 'sw' ? 'Imeshindwa kutoka. Tafadhali jaribu tena.' : 'Failed to logout. Please try again.')
                 );
               }
             },
@@ -110,11 +91,7 @@ export default function Profile() {
       iconName: 'language',
       label: 'Change Language',
       labelSw: 'Badilisha Lugha',
-      onPress: () =>
-          router.push({
-            pathname: '/LanguageScreen',
-            params: { lang: language, userId },
-          }),
+      onPress: () => router.push({ pathname: '/LanguageScreen', params: { lang: language, userId } }),
     },
     {
       id: 'notifications',
@@ -122,11 +99,7 @@ export default function Profile() {
       iconName: 'notifications',
       label: 'Notifications',
       labelSw: 'Taarifa',
-      onPress: () =>
-          router.push({
-            pathname: 'tabs/NotificationsScreen',
-            params: { lang: language, userId },
-          }),
+      onPress: () => router.push({ pathname: 'tabs/NotificationsScreen', params: { lang: language, userId } }),
     },
     {
       id: 'pin',
@@ -134,11 +107,7 @@ export default function Profile() {
       iconName: 'lock-closed',
       label: 'Change PIN',
       labelSw: 'Badilisha PIN',
-      onPress: () =>
-          router.push({
-            pathname: 'tabs/ChangePinScreen',
-            params: { lang: language, userId },
-          }),
+      onPress: () => router.push({ pathname: 'tabs/ChangePinScreen', params: { lang: language, userId } }),
     },
     {
       id: 'profile',
@@ -146,11 +115,7 @@ export default function Profile() {
       iconName: 'create-outline',
       label: 'Update Personal Info',
       labelSw: 'Sasisha Taarifa za Yangu',
-      onPress: () =>
-          router.push({
-            pathname: 'tabs/LogEntryScreen',
-            params: { lang: language, userId },
-          }),
+      onPress: () => router.push({ pathname: 'tabs/UpdatingPersonalInfoScreen', params: { lang: language, userId } }),
     },
     {
       id: 'cycle',
@@ -158,11 +123,7 @@ export default function Profile() {
       iconName: 'calendar',
       label: 'Update Cycle Info',
       labelSw: 'Sasisha Taarifa za Mzunguko',
-      onPress: () =>
-          router.push({
-            pathname: 'tabs/LogEntryScreen',
-            params: { lang: language, userId },
-          }),
+      onPress: () => router.push({ pathname: 'tabs/LogEntryScreen', params: { lang: language, userId } }),
     },
     {
       id: 'delete',
@@ -170,11 +131,7 @@ export default function Profile() {
       iconName: 'person-remove',
       label: 'Delete Account',
       labelSw: 'Futa Akaunti',
-      onPress: () =>
-          router.push({
-            pathname: 'tabs/DeleteAccountScreen',
-            params: { lang: language, userId },
-          }),
+      onPress: () => router.push({ pathname: 'tabs/DeleteAccountScreen', params: { lang: language, userId } }),
     },
     {
       id: 'logout',
@@ -208,7 +165,7 @@ export default function Profile() {
     }
   };
 
-  if (!user && isFetchingUser) {
+  if (isInitialFetching && !user) {
     return (
         <View style={[styles.container, { paddingTop: insets.top, justifyContent: 'center', alignItems: 'center' }]}>
           <ActivityIndicator size="large" color="#FF5C8D" />
@@ -218,24 +175,41 @@ export default function Profile() {
         </View>
     );
   }
-
+  if (error && !user) {
+    return (
+        <View style={[styles.container, { paddingTop: insets.top, justifyContent: 'center', alignItems: 'center' }]}>
+          <Text style={{ color: '#E66386', fontSize: 16, textAlign: 'center', marginBottom: 16 }}>
+            {language === 'sw' ? 'Hitilafu: ' : 'Error: '}
+            {error}
+          </Text>
+          <TouchableOpacity onPress={() => refetchUser(true)}>
+            <Text style={{ color: '#FF597D', fontWeight: 'bold' }}>
+              {language === 'sw' ? 'Jaribu tena' : 'Retry'}
+            </Text>
+          </TouchableOpacity>
+        </View>
+    );
+  }
   return (
       <View style={[styles.container, { paddingTop: insets.top }]}>
+        {isBackgroundFetching && (
+            <View style={{ position: 'absolute', top: insets.top + 60, left: 0, right: 0, alignItems: 'center', zIndex: 10 }}>
+              <ActivityIndicator size="small" color="#FF5C8D" />
+            </View>
+        )}
+
         <View style={styles.header}>
           <TouchableOpacity style={styles.backButton} onPress={handleBack}>
             <Ionicons name="arrow-back" size={24} color="#000" />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>
-            {language === 'sw' ? 'Wasifu' : 'Profile'}
-          </Text>
+          <Text style={styles.headerTitle}>{language === 'sw' ? 'Wasifu' : 'Profile'}</Text>
           <View style={{ width: 32 }} />
         </View>
-
         <ScrollView
             showsVerticalScrollIndicator={false}
             refreshControl={
               <RefreshControl
-                  refreshing={isFetchingUser}
+                  refreshing={isInitialFetching}
                   onRefresh={handleRefresh}
                   tintColor="#FF5C8D"
                   colors={['#FF5C8D']}
@@ -253,29 +227,21 @@ export default function Profile() {
               {user?.kv?.last_name || ''}
             </Text>
             <Text style={styles.memberSince}>
-              {language === 'sw' ? 'Mwanachama tangu' : 'Member since'}{' '}
-              {memberSince}
+              {language === 'sw' ? 'Mwanachama tangu' : 'Member since'} {memberSince}
             </Text>
           </View>
-
           <View style={styles.menuContainer}>
             {menuItems.map((item, index) => (
                 <TouchableOpacity
                     key={item.id}
-                    style={[
-                      styles.menuItem,
-                      index === menuItems.length - 1 && styles.menuItemLast,
-                    ]}
+                    style={[styles.menuItem, index === menuItems.length - 1 && styles.menuItemLast]}
                     onPress={item.onPress}
                     disabled={item.id === 'logout' && isLoggingOut}
+                    accessibilityLabel={language === 'sw' ? item.labelSw : item.label}
                 >
                   <View style={styles.menuLeft}>
-                    <View style={styles.iconContainer}>
-                      {renderIcon(item)}
-                    </View>
-                    <Text
-                        style={[styles.menuLabel, item.isDanger && styles.dangerText]}
-                    >
+                    <View style={styles.iconContainer}>{renderIcon(item)}</View>
+                    <Text style={[styles.menuLabel, item.isDanger && styles.dangerText]}>
                       {language === 'sw' ? item.labelSw : item.label}
                     </Text>
                   </View>
@@ -284,12 +250,10 @@ export default function Profile() {
             ))}
           </View>
         </ScrollView>
-
         <NavbarCard language={language} userId={userId} />
       </View>
   );
 }
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
