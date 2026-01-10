@@ -118,7 +118,7 @@ export const NavbarCard: React.FC<Props> = ({ language, userId }) => {
             disabled={isActive('LogEntryScreen')}
         >
           <Ionicons
-              name="add-circle"
+              name="create-outline"
               size={26}
               color={isActive('LogEntryScreen') ? '#CE2020' : '#CCCCCC'}
           />

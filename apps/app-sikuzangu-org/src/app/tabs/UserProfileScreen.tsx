@@ -9,22 +9,23 @@ import {
   Alert,
   RefreshControl,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialIcons, FontAwesome5 } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useAccessToken, useUser } from '@siku-zangu/react'; // Import useUser
+import { useAccessToken, useUser } from '@siku-zangu/react';
 import { NavbarCard } from '@siku-zangu/react-native';
 import { useLocalSearchParams, useRouter, useFocusEffect } from 'expo-router';
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 interface MenuItem {
   id: string;
-  icon: string;
-  emoji?: string;
+  iconType: 'ionicons' | 'material' | 'fontawesome';
+  iconName: string;
   label: string;
   labelSw: string;
   onPress?: () => void;
   isDanger?: boolean;
 }
+
 export default function Profile() {
   const router = useRouter();
   const params = useLocalSearchParams();
@@ -37,6 +38,7 @@ export default function Profile() {
   const lastFetchRef = useRef<number>(0);
   const STALE_TIME = 3 * 60 * 1000;
   const LANGUAGE_KEY = 'language';
+
   useFocusEffect(
       useCallback(() => {
         const now = Date.now();
@@ -46,16 +48,17 @@ export default function Profile() {
         if (userId && refetchUser && (!user || isStale)) {
           refetchUser();
           lastFetchRef.current = now;
-        } else {
         }
       }, [userId, refetchUser, user])
   );
+
   const handleRefresh = useCallback(async () => {
     if (refetchUser) {
       await refetchUser();
       lastFetchRef.current = Date.now();
     }
   }, [refetchUser]);
+
   const memberSince = user?.created_at
       ? new Date(user.created_at).toLocaleDateString('en-US', {
         month: 'short',
@@ -103,17 +106,20 @@ export default function Profile() {
   const menuItems: MenuItem[] = [
     {
       id: 'language',
-      icon: '🔄',
+      iconType: 'ionicons',
+      iconName: 'language',
       label: 'Change Language',
       labelSw: 'Badilisha Lugha',
-      onPress: () => router.push({
-        pathname: '/LanguageScreen',
-        params: { lang: language, userId }, // Pass current language and userId
-      }),
+      onPress: () =>
+          router.push({
+            pathname: '/LanguageScreen',
+            params: { lang: language, userId },
+          }),
     },
     {
       id: 'notifications',
-      icon: '🔔',
+      iconType: 'ionicons',
+      iconName: 'notifications',
       label: 'Notifications',
       labelSw: 'Taarifa',
       onPress: () =>
@@ -124,7 +130,8 @@ export default function Profile() {
     },
     {
       id: 'pin',
-      icon: '🔒',
+      iconType: 'ionicons',
+      iconName: 'lock-closed',
       label: 'Change PIN',
       labelSw: 'Badilisha PIN',
       onPress: () =>
@@ -134,8 +141,21 @@ export default function Profile() {
           }),
     },
     {
+      id: 'profile',
+      iconType: 'ionicons',
+      iconName: 'create-outline',
+      label: 'Update Personal Info',
+      labelSw: 'Sasisha Taarifa za Yangu',
+      onPress: () =>
+          router.push({
+            pathname: 'tabs/LogEntryScreen',
+            params: { lang: language, userId },
+          }),
+    },
+    {
       id: 'cycle',
-      icon: '📅',
+      iconType: 'ionicons',
+      iconName: 'calendar',
       label: 'Update Cycle Info',
       labelSw: 'Sasisha Taarifa za Mzunguko',
       onPress: () =>
@@ -146,7 +166,8 @@ export default function Profile() {
     },
     {
       id: 'delete',
-      icon: '👤',
+      iconType: 'material',
+      iconName: 'person-remove',
       label: 'Delete Account',
       labelSw: 'Futa Akaunti',
       onPress: () =>
@@ -157,14 +178,36 @@ export default function Profile() {
     },
     {
       id: 'logout',
-      icon: 'exit-outline',
+      iconType: 'ionicons',
+      iconName: 'exit-outline',
       label: 'Logout',
       labelSw: 'Toka',
       onPress: handleLogout,
       isDanger: true,
     },
   ];
+
   const handleBack = () => router.back();
+
+  const renderIcon = (item: MenuItem) => {
+    const iconColor = '#FF597D';
+    const iconSize = 22;
+
+    if (item.id === 'logout' && isLoggingOut) {
+      return <ActivityIndicator size="small" color={iconColor} />;
+    }
+
+    switch (item.iconType) {
+      case 'material':
+        return <MaterialIcons name={item.iconName as any} size={iconSize} color={iconColor} />;
+      case 'fontawesome':
+        return <FontAwesome5 name={item.iconName as any} size={iconSize} color={iconColor} />;
+      case 'ionicons':
+      default:
+        return <Ionicons name={item.iconName as any} size={iconSize} color={iconColor} />;
+    }
+  };
+
   if (!user && isFetchingUser) {
     return (
         <View style={[styles.container, { paddingTop: insets.top, justifyContent: 'center', alignItems: 'center' }]}>
@@ -175,6 +218,7 @@ export default function Profile() {
         </View>
     );
   }
+
   return (
       <View style={[styles.container, { paddingTop: insets.top }]}>
         <View style={styles.header}>
@@ -201,7 +245,7 @@ export default function Profile() {
           <View style={styles.profileCard}>
             <View style={styles.avatarContainer}>
               <View style={styles.avatar}>
-                <Text style={styles.avatarEmoji}>👩</Text>
+                <Ionicons name="person" size={36} color="#FF597D" />
               </View>
             </View>
             <Text style={styles.userName}>
@@ -226,23 +270,9 @@ export default function Profile() {
                     disabled={item.id === 'logout' && isLoggingOut}
                 >
                   <View style={styles.menuLeft}>
-                    {item.icon === 'exit-outline' ? (
-                        <View style={styles.iconContainer}>
-                          {isLoggingOut && item.id === 'logout' ? (
-                              <ActivityIndicator size="small" color="#FF597D" />
-                          ) : (
-                              <Ionicons
-                                  name={item.icon as any}
-                                  size={22}
-                                  color="#FF597D"
-                              />
-                          )}
-                        </View>
-                    ) : (
-                        <View style={styles.iconContainer}>
-                          <Text style={styles.menuEmoji}>{item.icon}</Text>
-                        </View>
-                    )}
+                    <View style={styles.iconContainer}>
+                      {renderIcon(item)}
+                    </View>
                     <Text
                         style={[styles.menuLabel, item.isDanger && styles.dangerText]}
                     >
@@ -301,9 +331,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  avatarEmoji: {
-    fontSize: 36,
-  },
   userName: {
     fontSize: 20,
     fontWeight: '700',
@@ -348,9 +375,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFF4EC',
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  menuEmoji: {
-    fontSize: 20,
   },
   menuLabel: {
     fontSize: 16,
