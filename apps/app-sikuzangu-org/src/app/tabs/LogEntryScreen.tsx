@@ -83,6 +83,12 @@ export default function LogEntry() {
       color: '#F3E5F5',
     },
     {
+      key: 'anxious',
+      label: language === 'en' ? 'In Love' : 'Mapenzi',
+      emoji: '😟',
+      color: '#FCE4EC',
+    },
+    {
       key: 'calm',
       label: language === 'en' ? 'Calm' : 'Utulivu',
       emoji: '😌',
@@ -95,7 +101,6 @@ export default function LogEntry() {
       color: '#FFF3E0',
     },
   ];
-
   const medications = [
     {
       key: 'pain_relief',
@@ -118,7 +123,7 @@ export default function LogEntry() {
     {
       key: 'birth_control',
       label: language === 'en' ? 'Birth Control' : 'Kupunguza uzazi',
-      icon: '💊',
+      icon: '🌸',
       color: '#F3E5F5',
     },
   ];
