@@ -20,13 +20,13 @@ export default function RootLayout() {
 
     useEffect(() => {
         if (expoPushToken && userId) {
-            console.log('✅ Push token registered for user:', userId);
-            console.log('📱 Token:', expoPushToken);
+            console.log('Push token registered for user:', userId);
+            console.log('Token:', expoPushToken);
         }
     }, [expoPushToken, userId]);
     useEffect(() => {
         if (notification && userId && appIsReady) {
-            console.log('🔔 Notification received:', notification);
+            console.log('Notification received:', notification);
 
             const data = notification.request.content.data;
             if (data.type === 'period_reminder' || data.type === 'fertile_window') {
