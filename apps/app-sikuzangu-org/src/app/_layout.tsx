@@ -3,8 +3,7 @@ import {useCallback, useEffect, useRef, useState} from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {Animated, ImageBackground, StyleSheet} from 'react-native';
 import {ACCESS_TOKEN_KEY} from '@siku-zangu/react';
-import {isOnboardingComplete, useNotifications} from '@siku-zangu/react-native';
-// Import Firebase config to initialize it before anything else
+import {isOnboardingComplete, useNotifications, useFirebaseCrashlytics} from '@siku-zangu/react-native';
 import '../firebase.config';
 
 const LANGUAGE_KEY = 'language';
@@ -14,27 +13,49 @@ export default function RootLayout() {
     const fadeAnim = useRef(new Animated.Value(1)).current;
     const router = useRouter();
     const [userId, setUserId] = useState<string | null>(null);
+    const [language, setLanguage] = useState<string>('en');
     const hasNavigated = useRef(false);
-
-    // 🔔 Register for push notifications when userId is available
+    const crashlytics = useFirebaseCrashlytics(userId);
     const {expoPushToken, notification} = useNotifications(userId || undefined);
 
-    // Log when push token is obtained
     useEffect(() => {
         if (expoPushToken && userId) {
             console.log('✅ Push token registered for user:', userId);
             console.log('📱 Token:', expoPushToken);
         }
     }, [expoPushToken, userId]);
-
-    // Handle notification taps
     useEffect(() => {
-        if (notification) {
+        if (notification && userId && appIsReady) {
             console.log('🔔 Notification received:', notification);
-            // TODO: Handle navigation based on notification data
-            // Example: router.push(`/some-screen/${notification.request.content.data.id}`);
+
+            const data = notification.request.content.data;
+            if (data.type === 'period_reminder' || data.type === 'fertile_window') {
+                router.push({
+                    pathname: '/tabs/HomeScreen',
+                    params: {
+                        lang: language,
+                        userId: userId,
+                    },
+                });
+            } else if (data.type === 'medication_reminder') {
+                router.push({
+                    pathname: '/tabs/LogEntryScreen',
+                    params: {
+                        lang: language,
+                        userId: userId,
+                    },
+                });
+            } else if (data.type === 'daily_insight') {
+                router.push({
+                    pathname: '/tabs/HomeScreen',
+                    params: {
+                        lang: language,
+                        userId: userId,
+                    },
+                });
+            }
         }
-    }, [notification]);
+    }, [notification, userId, appIsReady, language]);
 
     const onLayoutRootView = useCallback(async () => {
         if (appIsReady) {
@@ -57,6 +78,8 @@ export default function RootLayout() {
                 ]);
 
                 const currentLanguage = savedLanguage || 'en';
+                setLanguage(currentLanguage);
+
                 if (!savedLanguage) {
                     await AsyncStorage.setItem(LANGUAGE_KEY, currentLanguage);
                 }
@@ -91,9 +114,6 @@ export default function RootLayout() {
                     });
                     return;
                 }
-
-                // Set userId to trigger notification registration
-                console.log('👤 User authenticated:', parsed.user.user_id);
                 setUserId(parsed.user.user_id);
 
                 const hasCompletedOnboarding = await isOnboardingComplete(parsed.user.user_id);
@@ -119,6 +139,10 @@ export default function RootLayout() {
 
             } catch (error) {
                 console.error('❌ Bootstrap error:', error);
+                if (error instanceof Error) {
+                    crashlytics.logError(error, 'Bootstrap failed');
+                }
+
                 await AsyncStorage.removeItem(ACCESS_TOKEN_KEY);
                 const lang = await AsyncStorage.getItem(LANGUAGE_KEY);
                 hasNavigated.current = true;

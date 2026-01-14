@@ -1,1 +1,1 @@
-//export * from './use-firebase-crashlytics.function'
+export * from './use-firebase-crashlytics.function'

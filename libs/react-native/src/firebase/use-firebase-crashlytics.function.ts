@@ -1,5 +1,5 @@
-/*import {useEffect} from 'react';
-//import crashlytics from '@react-native-firebase/crashlytics';
+import {useEffect} from 'react';
+import crashlytics from '@react-native-firebase/crashlytics';
 
 export function useFirebaseCrashlytics(userId?: string | null) {
     function logError(error: Error, context?: string) {
@@ -27,4 +27,4 @@ export function useFirebaseCrashlytics(userId?: string | null) {
     }, [userId]);
 
     return {logError, logMessage, setAttribute, testCrash};
-} */
+}
