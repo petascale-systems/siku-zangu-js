@@ -14,25 +14,16 @@ interface NotificationPayload {
     body: string;
     data?: Record<string, string>;
 }
-
 export async function sendPushNotification(payload: NotificationPayload) {
     try {
-        // Fetch user from database
         const user = await selectOneUserByUserId(payload.userId);
-
         if (!user?.kv?.fcm_token) {
-            console.log(`⚠️ No FCM token for user ${payload.userId}`);
             return null;
         }
-
-        // Check if user wants this type of notifications
         const shouldSend = checkNotificationPreference(user, payload.type);
         if (!shouldSend) {
-            console.log(`⚠️ User ${payload.userId} disabled ${payload.type} notifications`);
             return null;
         }
-
-        // Prepare notifications message
         const message = {
             token: user.kv.fcm_token,
             notification: {
@@ -61,29 +52,19 @@ export async function sendPushNotification(payload: NotificationPayload) {
                 },
             },
         };
-
-        // Send notifications via FCM
         const response = await messaging.send(message);
-        console.log('✅ Notification sent successfully:', response);
         return response;
 
     } catch (error: any) {
-        console.error('❌ Error sending notifications:', error);
-
-        // Handle invalid token errors
         if (error.code === 'messaging/invalid-registration-token' ||
             error.code === 'messaging/registration-token-not-registered') {
-            console.log(`🗑️ Invalid token for user ${payload.userId}`);
-            // TODO: Remove invalid token from database
         }
 
         throw error;
     }
 }
-
 function checkNotificationPreference(user: any, type: NotificationType): boolean {
     const kv = user.kv;
-
     switch (type) {
         case 'period_reminder':
             return kv.receive_period_alerts !== false;
@@ -97,8 +78,6 @@ function checkNotificationPreference(user: any, type: NotificationType): boolean
             return true;
     }
 }
-
-// Utility function to send to multiple users
 export async function sendBulkNotifications(
     userIds: string[],
     type: NotificationType,
@@ -110,10 +89,7 @@ export async function sendBulkNotifications(
             sendPushNotification({ userId, type, title, body })
         )
     );
-
     const successful = results.filter(r => r.status === 'fulfilled').length;
     const failed = results.filter(r => r.status === 'rejected').length;
-
-    console.log(`📊 Bulk send: ${successful} succeeded, ${failed} failed`);
     return { successful, failed, total: userIds.length };
 }

@@ -10,45 +10,34 @@ function calculateCycleMetrics(
     const daysSinceStart = Math.floor(
         (today.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)
     );
-
     const dayInCycle = daysSinceStart % avgCycleLengthDays;
     const daysUntilPeriod = avgCycleLengthDays - dayInCycle;
     const ovulationDay = avgCycleLengthDays - 14;
     const daysUntilOvulation = ovulationDay - dayInCycle;
     const fertileDaysRemaining = Math.max(0, daysUntilOvulation + 5);
-
     return {
         daysUntilPeriod,
         daysUntilOvulation,
         fertileDaysRemaining,
     };
 }
-
 export async function schedulePeriodReminders() {
-    console.log('🔄 Running period reminder scheduler...');
     let page = 1;
     const size = 50;
     let totalSent = 0;
-
     while (true) {
         const usersPage = await selectUsersPage({ page, size, q: '' });
-
         for (const user of usersPage.data) {
-            // Skip if user doesn't want alerts or missing data
             if (!user.kv?.receive_period_alerts ||
                 !user.kv?.prev_cycle_start_date ||
                 !user.kv?.fcm_token) {
                 continue;
             }
-
             const metrics = calculateCycleMetrics(
                 user.kv.prev_cycle_start_date,
                 user.kv.avg_cycle_length_days || 28
             );
-
             const lang = user.kv.language || 'en';
-
-            // Send reminder 2 days before period
             if (metrics.daysUntilPeriod === 2) {
                 await sendPushNotification({
                     userId: user.user_id!,
@@ -65,8 +54,6 @@ export async function schedulePeriodReminders() {
                 });
                 totalSent++;
             }
-
-            // Send reminder on period day
             if (metrics.daysUntilPeriod === 0) {
                 await sendPushNotification({
                     userId: user.user_id!,
@@ -81,17 +68,12 @@ export async function schedulePeriodReminders() {
                 totalSent++;
             }
         }
-
         if (page >= usersPage.last_page) break;
         page++;
     }
-
-    console.log(`✅ Period reminders sent: ${totalSent}`);
     return totalSent;
 }
-
 export async function scheduleFertileWindowAlerts() {
-    console.log('🔄 Running fertile window scheduler...');
     let page = 1;
     const size = 50;
     let totalSent = 0;
@@ -105,12 +87,10 @@ export async function scheduleFertileWindowAlerts() {
                 !user.kv?.fcm_token) {
                 continue;
             }
-
             const metrics = calculateCycleMetrics(
                 user.kv.prev_cycle_start_date,
                 user.kv.avg_cycle_length_days || 28
             );
-
             const lang = user.kv.language || 'en';
             if (metrics.daysUntilOvulation === 5 && metrics.fertileDaysRemaining > 0) {
                 await sendPushNotification({
@@ -139,11 +119,8 @@ export async function scheduleFertileWindowAlerts() {
                 totalSent++;
             }
         }
-
         if (page >= usersPage.last_page) break;
         page++;
     }
-
-    console.log(`✅ Fertile window alerts sent: ${totalSent}`);
     return totalSent;
 }
