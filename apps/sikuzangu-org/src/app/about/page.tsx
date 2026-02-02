@@ -173,7 +173,7 @@ export default function AboutPage() {
               </div>
             </div>
 
-            <div className="bg-yellow-50 rounded-2xl sm:rounded-3xl p-6 sm:p-8 md:p-10">
+            <div className="bg-yellow-50 rounded-2xl sm:rounded-3xl p-6 sm:p-8 md:p-10 text-center">
               <h2 className="text-2xl sm:text-3xl font-bold text-primary mb-4">
                 Our Vision
               </h2>
@@ -185,7 +185,7 @@ export default function AboutPage() {
               </p>
             </div>
 
-            <div className="bg-pink-50 rounded-2xl sm:rounded-3xl p-6 sm:p-8 md:p-10">
+            <div className="bg-pink-50 rounded-2xl sm:rounded-3xl p-6 sm:p-8 md:p-10 text-center">
               <h2 className="text-2xl sm:text-3xl font-bold text-primary mb-4">
                 Our Mission
               </h2>

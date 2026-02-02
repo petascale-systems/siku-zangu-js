@@ -17,6 +17,9 @@ export default function PrivacyPolicyPage() {
           </div>
           <div className="space-y-6 sm:space-y-8 text-neutral-dark-text">
             <div className="bg-pink-50 rounded-xl sm:rounded-2xl p-6 sm:p-8">
+              <h2 className="text-md sm:text-xl font-bold text-gray-900 mb-4">
+                1. Introduction
+              </h2>
               <p className="text-sm sm:text-base leading-relaxed mb-4">
                 Welcome to Siku Zangu, your trusted menstrual health companion.
                 We take your privacy seriously and are committed to protecting
