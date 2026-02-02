@@ -6,7 +6,6 @@ import {getJSON} from '../get-json.function';
 import {postJSON} from '../post-json.function';
 import {patchJSON} from '../patch-json.function';
 import {deleteJSON} from '../delete-json.function';
-import {useFocusEffect} from "expo-router";
 
 export const USERS_API_PATH = '/api/users';
 export const USER_BY_ID_API_PATH = (id: string) => `/api/users/${id}`;
@@ -74,19 +73,28 @@ export function useUser(userId?: string) {
             isFetchingRef.current = false;
         }
     }, [userId]);
+
+    // Initial fetch on mount or userId change
     useEffect(() => {
         if (!userId) return;
         refetchUser(false);
     }, [userId, refetchUser]);
-    useFocusEffect(
-        useCallback(() => {
-            if (!userId || isFetchingRef.current) return;
+
+    // Web-compatible version: Refetch on window focus (replaces useFocusEffect)
+    useEffect(() => {
+        if (!userId) return;
+
+        const handleFocus = () => {
+            if (isFetchingRef.current) return;
             const now = Date.now();
             if (now - lastFetchRef.current > MIN_DELAY_BETWEEN_REFRESHES) {
                 refetchUser(true);
             }
-        }, [userId, refetchUser])
-    );
+        };
+
+        window.addEventListener('focus', handleFocus);
+        return () => window.removeEventListener('focus', handleFocus);
+    }, [userId, refetchUser]);
 
     async function upsertUser(userData: Partial<User>): Promise<User | void> {
         setIsUpsertingUser(true);
@@ -111,6 +119,7 @@ export function useUser(userId?: string) {
             setIsUpsertingUser(false);
         }
     }
+
     async function deleteUser(): Promise<void> {
         if (!userId) {
             return;
@@ -151,6 +160,7 @@ export function useUser(userId?: string) {
             setIsChangingPin(false);
         }
     }
+
     return {
         user,
         isFetchingUser: isInitialFetching || isBackgroundFetching,
