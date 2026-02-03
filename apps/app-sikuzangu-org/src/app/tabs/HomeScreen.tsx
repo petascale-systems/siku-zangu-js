@@ -34,7 +34,7 @@ export default function Dashboard() {
   const insets = useSafeAreaInsets();
   const language = (params.lang as 'en' | 'sw') ?? 'en';
   const userId = params.userId as string;
-  const { user, refetchUser, isFetchingUser } = useUser(userId);
+  const { user, refetchUser, isInitialFetching, isBackgroundFetching, error, isFetchingUser } = useUser(userId);
   const lastFetchRef = useRef<number>(0);
   const STALE_TIME = 3 * 60 * 1000;
   const currentDate = new Date();
@@ -45,7 +45,7 @@ export default function Dashboard() {
         const timeSinceLastFetch = now - lastFetchRef.current;
         const isStale = timeSinceLastFetch > STALE_TIME;
         if (userId && refetchUser && (!user || isStale)) {
-          refetchUser();
+          refetchUser(true);
           lastFetchRef.current = now;
         } else {
         }
@@ -118,15 +118,13 @@ export default function Dashboard() {
   };
   const handleRefresh = useCallback(async () => {
     if (refetchUser) {
-      console.log('🔄 Manual refresh triggered');
-      await refetchUser();
-      lastFetchRef.current = Date.now();
+      await refetchUser(true);
     }
   }, [refetchUser]);
   const moodData = mostRecentMood ? MOOD_CONFIG[mostRecentMood] : null;
   const remainingSymptoms =
       recentSymptoms.length > 3 ? recentSymptoms.length - 3 : 0;
-  if (!user && isFetchingUser) {
+  if (!user && isInitialFetching) {
     return (
         <View style={[styles.container, { paddingTop: insets.top, justifyContent: 'center', alignItems: 'center' }]}>
           <ActivityIndicator size="large" color="#FF5C8D" />
@@ -138,11 +136,16 @@ export default function Dashboard() {
   }
   return (
       <View style={[styles.container, { paddingTop: insets.top }]}>
+        {isBackgroundFetching && (
+            <View style={{ position: 'absolute', top: insets.top + 60, alignSelf: 'center' }}>
+              <ActivityIndicator size="small" color="#FF5C8D" />
+            </View>
+        )}
         <ScrollView
             showsVerticalScrollIndicator={false}
             refreshControl={
               <RefreshControl
-                  refreshing={isFetchingUser}
+                  refreshing={isInitialFetching}
                   onRefresh={handleRefresh}
                   tintColor="#FF5C8D"
                   colors={['#FF5C8D']}

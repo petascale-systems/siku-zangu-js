@@ -9,7 +9,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useUser } from '@siku-zangu/react';
 import { UserKv } from '@siku-zangu/core';
@@ -21,7 +21,8 @@ interface NotificationSetting {
   titleSw: string;
   description: string;
   descriptionSw: string;
-  icon: string;
+  iconType: 'ionicons' | 'material';
+  iconName: string;
   iconBg: string;
   enabled: boolean;
 }
@@ -36,7 +37,7 @@ export default function NotificationsScreen() {
   const { user, upsertUser, isUpsertingUser } = useUser(userId);
 
   const [initialNotifications, setInitialNotifications] = useState<
-    NotificationSetting[]
+      NotificationSetting[]
   >([]);
   const [notifications, setNotifications] = useState<NotificationSetting[]>([
     {
@@ -45,7 +46,8 @@ export default function NotificationsScreen() {
       titleSw: 'Ukumbusho wa kuwasili kwa hedhi',
       description: 'Get a reminder before your period starts.',
       descriptionSw: 'Pata ukumbusho kabla hedhi yako haijaanza.',
-      icon: '💧',
+      iconType: 'ionicons',
+      iconName: 'water',
       iconBg: '#B3E5FC',
       enabled: false,
     },
@@ -55,7 +57,8 @@ export default function NotificationsScreen() {
       titleSw: 'Arifa za siku za uzazi',
       description: 'Know your most fertile days',
       descriptionSw: 'Jua siku zako za juu zaidi za uzazi',
-      icon: '🌸',
+      iconType: 'ionicons',
+      iconName: 'flower',
       iconBg: '#FFE4EC',
       enabled: false,
     },
@@ -65,7 +68,8 @@ export default function NotificationsScreen() {
       titleSw: 'Pokea vikumbusho vya dawa',
       description: 'Stay on track with medicines or supplements.',
       descriptionSw: 'Endelea kufuatilia dawa au virutubisho.',
-      icon: '💊',
+      iconType: 'material',
+      iconName: 'pill',
       iconBg: '#FFE0E6',
       enabled: false,
     },
@@ -75,12 +79,14 @@ export default function NotificationsScreen() {
       titleSw: 'Maarifa na vidokezo',
       description: 'Receive daily or weekly tips made for you',
       descriptionSw:
-        'Pokea vidokezo vya kila siku au wiki vilivyotengenezwa kwa ajili yako',
-      icon: '💡',
+          'Pokea vidokezo vya kila siku au wiki vilivyotengenezwa kwa ajili yako',
+      iconType: 'ionicons',
+      iconName: 'bulb',
       iconBg: '#FFF9C4',
       enabled: false,
     },
   ]);
+
   React.useEffect(() => {
     if (!user?.kv) return;
 
@@ -116,9 +122,9 @@ export default function NotificationsScreen() {
 
   const toggleNotification = (id: string) => {
     setNotifications((prev) =>
-      prev.map((notif) =>
-        notif.id === id ? { ...notif, enabled: !notif.enabled } : notif
-      )
+        prev.map((notif) =>
+            notif.id === id ? { ...notif, enabled: !notif.enabled } : notif
+        )
     );
   };
 
@@ -131,10 +137,10 @@ export default function NotificationsScreen() {
 
     if (!hasChanges) {
       Alert.alert(
-        language === 'sw' ? 'Hakuna Mabadiliko' : 'No Changes',
-        language === 'sw'
-          ? 'Hakuna mabadiliko ya kuhifadhi.'
-          : 'No changes to save.'
+          language === 'sw' ? 'Hakuna Mabadiliko' : 'No Changes',
+          language === 'sw'
+              ? 'Hakuna mabadiliko ya kuhifadhi.'
+              : 'No changes to save.'
       );
       return;
     }
@@ -142,136 +148,157 @@ export default function NotificationsScreen() {
     try {
       const updates: UserKv = {
         receive_period_alerts: notifications.find((n) => n.id === 'period')
-          ?.enabled,
+            ?.enabled,
         receive_fertile_alerts: notifications.find((n) => n.id === 'fertile')
-          ?.enabled,
+            ?.enabled,
         receive_medication_tips: notifications.find(
-          (n) => n.id === 'medication'
+            (n) => n.id === 'medication'
         )?.enabled,
         receive_insights_tips: notifications.find((n) => n.id === 'insights')
-          ?.enabled,
+            ?.enabled,
       };
 
       await upsertUser({ kv: updates });
 
       Alert.alert(
-        language === 'sw' ? 'Mafanikio' : 'Success',
-        language === 'sw'
-          ? 'Mapendeleo yamehifadhiwa!'
-          : 'Preferences saved successfully!',
-        [
-          {
-            text: 'OK',
-            onPress: () => {
-              setInitialNotifications(
-                JSON.parse(JSON.stringify(notifications))
-              );
+          language === 'sw' ? 'Mafanikio' : 'Success',
+          language === 'sw'
+              ? 'Mapendeleo yamehifadhiwa!'
+              : 'Preferences saved successfully!',
+          [
+            {
+              text: 'OK',
+              onPress: () => {
+                setInitialNotifications(
+                    JSON.parse(JSON.stringify(notifications))
+                );
+              },
             },
-          },
-        ]
+          ]
       );
     } catch (e: any) {
       Alert.alert(
-        language === 'sw' ? 'Hitilafu' : 'Error',
-        e.message ||
+          language === 'sw' ? 'Hitilafu' : 'Error',
+          e.message ||
           (language === 'sw' ? 'Imeshindwa kuhifadhi' : 'Failed to save')
       );
     }
   };
 
+  const renderIcon = (item: NotificationSetting) => {
+    const iconColor = '#FF597D';
+    const iconSize = 24;
+
+    if (item.iconType === 'material') {
+      return (
+          <MaterialCommunityIcons
+              name={item.iconName as any}
+              size={iconSize}
+              color={iconColor}
+          />
+      );
+    }
+
+    return (
+        <Ionicons
+            name={item.iconName as any}
+            size={iconSize}
+            color={iconColor}
+        />
+    );
+  };
+
   const handleBack = () => router.back();
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={handleBack}>
-          <Ionicons name="arrow-back" size={24} color="#000" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>
-          {language === 'sw' ? 'Arifa' : 'Notifications'}
-        </Text>
-        <Ionicons name="notifications" size={22} color="#999" />
-      </View>
-
-      <ScrollView showsVerticalScrollIndicator={false}>
-        <View style={styles.heroSection}>
-          <View style={styles.iconCircle}>
-            <Text style={styles.heroIcon}>
-              <Ionicons name="calendar" size={24} color="#FD5A7E" />
-            </Text>
-            <View style={styles.badge}>
-              <Ionicons name="notifications" size={14} color="#fff" />
-            </View>
-          </View>
-          <Text style={styles.heroTitle}>
-            {language === 'sw'
-              ? 'Endelea kufuatilia mzunguko wako'
-              : 'Stay on top of your cycle'}
+      <View style={[styles.container, { paddingTop: insets.top }]}>
+        <View style={styles.header}>
+          <TouchableOpacity style={styles.backButton} onPress={handleBack}>
+            <Ionicons name="arrow-back" size={24} color="#000" />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>
+            {language === 'sw' ? 'Arifa' : 'Notifications'}
           </Text>
-          <Text style={styles.heroDescription}>
-            {language === 'sw'
-              ? 'Dhibiti arifa zako za hedhi, dirisha la uzazi, na vikumbusho'
-              : 'Manage your alerts for period, fertile window, and reminders'}
-          </Text>
+          <Ionicons name="notifications" size={22} color="#FF597D" />
         </View>
 
-        <View style={styles.settingsContainer}>
-          {notifications.map((item, index) => (
-            <View
-              key={item.id}
-              style={[
-                styles.settingCard,
-                index === notifications.length - 1 && styles.lastCard,
-              ]}
-            >
-              <View style={styles.settingLeft}>
-                <View
-                  style={[styles.settingIcon, { backgroundColor: item.iconBg }]}
-                >
-                  <Text style={styles.settingEmoji}>{item.icon}</Text>
-                </View>
-                <View style={styles.settingContent}>
-                  <Text style={styles.settingTitle}>
-                    {language === 'sw' ? item.titleSw : item.title}
-                  </Text>
-                  <Text style={styles.settingDescription}>
-                    {language === 'sw' ? item.descriptionSw : item.description}
-                  </Text>
-                </View>
+        <ScrollView showsVerticalScrollIndicator={false}>
+          <View style={styles.heroSection}>
+            <View style={styles.iconCircle}>
+              <Ionicons name="calendar" size={32} color="#FD5A7E" />
+              <View style={styles.badge}>
+                <Ionicons name="notifications" size={14} color="#fff" />
               </View>
-              <Switch
-                value={item.enabled}
-                onValueChange={() => toggleNotification(item.id)}
-                trackColor={{ false: '#D1D5DB', true: '#FF597D' }}
-                thumbColor="#fff"
-                ios_backgroundColor="#D1D5DB"
-              />
             </View>
-          ))}
-        </View>
-
-        <TouchableOpacity
-          style={[
-            styles.saveButton,
-            isUpsertingUser && styles.saveButtonDisabled,
-          ]}
-          onPress={handleSavePreferences}
-          disabled={isUpsertingUser}
-          activeOpacity={0.8}
-          accessibilityLabel={
-            language === 'sw' ? 'Hifadhi mapendeleo' : 'Save Preferences'
-          }
-        >
-          {isUpsertingUser ? (
-            <ActivityIndicator size="small" color="#fff" />
-          ) : (
-            <Text style={styles.saveButtonText}>
-              {language === 'sw' ? 'Hifadhi Mapendeleo' : 'Save Preferences'}
+            <Text style={styles.heroTitle}>
+              {language === 'sw'
+                  ? 'Endelea kufuatilia mzunguko wako'
+                  : 'Stay on top of your cycle'}
             </Text>
-          )}
-        </TouchableOpacity>
-      </ScrollView>
-    </View>
+            <Text style={styles.heroDescription}>
+              {language === 'sw'
+                  ? 'Dhibiti arifa zako za hedhi, dirisha la uzazi, na vikumbusho'
+                  : 'Manage your alerts for period, fertile window, and reminders'}
+            </Text>
+          </View>
+
+          <View style={styles.settingsContainer}>
+            {notifications.map((item, index) => (
+                <View
+                    key={item.id}
+                    style={[
+                      styles.settingCard,
+                      index === notifications.length - 1 && styles.lastCard,
+                    ]}
+                >
+                  <View style={styles.settingLeft}>
+                    <View
+                        style={[styles.settingIcon, { backgroundColor: item.iconBg }]}
+                    >
+                      {renderIcon(item)}
+                    </View>
+                    <View style={styles.settingContent}>
+                      <Text style={styles.settingTitle}>
+                        {language === 'sw' ? item.titleSw : item.title}
+                      </Text>
+                      <Text style={styles.settingDescription}>
+                        {language === 'sw' ? item.descriptionSw : item.description}
+                      </Text>
+                    </View>
+                  </View>
+                  <Switch
+                      value={item.enabled}
+                      onValueChange={() => toggleNotification(item.id)}
+                      trackColor={{ false: '#D1D5DB', true: '#FF597D' }}
+                      thumbColor="#fff"
+                      ios_backgroundColor="#D1D5DB"
+                  />
+                </View>
+            ))}
+          </View>
+
+          <TouchableOpacity
+              style={[
+                styles.saveButton,
+                isUpsertingUser && styles.saveButtonDisabled,
+              ]}
+              onPress={handleSavePreferences}
+              disabled={isUpsertingUser}
+              activeOpacity={0.8}
+              accessibilityLabel={
+                language === 'sw' ? 'Hifadhi mapendeleo' : 'Save Preferences'
+              }
+          >
+            {isUpsertingUser ? (
+                <ActivityIndicator size="small" color="#fff" />
+            ) : (
+                <Text style={styles.saveButtonText}>
+                  {language === 'sw' ? 'Hifadhi Mapendeleo' : 'Save Preferences'}
+                </Text>
+            )}
+          </TouchableOpacity>
+        </ScrollView>
+      </View>
   );
 }
 
@@ -313,9 +340,6 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 4,
     position: 'relative',
-  },
-  heroIcon: {
-    fontSize: 36,
   },
   badge: {
     position: 'absolute',
@@ -381,9 +405,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
-  },
-  settingEmoji: {
-    fontSize: 24,
   },
   settingContent: {
     flex: 1,
