@@ -7,6 +7,7 @@ import {
   Select,
   Spinner,
   TextInput,
+    Modal
 } from 'flowbite-react';
 import {
   ARTICLE_COVER_IMAGE_API_PATH,
@@ -18,6 +19,7 @@ import {
 import { ChangeEvent, useEffect, useState } from 'react';
 import { Article, ArticleStatus, Language } from '@siku-zangu/core';
 import { useParams, useRouter } from 'next/navigation';
+import { CheckCircleIcon } from '@heroicons/react/24/outline';
 
 export default function ArticlePage() {
   const _router = useRouter();
