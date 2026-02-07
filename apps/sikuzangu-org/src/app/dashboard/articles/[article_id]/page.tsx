@@ -2,6 +2,7 @@
 
 import {
   Button,
+  Modal,
   Label,
   Radio,
   Select,
@@ -18,6 +19,7 @@ import {
 import { ChangeEvent, useEffect, useState } from 'react';
 import { Article, ArticleStatus, Language } from '@siku-zangu/core';
 import { useParams, useRouter } from 'next/navigation';
+import { CheckCircleIcon } from 'lucide-react';
 
 export default function ArticlePage() {
   const _router = useRouter();
@@ -213,7 +215,7 @@ export default function ArticlePage() {
               Category
             </Label>
             <Select
-              id="article_status"
+              id="article_category"
               required
               className="w-full"
               value={_articleFormData?.kv?.category}
