@@ -302,7 +302,6 @@ export default function ArticlePage() {
       size="md"
       popup
   >
-    <Modal.Body>
       <div className="text-center py-6">
         <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-green-100 mb-4">
           <CheckCircleIcon className="h-10 w-10 text-green-600" />
@@ -321,7 +320,6 @@ export default function ArticlePage() {
           Go to Articles
         </Button>
       </div>
-    </Modal.Body>
   </Modal>
 </>
 );
