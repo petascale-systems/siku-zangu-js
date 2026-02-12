@@ -54,11 +54,6 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             icon={<BellIcon className="size-5 stroke-2" />}
           />
           <NavLink
-            href="/dashboard/stats"
-            text="Stats"
-            icon={<ChartBarIcon className="size-4.5 stroke-2" />}
-          />
-          <NavLink
             href="/dashboard/trends"
             text="Trends"
             icon={<ArrowTrendingUpIcon className="size-4.5 stroke-2" />}
