@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
   Alert,
   RefreshControl,
+  BackHandler,
 } from 'react-native';
 import { Ionicons, MaterialIcons, FontAwesome5 } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -15,6 +16,7 @@ import { useAccessToken, useUser } from '@siku-zangu/react';
 import { NavbarCard } from '@siku-zangu/react-native';
 import { useLocalSearchParams, useRouter, useFocusEffect } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useAuthProtection } from '@siku-zangu/react-native';
 
 interface MenuItem {
   id: string;
@@ -25,7 +27,11 @@ interface MenuItem {
   onPress?: () => void;
   isDanger?: boolean;
 }
+
 export default function Profile() {
+  // Protect this route - requires authentication
+  useAuthProtection(true);
+
   const router = useRouter();
   const params = useLocalSearchParams();
   const insets = useSafeAreaInsets();
@@ -71,7 +77,12 @@ export default function Profile() {
               try {
                 await AsyncStorage.setItem('language', language);
                 await logoutUser();
-                router.replace({ pathname: '/auth/LoginScreen', params: { lang: language } });
+                router.dismissAll();
+                router.replace({
+                  pathname: '/auth/LoginScreen',
+                  params: { lang: language }
+                });
+
               } catch (e: any) {
                 Alert.alert(
                     language === 'sw' ? 'Hitilafu' : 'Error',
@@ -175,6 +186,7 @@ export default function Profile() {
         </View>
     );
   }
+
   if (error && !user) {
     return (
         <View style={[styles.container, { paddingTop: insets.top, justifyContent: 'center', alignItems: 'center' }]}>
@@ -190,6 +202,7 @@ export default function Profile() {
         </View>
     );
   }
+
   return (
       <View style={[styles.container, { paddingTop: insets.top }]}>
         {isBackgroundFetching && (
@@ -205,6 +218,7 @@ export default function Profile() {
           <Text style={styles.headerTitle}>{language === 'sw' ? 'Wasifu' : 'Profile'}</Text>
           <View style={{ width: 32 }} />
         </View>
+
         <ScrollView
             showsVerticalScrollIndicator={false}
             refreshControl={
@@ -230,6 +244,7 @@ export default function Profile() {
               {language === 'sw' ? 'Mwanachama tangu' : 'Member since'} {memberSince}
             </Text>
           </View>
+
           <View style={styles.menuContainer}>
             {menuItems.map((item, index) => (
                 <TouchableOpacity
@@ -250,10 +265,12 @@ export default function Profile() {
             ))}
           </View>
         </ScrollView>
+
         <NavbarCard language={language} userId={userId} />
       </View>
   );
 }
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,

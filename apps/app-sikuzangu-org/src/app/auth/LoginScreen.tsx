@@ -32,6 +32,7 @@ export default function LoginScreen() {
         };
         saveLanguage();
     }, [language]);
+
     useEffect(() => {
         const phoneNumber = phone.replace(/\D/g, '');
         if (phone.length === 0) {
@@ -54,6 +55,7 @@ export default function LoginScreen() {
             setPhoneError('');
         }
     }, [phone, language]);
+
     useEffect(() => {
         if (pin.length === 0) {
             setPinError(
@@ -67,6 +69,7 @@ export default function LoginScreen() {
             setPinError('');
         }
     }, [pin, language]);
+
     const handleLogin = async () => {
         const phoneNumber = phone.replace(/\D/g, '');
         const storedPhoneNumber = `${storageCountryCode} ${phoneNumber}`;
@@ -166,6 +169,7 @@ export default function LoginScreen() {
             Alert.alert(language === 'en' ? 'Error' : 'Hitilafu', errorMessage);
         }
     };
+
     const goToRegister = () => {
         Keyboard.dismiss();
         router.push({
@@ -173,6 +177,7 @@ export default function LoginScreen() {
             params: {lang: language},
         });
     };
+
     return (
         <KeyboardAvoidingView
             style={styles.container}

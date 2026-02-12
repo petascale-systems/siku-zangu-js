@@ -79,11 +79,6 @@ export default function UpdatingSymptomsMoodsScreen() {
       icon: 'alert-circle-outline',
     },
     {
-      key: 'in_love',
-      label: language === 'en' ? 'In Love' : 'Mapenzi',
-      icon: 'heart-outline',
-    },
-    {
       key: 'calm',
       label: language === 'en' ? 'Calm' : 'Utulivu',
       icon: 'leaf-outline',

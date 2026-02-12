@@ -84,7 +84,7 @@ export default function LogEntry() {
     },
     {
       key: 'anxious',
-      label: language === 'en' ? 'In Love' : 'Mapenzi',
+      label: language === 'en' ? 'Anxious' : 'Wasiwasi',
       emoji: '😟',
       color: '#FCE4EC',
     },
