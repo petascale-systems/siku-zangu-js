@@ -14,7 +14,6 @@
       "supportsTablet": true,
       "bundleIdentifier": "org.sikuzangu.app",
       "associatedDomains": [
-        "applinks:sikuzangu.org",
         "applinks:sikuzangu.org"
       ],
       "googleServicesFile": "./GoogleService-Info.plist",
@@ -28,7 +27,7 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "versionCode": 2,
+      "versionCode": 8,
       "edgeToEdgeEnabled": true,
       "package": "org.sikuzangu.app",
       "googleServicesFile": "./google-services.json",

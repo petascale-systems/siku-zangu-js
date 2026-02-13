@@ -44,7 +44,8 @@
     "react-native-svg-transformer": "*",
     "react-native-web": "*",
     "recharts": "*",
-    "zod": "*"
+    "zod": "*",
+    "react-native-render-html": "*"
   },
   "devDependencies": {
     "@babel/core": "*",
