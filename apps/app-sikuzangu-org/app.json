@@ -14,11 +14,13 @@
       "supportsTablet": true,
       "bundleIdentifier": "org.sikuzangu.app",
       "associatedDomains": [
+        "applinks:sikuzangu.org",
         "applinks:sikuzangu.org"
       ],
       "googleServicesFile": "./GoogleService-Info.plist",
       "infoPlist": {
-        "FirebaseCrashlyticsCollectionEnabled": true
+        "FirebaseCrashlyticsCollectionEnabled": true,
+        "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
@@ -82,6 +84,12 @@
           }
         }
       ]
-    ]
+    ],
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "de89f1b8-4458-4af8-8e32-dca66d650b79"
+      }
+    }
   }
 }

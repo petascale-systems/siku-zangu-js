@@ -6,6 +6,7 @@ import {ACCESS_TOKEN_KEY} from '@siku-zangu/react';
 import {useFirebaseCrashlytics, isOnboardingComplete} from '@siku-zangu/react-native';
 
 const LANGUAGE_KEY = 'language';
+const FIRST_LAUNCH_KEY = 'hasLaunchedBefore';
 
 export default function RootLayout() {
     const [appIsReady, setAppIsReady] = useState(false);
@@ -30,6 +31,15 @@ export default function RootLayout() {
             if (hasNavigated.current) return;
 
             try {
+                // Check if this is first launch
+                const hasLaunched = await AsyncStorage.getItem(FIRST_LAUNCH_KEY);
+
+                if (!hasLaunched) {
+                    // First launch - clear any persisted data from backups/previous installs
+                    await AsyncStorage.clear();
+                    await AsyncStorage.setItem(FIRST_LAUNCH_KEY, 'true');
+                }
+
                 const [savedLanguage, storedToken] = await Promise.all([
                     AsyncStorage.getItem(LANGUAGE_KEY),
                     AsyncStorage.getItem(ACCESS_TOKEN_KEY),
@@ -39,6 +49,7 @@ export default function RootLayout() {
                 if (!savedLanguage) {
                     await AsyncStorage.setItem(LANGUAGE_KEY, currentLanguage);
                 }
+
                 if (!storedToken) {
                     hasNavigated.current = true;
                     router.replace({
@@ -47,6 +58,7 @@ export default function RootLayout() {
                     });
                     return;
                 }
+
                 const parsed = JSON.parse(storedToken);
                 if (!parsed?.token || !parsed?.expires_in || !parsed?.user?.user_id) {
                     await AsyncStorage.removeItem(ACCESS_TOKEN_KEY);
@@ -57,6 +69,7 @@ export default function RootLayout() {
                     });
                     return;
                 }
+
                 const isExpired = Date.now() >= parsed.expires_in * 1000;
                 if (isExpired) {
                     await AsyncStorage.removeItem(ACCESS_TOKEN_KEY);
@@ -67,6 +80,7 @@ export default function RootLayout() {
                     });
                     return;
                 }
+
                 setUserId(parsed.user.user_id);
                 const hasCompletedOnboarding = await isOnboardingComplete(parsed.user.user_id);
 
