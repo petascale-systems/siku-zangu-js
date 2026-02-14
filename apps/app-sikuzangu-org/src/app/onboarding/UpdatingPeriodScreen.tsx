@@ -74,22 +74,10 @@ export default function UpdatingPeriodScreen() {
     { label: language === 'en' ? 'June' : 'Juni', value: 5, short: 'Jun' },
     { label: language === 'en' ? 'July' : 'Julai', value: 6, short: 'Jul' },
     { label: language === 'en' ? 'August' : 'Agosti', value: 7, short: 'Aug' },
-    {
-      label: language === 'en' ? 'September' : 'Septemba',
-      value: 8,
-      short: 'Sep',
-    },
+    {label: language === 'en' ? 'September' : 'Septemba', value: 8, short: 'Sep',},
     { label: language === 'en' ? 'October' : 'Oktoba', value: 9, short: 'Oct' },
-    {
-      label: language === 'en' ? 'November' : 'Novemba',
-      value: 10,
-      short: 'Nov',
-    },
-    {
-      label: language === 'en' ? 'December' : 'Desemba',
-      value: 11,
-      short: 'Dec',
-    },
+    {label: language === 'en' ? 'November' : 'Novemba', value: 10, short: 'Nov',},
+    {label: language === 'en' ? 'December' : 'Desemba', value: 11, short: 'Dec',},
   ];
 
   const getDaysInMonth = (month: number, year: number) => {
@@ -351,19 +339,6 @@ export default function UpdatingPeriodScreen() {
       </View>
   );
 
-  const getDateContext = () => {
-    const selectedDate = new Date(selectedYear, selectedMonth, selectedDay);
-    const today = new Date();
-    const diffTime = Math.abs(today.getTime() - selectedDate.getTime());
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-    if (diffDays === 0) return language === 'en' ? 'Today' : 'Leo';
-    if (diffDays === 1) return language === 'en' ? 'Yesterday' : 'Jana';
-    if (diffDays <= 7) return language === 'en' ? 'This week' : 'Wiki hii';
-    if (diffDays <= 30) return language === 'en' ? 'This month' : 'Mwezi huu';
-    return language === 'en' ? 'Earlier' : 'Mapema';
-  };
-
   return (
       <View style={styles.container}>
         <TouchableOpacity
@@ -398,12 +373,6 @@ export default function UpdatingPeriodScreen() {
           </View>
 
           {renderDateDisplay()}
-
-          <View style={styles.dateContext}>
-            <Ionicons name="calendar-outline" size={16} color="#FD5A7E" />
-            <Text style={styles.dateContextText}>{getDateContext()}</Text>
-          </View>
-
           {renderPicker()}
 
           <TouchableOpacity
@@ -418,12 +387,12 @@ export default function UpdatingPeriodScreen() {
             {isUpsertingUser ? (
                 <ActivityIndicator size="small" color="#fff" />
             ) : (
-               <>
-                 <Text style={styles.nextButtonText}>
-                   {language === 'en' ? 'NEXT' : 'IJAYO'}
-                 </Text>
-                 <Ionicons name="arrow-forward" size={20} color="#FFFFFF" />
-               </>
+                <>
+                  <Text style={styles.nextButtonText}>
+                    {language === 'en' ? 'NEXT' : 'IJAYO'}
+                  </Text>
+                  <Ionicons name="arrow-forward" size={20} color="#FFFFFF" />
+                </>
             )}
           </TouchableOpacity>
         </Animated.View>
