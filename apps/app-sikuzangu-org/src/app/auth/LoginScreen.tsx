@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from 'react';
-import {Alert, StyleSheet, Text, TextInput, TouchableOpacity, View, Keyboard, ScrollView, KeyboardAvoidingView, Platform} from 'react-native';
+import {Alert, StyleSheet, Text, TextInput, TouchableOpacity, View, Keyboard, ScrollView, KeyboardAvoidingView, Platform, BackHandler} from 'react-native';
 import {useLocalSearchParams, useRouter} from 'expo-router';
 import {isOnboardingComplete, PrimaryButton} from '@siku-zangu/react-native';
 import {Ionicons} from '@expo/vector-icons';
@@ -21,6 +21,15 @@ export default function LoginScreen() {
     const displayCountryCode = '+255';
     const storageCountryCode = 'TZ';
     const LANGUAGE_KEY = 'language';
+
+    // Prevent back navigation on login screen
+    useEffect(() => {
+        const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
+            return true;
+        });
+
+        return () => backHandler.remove();
+    }, []);
 
     useEffect(() => {
         const saveLanguage = async () => {

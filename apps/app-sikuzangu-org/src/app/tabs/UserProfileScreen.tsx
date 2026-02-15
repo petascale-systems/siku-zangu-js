@@ -29,7 +29,6 @@ interface MenuItem {
 }
 
 export default function Profile() {
-  // Protect this route - requires authentication
   useAuthProtection(true);
 
   const router = useRouter();
@@ -75,13 +74,15 @@ export default function Profile() {
             style: 'destructive',
             onPress: async () => {
               try {
+                // Save language preference before logout
                 await AsyncStorage.setItem('language', language);
+
+                // Perform logout - this clears the access token
                 await logoutUser();
-                router.dismissAll();
-                router.replace({
-                  pathname: '/auth/LoginScreen',
-                  params: { lang: language }
-                });
+
+                // Navigate to login screen using replace to clear navigation stack
+                // This should prevent back navigation
+                router.replace('/auth/LoginScreen');
 
               } catch (e: any) {
                 Alert.alert(
