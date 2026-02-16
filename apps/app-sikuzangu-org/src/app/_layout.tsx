@@ -31,13 +31,15 @@ export default function RootLayout() {
             if (hasNavigated.current) return;
 
             try {
-                // Check if this is first launch
                 const hasLaunched = await AsyncStorage.getItem(FIRST_LAUNCH_KEY);
 
                 if (!hasLaunched) {
-                    // First launch - clear any persisted data from backups/previous installs
                     await AsyncStorage.clear();
                     await AsyncStorage.setItem(FIRST_LAUNCH_KEY, 'true');
+
+                    hasNavigated.current = true;
+                    router.replace('/LanguageScreen');
+                    return;
                 }
 
                 const [savedLanguage, storedToken] = await Promise.all([

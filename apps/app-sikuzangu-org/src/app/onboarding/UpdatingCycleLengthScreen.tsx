@@ -137,7 +137,7 @@ export default function UpdatingCycleLengthScreen() {
           <Text style={styles.title}>
             {language === 'en'
               ? "What's your average cycle length?"
-              : 'Mzunguko wako wa wastani hudumu siku ngapi?'}
+              : 'Mzunguko wako una siku ngapi kwa wastani?'}
           </Text>
 
           <Text style={styles.subtitle}>
@@ -242,14 +242,14 @@ export default function UpdatingCycleLengthScreen() {
           ]}
           onPress={handleSave}
           disabled={isUpsertingUser}
-          accessibilityLabel={language === 'en' ? 'Next' : 'Ijayo'}
+          accessibilityLabel={language === 'en' ? 'Next' : 'IFUATAYO'}
         >
           {isUpsertingUser ? (
             <ActivityIndicator size="small" color="#fff" />
           ) : (
               <>
                 <Text style={styles.nextButtonText}>
-                  {language === 'en' ? 'Next' : 'Ijayo'}
+                  {language === 'en' ? 'Next' : 'IFUATAYO'}
                 </Text>
                 <Ionicons name="arrow-forward" size={20} color="#FFFFFF" />
               </>

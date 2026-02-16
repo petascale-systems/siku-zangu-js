@@ -343,7 +343,7 @@ export default function UpdatingDOBScreen() {
         ]}
       >
         <Text style={styles.title}>
-          {language === 'en' ? 'When were you born?' : 'Ulizaliwa lini?'}
+          {language === 'en' ? 'When were you born?' : 'Umezaliwa lini?'}
         </Text>
         <Text style={styles.subtitle}>
           {language === 'en'
@@ -374,8 +374,7 @@ export default function UpdatingDOBScreen() {
                 >
                   Sheria na Masharti
                 </Text>{' '}
-                yetu kujua kuhusu umri wa chini unaohitajika. Unaweza kubadilisha
-                jibu lako wakati wowote katika profaili yako.
+                yetu kujua kuhusu umri wa chini unaohitajika. Unaweza kubadilisha jibu lako kwenye wasifu wako wakati wowote.
               </>
           )}
         </Text>
@@ -386,14 +385,14 @@ export default function UpdatingDOBScreen() {
           ]}
           onPress={handleSave}
           disabled={isUpsertingUser}
-          accessibilityLabel={language === 'en' ? 'Next' : 'Ijayo'}
+          accessibilityLabel={language === 'en' ? 'Next' : 'IFUATAYO'}
         >
           {isUpsertingUser ? (
             <ActivityIndicator size="small" color="#fff" />
           ) : (
     <>
       <Text style={styles.nextButtonText}>
-        {language === 'en' ? 'NEXT' : 'IJAYO'}
+        {language === 'en' ? 'NEXT' : 'IFUATAYO'}
       </Text>
       <Ionicons name="arrow-forward" size={20} color="#FFFFFF" />
     </>

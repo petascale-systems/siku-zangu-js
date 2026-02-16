@@ -37,12 +37,12 @@ export default function UpdatingSymptomsMoodsScreen() {
     },
     {
       key: 'bloating',
-      label: language === 'en' ? 'Bloating' : 'Kuvimba',
+      label: language === 'en' ? 'Bloating' : 'Kuvimbiwa',
       icon: 'water',
     },
     {
       key: 'tender_breast',
-      label: language === 'en' ? 'Tender breast' : 'Matiti yenye uchungu',
+      label: language === 'en' ? 'Tender breast' : 'Maumivu ya matiti',
       icon: 'female',
     },
     {
@@ -200,7 +200,7 @@ export default function UpdatingSymptomsMoodsScreen() {
             <Text style={styles.subtitle}>
               {language === 'en'
                 ? 'Your cycle can impact how you feel.'
-                : 'Mzunguko wako unaweza kuathiri jinsi unavyohisi.'}
+                : 'Mzunguko wako wa hedhi unaweza kuathiri jinsi unavyojisikia.'}
             </Text>
           </View>
 
@@ -304,14 +304,14 @@ export default function UpdatingSymptomsMoodsScreen() {
             ]}
             onPress={handleSave}
             disabled={isUpsertingUser}
-            accessibilityLabel={language === 'en' ? 'Next' : 'Ijayo'}
+            accessibilityLabel={language === 'en' ? 'Next' : 'IFUATAYO'}
           >
             {isUpsertingUser ? (
               <ActivityIndicator size="small" color="#fff" />
             ) : (
                 <>
                   <Text style={styles.nextButtonText}>
-                    {language === 'en' ? 'Next' : 'Ijayo'}
+                    {language === 'en' ? 'Next' : 'IFUATAYO'}
                   </Text>
                   <Ionicons name="arrow-forward" size={20} color="#FFFFFF" />
                 </>

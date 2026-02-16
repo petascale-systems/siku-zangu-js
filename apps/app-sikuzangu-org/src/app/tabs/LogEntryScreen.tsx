@@ -27,7 +27,7 @@ export default function LogEntry() {
   const symptoms = [
     {
       key: 'cramps',
-      label: language === 'en' ? 'Cramps' : 'Maumivu ya Tumbo',
+      label: language === 'en' ? 'Cramps' : 'Maumivu',
       icon: 'fitness-outline',
       color: '#F59E0B',
     },

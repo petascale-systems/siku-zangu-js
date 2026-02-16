@@ -220,7 +220,7 @@ export default function Dashboard() {
                   {language === 'sw' ? 'Siku' : 'days'}
                 </Text>
                 <Text style={styles.statSub}>
-                  {language === 'sw' ? 'Siku za hedhi zinazokuja' : 'Next period'}
+                  {language === 'sw' ? 'Hedhi ijayo' : 'Next period'}
                 </Text>
                 <Text style={styles.statDate}>{formattedNextPeriod}</Text>
               </View>
@@ -232,7 +232,7 @@ export default function Dashboard() {
                   {language === 'sw' ? 'Siku' : 'days'}
                 </Text>
                 <Text style={styles.statSub}>
-                  {language === 'sw' ? 'Kupevuka kwa yai kutatokea baada ya' : 'Ovulation'}
+                  {language === 'sw' ? 'Yai kupevuka ' : 'Ovulation in'}
                 </Text>
                 <View style={styles.iconRow}>
                   <Ionicons name="moon" color="#555" size={12} />
@@ -249,7 +249,7 @@ export default function Dashboard() {
                   {language === 'sw' ? 'Siku' : 'days'}
                 </Text>
                 <Text style={styles.statSub}>
-                  {language === 'sw' ? 'Kipindi chenye uwezekano mkubwa wa kutunga mimba' : 'Fertile'}
+                  {language === 'sw' ? 'Uzazi' : 'Fertile'}
                 </Text>
                 <Text style={styles.statDate}>
                   {fertileDaysRemaining > 0

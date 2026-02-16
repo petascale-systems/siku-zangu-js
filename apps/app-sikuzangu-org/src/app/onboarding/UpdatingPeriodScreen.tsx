@@ -362,13 +362,13 @@ export default function UpdatingPeriodScreen() {
             <Text style={styles.title}>
               {language === 'en'
                   ? 'First day of your last period?'
-                  : 'Siku ya kwanza ya hedhi yako ya mwisho?'}
+                  : 'Ingiza siku ya kwanza ya hedhi iliyopita'}
             </Text>
 
             <Text style={styles.subtitle}>
               {language === 'en'
                   ? 'Not sure? Give us your best guess.'
-                  : 'Huna uhakika? Toa makadirio yako bora.'}
+                  : 'Kama haukumbuki ingiza makadirio yako.'}
             </Text>
           </View>
 
@@ -382,14 +382,14 @@ export default function UpdatingPeriodScreen() {
               ]}
               onPress={handleSave}
               disabled={isUpsertingUser}
-              accessibilityLabel={language === 'en' ? 'Next' : 'Ijayo'}
+              accessibilityLabel={language === 'en' ? 'Next' : 'IFUATAYO'}
           >
             {isUpsertingUser ? (
                 <ActivityIndicator size="small" color="#fff" />
             ) : (
                 <>
                   <Text style={styles.nextButtonText}>
-                    {language === 'en' ? 'NEXT' : 'IJAYO'}
+                    {language === 'en' ? 'NEXT' : 'IFUATAYO'}
                   </Text>
                   <Ionicons name="arrow-forward" size={20} color="#FFFFFF" />
                 </>
