@@ -82,7 +82,10 @@ export default function Profile() {
 
                 // Navigate to login screen using replace to clear navigation stack
                 // This should prevent back navigation
-                router.replace('/auth/LoginScreen');
+                router.replace({
+                  pathname: '/auth/LoginScreen',
+                  params: { lang: language },
+                });
 
               } catch (e: any) {
                 Alert.alert(
