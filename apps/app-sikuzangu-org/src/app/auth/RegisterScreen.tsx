@@ -203,7 +203,7 @@ export default function RegisterScreen() {
                     }}
                     maxLength={12}
                     accessibilityLabel={
-                      language === 'en' ? 'Phone Number' : 'Nambari ya Simu'
+                      language === 'en' ? 'Phone Number' : 'Namba ya Simu'
                     }
                 />
               </View>
@@ -213,7 +213,7 @@ export default function RegisterScreen() {
             </View>
             <View style={styles.fieldWrapper}>
               <Text style={styles.label}>
-                {language === 'en' ? 'PIN' : 'Nenosiri'}
+                {language === 'en' ? 'PIN' : 'Namba ya Siri'}
               </Text>
               <View
                   style={[styles.pinWrapper, pinError ? styles.errorBorder : null]}

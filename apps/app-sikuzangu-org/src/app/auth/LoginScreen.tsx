@@ -22,7 +22,6 @@ export default function LoginScreen() {
     const storageCountryCode = 'TZ';
     const LANGUAGE_KEY = 'language';
 
-    // Prevent back navigation on login screen
     useEffect(() => {
         const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
             return true;
@@ -48,7 +47,7 @@ export default function LoginScreen() {
             setPhoneError(
                 language === 'en'
                     ? 'Phone number is required'
-                    : 'Nambari ya simu inahitajika'
+                    : 'Namba ya simu inahitajika'
             );
         } else if (!/^\d{6,12}$/.test(phoneNumber)) {
             setPhoneError(
@@ -87,7 +86,7 @@ export default function LoginScreen() {
             setPhoneError(
                 language === 'en'
                     ? 'Phone number is required'
-                    : 'Nambari ya simu inahitajika'
+                    : 'Namba ya simu inahitajika'
             );
             Alert.alert(
                 language === 'en' ? 'Error' : 'Hitilafu',
@@ -207,7 +206,7 @@ export default function LoginScreen() {
                 <View style={styles.formBox}>
                     <View style={styles.fieldWrapper}>
                         <Text style={styles.label}>
-                            {language === 'en' ? 'Phone Number' : 'Nambari ya Simu'}
+                            {language === 'en' ? 'Phone Number' : 'Namba ya Simu'}
                         </Text>
                         <View
                             style={[
@@ -228,7 +227,7 @@ export default function LoginScreen() {
                                 }}
                                 maxLength={12}
                                 accessibilityLabel={
-                                    language === 'en' ? 'Phone Number' : 'Nambari ya Simu'
+                                    language === 'en' ? 'Phone Number' : 'Namba ya Simu'
                                 }
                             />
                         </View>

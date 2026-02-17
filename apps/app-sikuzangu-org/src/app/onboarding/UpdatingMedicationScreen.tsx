@@ -25,14 +25,23 @@ export default function UpdatingMedicationScreen() {
   const { upsertUser, isUpsertingUser, user } = useUser(userId);
 
   const medications = [
-    { key: 'pain_relief', label: 'Pain Relief', icon: 'medkit-outline' },
+    {
+      key: 'pain_relief',
+      label: language === 'en' ? 'Pain Relief' : 'Dawa za maumivu',
+      icon: 'medkit-outline'
+},
     {
       key: 'herbal_supplement',
-      label: 'Herbal Supplement',
-      icon: 'leaf-outline',
-    },
-    { key: 'hormone_therapy', label: 'Hormone Therapy', icon: 'flask-outline' },
-    { key: 'birth_control', label: 'Birth Control', icon: 'pill-outline' },
+      label: language === 'en' ? 'Herbal Supplement' :'Tiba za asili',
+      icon: 'leaf-outline',},
+    {
+      key: 'hormone_therapy',
+      label: language === 'en' ? 'Hormone Therapy': 'Tiba ya homoni',
+      icon: 'flask-outline' },
+    {
+      key: 'birth_control',
+      label: language === 'en' ? 'Birth Control' : 'Uzazi wa mpango',
+      icon: 'pill-outline' },
   ];
 
   const [selectedMedications, setSelectedMedications] = useState<string[]>([]);
@@ -172,7 +181,7 @@ export default function UpdatingMedicationScreen() {
             <ActivityIndicator size="small" color="#fff" />
           ) : (
             <Text style={styles.nextButtonText}>
-              {language === 'en' ? 'COMPLETE SETUP' : 'KAMALI MIPANGO'}
+              {language === 'en' ? 'CONFIRM' : 'THIBITISHA'}
             </Text>
           )}
         </TouchableOpacity>

@@ -374,7 +374,7 @@ export default function TrendsPage() {
     });
 
     const total = Object.values(regularity).reduce((a, b) => a + b, 0);
-    const regularityData = [
+    const regularityData: CycleRegularityData[] = [
       { category: 'Regular (26-30 days)', count: regularity.regular, percentage: (regularity.regular / total) * 100 },
       { category: 'Slightly Irregular (24-32 days)', count: regularity.slightlyIrregular, percentage: (regularity.slightlyIrregular / total) * 100 },
       { category: 'Irregular (21-35 days)', count: regularity.irregular, percentage: (regularity.irregular / total) * 100 },
@@ -751,15 +751,21 @@ export default function TrendsPage() {
                   <ResponsiveContainer width="100%" height={300}>
                     <PieChart>
                       <Pie
-                          data={cycleRegularity}
+                          data={cycleRegularity as any}
                           cx="50%"
                           cy="50%"
                           labelLine={false}
-                          label={({ name, percent }) =>
-                              name
-                                  ? `${(name as string).split('(')[0].trim()}: ${(percent! * 100).toFixed(1)}%`
-                                  : ''
-                          }
+                          label={(entry: any) => {
+                            // Type-safe label function - entry contains the data object
+                            const category = entry.category || entry.name;
+                            const percent = entry.percent;
+
+                            if (typeof category === 'string' && typeof percent === 'number') {
+                              const categoryName = category.split('(')[0].trim();
+                              return `${categoryName}: ${(percent * 100).toFixed(1)}%`;
+                            }
+                            return '';
+                          }}
                           outerRadius={100}
                           fill="#8884d8"
                           dataKey="count"

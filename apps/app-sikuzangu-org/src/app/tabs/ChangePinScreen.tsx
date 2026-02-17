@@ -138,7 +138,7 @@ export default function ChangePinScreen() {
       >
         <Text style={styles.subtitle}>
           {language === 'sw'
-            ? 'Weka PIN yako mpya ya akaunti yako. Hakikisha haijasiwa rahisi na ni ya kipekee ili kuongeza usalama.'
+            ? 'Weka PIN yako ya sasa na utengeneze mpya'
             : "Enter your new PIN for your account. Ensure it's not easy to guess and unique to enhance security."}
         </Text>
         <View style={styles.form}>
