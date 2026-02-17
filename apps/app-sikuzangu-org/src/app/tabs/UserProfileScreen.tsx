@@ -74,19 +74,12 @@ export default function Profile() {
             style: 'destructive',
             onPress: async () => {
               try {
-                // Save language preference before logout
                 await AsyncStorage.setItem('language', language);
-
-                // Perform logout - this clears the access token
                 await logoutUser();
-
-                // Navigate to login screen using replace to clear navigation stack
-                // This should prevent back navigation
                 router.replace({
                   pathname: '/auth/LoginScreen',
                   params: { lang: language },
                 });
-
               } catch (e: any) {
                 Alert.alert(
                     language === 'sw' ? 'Hitilafu' : 'Error',
