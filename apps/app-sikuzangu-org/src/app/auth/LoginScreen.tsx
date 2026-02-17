@@ -78,6 +78,14 @@ export default function LoginScreen() {
         }
     }, [pin, language]);
 
+    const goToForgotPin = () => {
+   Keyboard.dismiss();
+  router.push({
+     pathname: '/auth/Forgotpinscreen',
+     params: { lang: language },
+  });
+   };
+
     const handleLogin = async () => {
         const phoneNumber = phone.replace(/\D/g, '');
         const storedPhoneNumber = `${storageCountryCode} ${phoneNumber}`;
@@ -278,10 +286,10 @@ export default function LoginScreen() {
                         </View>
                         {pinError ? <Text style={styles.errorText}>{pinError}</Text> : null}
                     </View>
-                    <TouchableOpacity>
+                    <TouchableOpacity onPress={goToForgotPin}>
                         <Text style={styles.forgotLink}>
                             {language === 'en' ? 'Forgot PIN?' : 'Umesahau Nenosiri?'}
-                        </Text>
+                          </Text>
                     </TouchableOpacity>
 
                     <PrimaryButton
