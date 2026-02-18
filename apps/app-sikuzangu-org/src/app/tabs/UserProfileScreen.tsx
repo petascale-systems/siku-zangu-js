@@ -40,7 +40,6 @@ export default function Profile() {
   const { logoutUser, isLoggingOut } = useAccessToken();
   const lastFetchRef = useRef<number>(0);
   const MIN_DELAY_BETWEEN_REFRESHES = 30000;
-
   useFocusEffect(
       useCallback(() => {
         if (!userId || !refetchUser) return;
