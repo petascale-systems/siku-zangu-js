@@ -129,7 +129,6 @@ export default function NotificationsScreen() {
   };
 
   const handleSavePreferences = async () => {
-    // Check if there are any changes
     const hasChanges = notifications.some((notif, index) => {
       const initial = initialNotifications[index];
       return initial && notif.enabled !== initial.enabled;
@@ -172,6 +171,10 @@ export default function NotificationsScreen() {
                 setInitialNotifications(
                     JSON.parse(JSON.stringify(notifications))
                 );
+                router.push({
+                  pathname: '/tabs/UserProfileScreen',
+                  params: { lang: language, userId },
+                });
               },
             },
           ]
