@@ -140,6 +140,7 @@ export default function InsightsScreen() {
     page,
     size: pageSize,
     status: 'published',
+    language,
   });
 
   const t = translations[language];

@@ -17,9 +17,18 @@ export function useArticlesPage(params: ArticlesFetchParams) {
     useEffect(() => {
         setIsFetchingArticlesPage(true);
         _fetchArticles(params)
-            .then(setArticlesPage)
+            .then((page) => {
+                if (!page) return;
+                const filtered = params.language
+                    ? page.items.filter(
+                        (a) => !a.kv?.language || a.kv.language === params.language
+                    )
+                    : page.items;
+
+                setArticlesPage({ ...page, items: filtered });
+            })
             .finally(() => setIsFetchingArticlesPage(false));
-    }, [params.q, params.page, params.size, params.status]);
+    }, [params.q, params.page, params.size, params.status, params.language]);
 
     return {articlesPage, isFetchingArticlesPage};
 }
