@@ -55,8 +55,8 @@ export default function ForgotPinScreen() {
 
     const { sendResetCode, isRequestingReset } = useUser();
 
-    const displayCountryCode = '+255';
-    const storageCountryCode = 'TZ';
+    const displayCountryCode = '+254';
+    const storageCountryCode = 'KE';
 
     const [phone, setPhone] = useState('');
     const [phoneError, setPhoneError] = useState('');
@@ -83,6 +83,10 @@ export default function ForgotPinScreen() {
         const digits = phone.replace(/\D/g, '');
         const storedPhoneNumber = `${storageCountryCode} ${digits}`;
 
+        console.log('[FRONTEND DEBUG] Phone input:', phone);
+        console.log('[FRONTEND DEBUG] Digits extracted:', digits);
+        console.log('[FRONTEND DEBUG] Stored format:', storedPhoneNumber);
+
         try {
             await sendResetCode(storedPhoneNumber);
             router.push({
@@ -94,6 +98,7 @@ export default function ForgotPinScreen() {
                 },
             });
         } catch (e: any) {
+            console.error('[FRONTEND DEBUG] Error:', e);
             Alert.alert(
                 tx.errorTitle,
                 e?.message ?? (language === 'en'

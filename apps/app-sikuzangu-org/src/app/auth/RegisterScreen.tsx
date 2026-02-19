@@ -27,7 +27,7 @@ export default function RegisterScreen() {
   const [pinError, setPinError] = useState('');
 
   const language = (params.lang as 'en' | 'sw') ?? 'en';
-  const displayCountryCode = '+255';
+  const displayCountryCode = '+254';
   const storageCountryCode = 'TZ';
 
   useEffect(() => {

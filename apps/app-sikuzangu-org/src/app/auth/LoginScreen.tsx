@@ -18,7 +18,7 @@ export default function LoginScreen() {
     const [pinError, setPinError] = useState('');
 
     const language = (params.lang as 'en' | 'sw') ?? 'en';
-    const displayCountryCode = '+255';
+    const displayCountryCode = '+254';
     const storageCountryCode = 'TZ';
     const LANGUAGE_KEY = 'language';
 
@@ -81,7 +81,7 @@ export default function LoginScreen() {
     const goToForgotPin = () => {
    Keyboard.dismiss();
   router.push({
-     pathname: '/auth/Forgotpinscreen',
+     pathname: '/auth/ForgotPinScreen',
      params: { lang: language },
   });
    };
