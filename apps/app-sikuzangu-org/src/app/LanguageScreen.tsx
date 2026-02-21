@@ -41,7 +41,7 @@ export default function LanguageScreen() {
         });
       } else {
         router.push({
-          pathname: '/auth/RegisterScreen',
+          pathname: '/auth/LoginScreen',
           params: { lang: selectedLang },
         });
       }
