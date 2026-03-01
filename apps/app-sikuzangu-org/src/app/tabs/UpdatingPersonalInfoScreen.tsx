@@ -23,6 +23,11 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 type EditSection = 'name' | 'dob' | null;
 
+const MINIMUM_AGE = 17;
+const currentYear = new Date().getFullYear();
+const maxBirthYear = currentYear - MINIMUM_AGE;
+const minBirthYear = 1975;
+
 export default function UpdatePersonalInfoScreen() {
     const router = useRouter();
     const params = useLocalSearchParams();
@@ -38,7 +43,9 @@ export default function UpdatePersonalInfoScreen() {
 
     const [selectedDay, setSelectedDay] = useState<number>(1);
     const [selectedMonth, setSelectedMonth] = useState<number>(0);
-    const [selectedYear, setSelectedYear] = useState<number>(2000);
+    const [selectedYear, setSelectedYear] = useState<number>(
+        Math.min(2000, maxBirthYear)
+    );
     const [activePicker, setActivePicker] = useState<'day' | 'month' | 'year'>('day');
 
     const [editingSection, setEditingSection] = useState<EditSection>(null);
@@ -57,6 +64,7 @@ export default function UpdatePersonalInfoScreen() {
             }
         }
     }, [user, isFetchingUser]);
+
     const months = [
         { label: language === 'en' ? 'January' : 'Januari', value: 0, short: 'Jan' },
         { label: language === 'en' ? 'February' : 'Februari', value: 1, short: 'Feb' },
@@ -71,14 +79,21 @@ export default function UpdatePersonalInfoScreen() {
         { label: language === 'en' ? 'November' : 'Novemba', value: 10, short: 'Nov' },
         { label: language === 'en' ? 'December' : 'Desemba', value: 11, short: 'Dec' },
     ];
+
     const getDaysInMonth = (month: number, year: number) => {
         return new Date(year, month + 1, 0).getDate();
     };
+
     const days = Array.from(
         { length: getDaysInMonth(selectedMonth, selectedYear) },
         (_, i) => i + 1
     );
-    const years = Array.from({ length: 50 }, (_, i) => 1975 + i);
+
+    const years = Array.from(
+        { length: maxBirthYear - minBirthYear + 1 },
+        (_, i) => minBirthYear + i
+    );
+
     const validateName = (name: string, field: 'first' | 'last'): string => {
         if (field === 'first' && name.length === 0) {
             return language === 'en'
@@ -92,12 +107,14 @@ export default function UpdatePersonalInfoScreen() {
         }
         return '';
     };
+
     const handleFirstNameChange = (text: string) => {
         setFirstName(text);
         if (hasAttemptedSave) {
             setFirstNameError(validateName(text, 'first'));
         }
     };
+
     const handleLastNameChange = (text: string) => {
         setLastName(text);
         if (hasAttemptedSave) {
@@ -110,6 +127,7 @@ export default function UpdatePersonalInfoScreen() {
         const dayStr = String(day).padStart(2, '0');
         return `${year}-${monthStr}-${dayStr}`;
     };
+
     const isValidDate = (day: number, month: number, year: number): boolean => {
         const date = new Date(year, month, day);
         return (
@@ -118,6 +136,21 @@ export default function UpdatePersonalInfoScreen() {
             date.getDate() === day
         );
     };
+
+    const meetsMinimumAge = (day: number, month: number, year: number): boolean => {
+        const today = new Date();
+        const birthDate = new Date(year, month, day);
+        let age = today.getFullYear() - birthDate.getFullYear();
+        const monthDiff = today.getMonth() - birthDate.getMonth();
+        if (
+            monthDiff < 0 ||
+            (monthDiff === 0 && today.getDate() < birthDate.getDate())
+        ) {
+            age--;
+        }
+        return age >= MINIMUM_AGE;
+    };
+
     const handleSaveName = async () => {
         setHasAttemptedSave(true);
         const firstError = validateName(firstName.trim(), 'first');
@@ -155,6 +188,7 @@ export default function UpdatePersonalInfoScreen() {
             );
         }
     };
+
     const handleSaveDOB = async () => {
         if (!isValidDate(selectedDay, selectedMonth, selectedYear)) {
             Alert.alert(
@@ -163,6 +197,17 @@ export default function UpdatePersonalInfoScreen() {
             );
             return;
         }
+
+        if (!meetsMinimumAge(selectedDay, selectedMonth, selectedYear)) {
+            Alert.alert(
+                language === 'en' ? 'Age Requirement' : 'Mahitaji ya Umri',
+                language === 'en'
+                    ? `You must be at least ${MINIMUM_AGE} years old to register.`
+                    : `Lazima uwe na umri wa angalau miaka ${MINIMUM_AGE} ili kusajiliwa.`
+            );
+            return;
+        }
+
         try {
             const date_of_birth = formatDateToISO(selectedDay, selectedMonth, selectedYear);
             const updateData: User = { kv: { date_of_birth } };
@@ -184,6 +229,7 @@ export default function UpdatePersonalInfoScreen() {
             );
         }
     };
+
     const renderDateDisplay = () => (
         <View style={styles.dateDisplay}>
             <TouchableOpacity
@@ -239,6 +285,7 @@ export default function UpdatePersonalInfoScreen() {
                     {language === 'en' ? 'MONTH' : 'MWEZI'}
                 </Text>
             </TouchableOpacity>
+
             <View style={styles.dateSeparator}>
                 <Text style={styles.dateSeparatorText}>/</Text>
             </View>
@@ -269,6 +316,7 @@ export default function UpdatePersonalInfoScreen() {
             </TouchableOpacity>
         </View>
     );
+
     const renderPicker = () => (
         <View style={styles.pickerContainer}>
             <ScrollView
@@ -318,6 +366,7 @@ export default function UpdatePersonalInfoScreen() {
                             </Text>
                         </TouchableOpacity>
                     ))}
+
                 {activePicker === 'year' &&
                     years.map((year) => (
                         <TouchableOpacity
@@ -341,6 +390,7 @@ export default function UpdatePersonalInfoScreen() {
             </ScrollView>
         </View>
     );
+
     if (isInitialFetching && !user) {
         return (
             <View style={[styles.container, styles.centerContent, { paddingTop: insets.top }]}>
@@ -542,6 +592,7 @@ export default function UpdatePersonalInfoScreen() {
         </KeyboardAvoidingView>
     );
 }
+
 const styles = StyleSheet.create({
     container: {
         flex: 1,

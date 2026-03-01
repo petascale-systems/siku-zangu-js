@@ -19,6 +19,11 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
+const MINIMUM_AGE = 17;
+const currentYear = new Date().getFullYear();
+const maxBirthYear = currentYear - MINIMUM_AGE;
+const minBirthYear = 1975;
+
 export default function UpdatingDOBScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
@@ -29,10 +34,12 @@ export default function UpdatingDOBScreen() {
   const { upsertUser, isUpsertingUser } = useUser(userId);
 
   const [selectedDay, setSelectedDay] = useState<number>(12);
-  const [selectedMonth, setSelectedMonth] = useState<number>(8); // September (0-indexed)
-  const [selectedYear, setSelectedYear] = useState<number>(2003);
+  const [selectedMonth, setSelectedMonth] = useState<number>(8);
+  const [selectedYear, setSelectedYear] = useState<number>(
+      Math.min(2003, maxBirthYear)
+  );
   const [activePicker, setActivePicker] = useState<'day' | 'month' | 'year'>(
-    'day'
+      'day'
   );
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -93,15 +100,19 @@ export default function UpdatingDOBScreen() {
   };
 
   const days = Array.from(
-    { length: getDaysInMonth(selectedMonth, selectedYear) },
-    (_, i) => i + 1
+      { length: getDaysInMonth(selectedMonth, selectedYear) },
+      (_, i) => i + 1
   );
-  const years = Array.from({ length: 50 }, (_, i) => 1975 + i);
+
+  const years = Array.from(
+      { length: maxBirthYear - minBirthYear + 1 },
+      (_, i) => minBirthYear + i
+  );
 
   const formatDateToISO = (
-    day: number,
-    month: number,
-    year: number
+      day: number,
+      month: number,
+      year: number
   ): string => {
     const monthStr = String(month + 1).padStart(2, '0');
     const dayStr = String(day).padStart(2, '0');
@@ -111,38 +122,61 @@ export default function UpdatingDOBScreen() {
   const isValidDate = (day: number, month: number, year: number): boolean => {
     const date = new Date(year, month, day);
     return (
-      date.getFullYear() === year &&
-      date.getMonth() === month &&
-      date.getDate() === day
+        date.getFullYear() === year &&
+        date.getMonth() === month &&
+        date.getDate() === day
     );
+  };
+  const meetsMinimumAge = (day: number, month: number, year: number): boolean => {
+    const today = new Date();
+    const birthDate = new Date(year, month, day);
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    if (
+        monthDiff < 0 ||
+        (monthDiff === 0 && today.getDate() < birthDate.getDate())
+    ) {
+      age--;
+    }
+    return age >= MINIMUM_AGE;
   };
 
   const handleSave = async () => {
     if (!userId) {
       Alert.alert(
-        language === 'en' ? 'Error' : 'Hitilafu',
-        language === 'en'
-          ? 'User ID not found'
-          : 'Kitambulisho cha mtumiaji hakipatikani'
+          language === 'en' ? 'Error' : 'Hitilafu',
+          language === 'en'
+              ? 'User ID not found'
+              : 'Kitambulisho cha mtumiaji hakipatikani'
       );
       return;
     }
 
     if (!isValidDate(selectedDay, selectedMonth, selectedYear)) {
       Alert.alert(
-        language === 'en' ? 'Invalid Date' : 'Tarehe si sahihi',
-        language === 'en'
-          ? 'Please select a valid date'
-          : 'Tafadhali chagua tarehe sahihi'
+          language === 'en' ? 'Invalid Date' : 'Tarehe si sahihi',
+          language === 'en'
+              ? 'Please select a valid date'
+              : 'Tafadhali chagua tarehe sahihi'
+      );
+      return;
+    }
+
+    if (!meetsMinimumAge(selectedDay, selectedMonth, selectedYear)) {
+      Alert.alert(
+          language === 'en' ? 'Age Requirement' : 'Mahitaji ya Umri',
+          language === 'en'
+              ? `You must be at least ${MINIMUM_AGE} years old to register.`
+              : `Lazima uwe na umri wa angalau miaka ${MINIMUM_AGE} ili kusajiliwa.`
       );
       return;
     }
 
     try {
       const date_of_birth = formatDateToISO(
-        selectedDay,
-        selectedMonth,
-        selectedYear
+          selectedDay,
+          selectedMonth,
+          selectedYear
       );
       const updateData: User = { kv: { date_of_birth } };
       await upsertUser(updateData);
@@ -155,10 +189,10 @@ export default function UpdatingDOBScreen() {
       });
     } catch (error: any) {
       const errorMessage =
-        error.message ||
-        (language === 'en'
-          ? 'Failed to save date of birth'
-          : 'Imeshindwa kuhifadhi tarehe ya kuzaliwa');
+          error.message ||
+          (language === 'en'
+              ? 'Failed to save date of birth'
+              : 'Imeshindwa kuhifadhi tarehe ya kuzaliwa');
       Alert.alert(language === 'en' ? 'Error' : 'Hitilafu', errorMessage);
     }
   };
@@ -251,155 +285,155 @@ export default function UpdatingDOBScreen() {
   );
 
   const renderPicker = () => (
-    <View style={styles.pickerContainer}>
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.pickerScrollContent}
-      >
-        {activePicker === 'day' &&
-          days.map((day) => (
-            <TouchableOpacity
-              key={day}
-              style={[
-                styles.pickerItem,
-                selectedDay === day && styles.selectedPickerItem,
-              ]}
-              onPress={() => setSelectedDay(day)}
-            >
-              <Text
-                style={[
-                  styles.pickerItemText,
-                  selectedDay === day && styles.selectedPickerItemText,
-                ]}
-              >
-                {day}
-              </Text>
-            </TouchableOpacity>
-          ))}
+      <View style={styles.pickerContainer}>
+        <ScrollView
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={styles.pickerScrollContent}
+        >
+          {activePicker === 'day' &&
+              days.map((day) => (
+                  <TouchableOpacity
+                      key={day}
+                      style={[
+                        styles.pickerItem,
+                        selectedDay === day && styles.selectedPickerItem,
+                      ]}
+                      onPress={() => setSelectedDay(day)}
+                  >
+                    <Text
+                        style={[
+                          styles.pickerItemText,
+                          selectedDay === day && styles.selectedPickerItemText,
+                        ]}
+                    >
+                      {day}
+                    </Text>
+                  </TouchableOpacity>
+              ))}
 
-        {activePicker === 'month' &&
-          months.map((month) => (
-            <TouchableOpacity
-              key={month.value}
-              style={[
-                styles.pickerItem,
-                selectedMonth === month.value && styles.selectedPickerItem,
-              ]}
-              onPress={() => setSelectedMonth(month.value)}
-            >
-              <Text
-                  style={[
-                styles.pickerItemText,
-                styles.monthPickerItemText,
-                selectedMonth === month.value && styles.selectedMonthPickerItemText,
-              ]}
-              >
-                {month.label}
-              </Text>
-            </TouchableOpacity>
-          ))}
+          {activePicker === 'month' &&
+              months.map((month) => (
+                  <TouchableOpacity
+                      key={month.value}
+                      style={[
+                        styles.pickerItem,
+                        selectedMonth === month.value && styles.selectedPickerItem,
+                      ]}
+                      onPress={() => setSelectedMonth(month.value)}
+                  >
+                    <Text
+                        style={[
+                          styles.pickerItemText,
+                          styles.monthPickerItemText,
+                          selectedMonth === month.value && styles.selectedMonthPickerItemText,
+                        ]}
+                    >
+                      {month.label}
+                    </Text>
+                  </TouchableOpacity>
+              ))}
 
-        {activePicker === 'year' &&
-          years.map((year) => (
-            <TouchableOpacity
-              key={year}
-              style={[
-                styles.pickerItem,
-                selectedYear === year && styles.selectedPickerItem,
-              ]}
-              onPress={() => setSelectedYear(year)}
-            >
-              <Text
-                style={[
-                  styles.pickerItemText,
-                  selectedYear === year && styles.selectedPickerItemText,
-                ]}
-              >
-                {year}
-              </Text>
-            </TouchableOpacity>
-          ))}
-      </ScrollView>
-    </View>
+          {activePicker === 'year' &&
+              years.map((year) => (
+                  <TouchableOpacity
+                      key={year}
+                      style={[
+                        styles.pickerItem,
+                        selectedYear === year && styles.selectedPickerItem,
+                      ]}
+                      onPress={() => setSelectedYear(year)}
+                  >
+                    <Text
+                        style={[
+                          styles.pickerItemText,
+                          selectedYear === year && styles.selectedPickerItemText,
+                        ]}
+                    >
+                      {year}
+                    </Text>
+                  </TouchableOpacity>
+              ))}
+        </ScrollView>
+      </View>
   );
 
   return (
-    <View style={styles.container}>
-      <TouchableOpacity
-        style={styles.backButton}
-        onPress={() => router.back()}
-        accessibilityLabel={language === 'en' ? 'Go back' : 'Rudi nyuma'}
-      >
-        <Ionicons name="arrow-back" size={24} color="black" />
-      </TouchableOpacity>
-
-      <Animated.View
-        style={[
-          styles.content,
-          {
-            opacity: fadeAnim,
-            transform: [{ translateY: slideAnim }],
-          },
-        ]}
-      >
-        <Text style={styles.title}>
-          {language === 'en' ? 'When were you born?' : 'Umezaliwa lini?'}
-        </Text>
-        <Text style={styles.subtitle}>
-          {language === 'en'
-            ? 'Knowing your age helps us give you better tips.'
-            : 'Kujua umri wako hutusaidia kukupa ushauri bora.'}
-        </Text>
-        {renderDateDisplay()}
-        {renderPicker()}
-        <Text style={styles.termsText}>
-          {language === 'en' ? (
-              <>
-                Review our{' '}
-                <Text
-                    style={styles.termsConditions}
-                    onPress={() => Linking.openURL('https://sikuzangu.org/terms-of-service')}
-                >
-                  Terms and Conditions
-                </Text>{' '}
-                to learn about the minimum age requirement. You can change your
-                answer on your profile any time.
-              </>
-          ) : (
-              <>
-                Angalia{' '}
-                <Text
-                    style={styles.termsConditions}
-                    onPress={() => Linking.openURL('https://sikuzangu.org/terms-of-service')}
-                >
-                  Sheria na Masharti
-                </Text>{' '}
-                yetu kujua kuhusu umri wa chini unaohitajika. Unaweza kubadilisha jibu lako kwenye wasifu wako wakati wowote.
-              </>
-          )}
-        </Text>
+      <View style={styles.container}>
         <TouchableOpacity
-          style={[
-            styles.nextButton,
-            isUpsertingUser && styles.nextButtonDisabled,
-          ]}
-          onPress={handleSave}
-          disabled={isUpsertingUser}
-          accessibilityLabel={language === 'en' ? 'Next' : 'IFUATAYO'}
+            style={styles.backButton}
+            onPress={() => router.back()}
+            accessibilityLabel={language === 'en' ? 'Go back' : 'Rudi nyuma'}
         >
-          {isUpsertingUser ? (
-            <ActivityIndicator size="small" color="#fff" />
-          ) : (
-    <>
-      <Text style={styles.nextButtonText}>
-        {language === 'en' ? 'NEXT' : 'IFUATAYO'}
-      </Text>
-      <Ionicons name="arrow-forward" size={20} color="#FFFFFF" />
-    </>
-          )}
+          <Ionicons name="arrow-back" size={24} color="black" />
         </TouchableOpacity>
-      </Animated.View>
-    </View>
+
+        <Animated.View
+            style={[
+              styles.content,
+              {
+                opacity: fadeAnim,
+                transform: [{ translateY: slideAnim }],
+              },
+            ]}
+        >
+          <Text style={styles.title}>
+            {language === 'en' ? 'When were you born?' : 'Umezaliwa lini?'}
+          </Text>
+          <Text style={styles.subtitle}>
+            {language === 'en'
+                ? 'Knowing your age helps us give you better tips.'
+                : 'Kujua umri wako hutusaidia kukupa ushauri bora.'}
+          </Text>
+          {renderDateDisplay()}
+          {renderPicker()}
+          <Text style={styles.termsText}>
+            {language === 'en' ? (
+                <>
+                  Review our{' '}
+                  <Text
+                      style={styles.termsConditions}
+                      onPress={() => Linking.openURL('https://sikuzangu.org/terms-of-service')}
+                  >
+                    Terms and Conditions
+                  </Text>{' '}
+                  to learn about the minimum age requirement. You can change your
+                  answer on your profile any time.
+                </>
+            ) : (
+                <>
+                  Angalia{' '}
+                  <Text
+                      style={styles.termsConditions}
+                      onPress={() => Linking.openURL('https://sikuzangu.org/terms-of-service')}
+                  >
+                    Sheria na Masharti
+                  </Text>{' '}
+                  yetu kujua kuhusu umri wa chini unaohitajika. Unaweza kubadilisha jibu lako kwenye wasifu wako wakati wowote.
+                </>
+            )}
+          </Text>
+          <TouchableOpacity
+              style={[
+                styles.nextButton,
+                isUpsertingUser && styles.nextButtonDisabled,
+              ]}
+              onPress={handleSave}
+              disabled={isUpsertingUser}
+              accessibilityLabel={language === 'en' ? 'Next' : 'IFUATAYO'}
+          >
+            {isUpsertingUser ? (
+                <ActivityIndicator size="small" color="#fff" />
+            ) : (
+                <>
+                  <Text style={styles.nextButtonText}>
+                    {language === 'en' ? 'NEXT' : 'IFUATAYO'}
+                  </Text>
+                  <Ionicons name="arrow-forward" size={20} color="#FFFFFF" />
+                </>
+            )}
+          </TouchableOpacity>
+        </Animated.View>
+      </View>
   );
 }
 
