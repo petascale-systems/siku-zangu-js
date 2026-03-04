@@ -15,6 +15,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useUser } from '@siku-zangu/react';
+import { CountryCodePicker, COUNTRIES, Country } from '@siku-zangu/react-native';
 
 type Lang = 'en' | 'sw';
 
@@ -54,9 +55,7 @@ export default function ForgotPinScreen() {
     const tx = t[language];
 
     const { sendResetCode, isRequestingReset } = useUser();
-
-    const displayCountryCode = '+254';
-    const storageCountryCode = 'KE';
+    const [selectedCountry, setSelectedCountry] = useState<Country>(COUNTRIES[0]); // Default to Kenya
 
     const [phone, setPhone] = useState('');
     const [phoneError, setPhoneError] = useState('');
@@ -81,11 +80,7 @@ export default function ForgotPinScreen() {
         }
 
         const digits = phone.replace(/\D/g, '');
-        const storedPhoneNumber = `${storageCountryCode} ${digits}`;
-
-        console.log('[FRONTEND DEBUG] Phone input:', phone);
-        console.log('[FRONTEND DEBUG] Digits extracted:', digits);
-        console.log('[FRONTEND DEBUG] Stored format:', storedPhoneNumber);
+        const storedPhoneNumber = `${selectedCountry.code} ${digits}`;
 
         try {
             await sendResetCode(storedPhoneNumber);
@@ -98,7 +93,6 @@ export default function ForgotPinScreen() {
                 },
             });
         } catch (e: any) {
-            console.error('[FRONTEND DEBUG] Error:', e);
             Alert.alert(
                 tx.errorTitle,
                 e?.message ?? (language === 'en'
@@ -140,7 +134,11 @@ export default function ForgotPinScreen() {
                 <View style={styles.formBox}>
                     <Text style={styles.label}>{tx.phoneLabel}</Text>
                     <View style={[styles.phoneWrapper, phoneError ? styles.errorBorder : null]}>
-                        <Text style={styles.countryCode}>{displayCountryCode}</Text>
+                        <CountryCodePicker
+                            selectedCountry={selectedCountry}
+                            onSelect={setSelectedCountry}
+                            language={language}
+                        />
                         <TextInput
                             style={[styles.input, styles.phoneInput]}
                             placeholder={tx.phonePlaceholder}
@@ -255,18 +253,9 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderColor: '#FFB6C1',
         borderRadius: 10,
-        paddingHorizontal: 12,
+        paddingRight: 12,
         marginBottom: 6,
         backgroundColor: '#FAFAFA',
-    },
-    countryCode: {
-        fontSize: 16,
-        color: '#333333',
-        fontWeight: '600',
-        paddingVertical: 13,
-        paddingRight: 20,
-        borderRightWidth: 1,
-        borderRightColor: '#FFB6C1',
     },
     input: {
         flex: 1,

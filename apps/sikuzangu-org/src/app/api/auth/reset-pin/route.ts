@@ -19,6 +19,10 @@ export async function POST(req: NextRequest) {
     return handleAPIError(async () => {
         const { phone_number, reset_token, new_pin } = await req.json();
 
+        console.log('[RESET-PIN DEBUG] Received phone_number:', phone_number);
+        console.log('[RESET-PIN DEBUG] Received reset_token:', reset_token);
+        console.log('[RESET-PIN DEBUG] Received new_pin:', new_pin ? '****' : 'undefined');
+
         if (!phone_number || !reset_token || !new_pin) {
             throw {
                 status: 400,
@@ -36,7 +40,10 @@ export async function POST(req: NextRequest) {
         }
 
         // Validate and consume the single-use reset token
+        console.log('[RESET-PIN DEBUG] Attempting to consume token...');
         const tokenValid = consumeResetToken(phone_number, reset_token);
+        console.log('[RESET-PIN DEBUG] Token valid:', tokenValid);
+
         if (!tokenValid) {
             throw {
                 status: 401,
@@ -44,7 +51,9 @@ export async function POST(req: NextRequest) {
             } as APIError;
         }
 
-        const user = await selectOneUserByPhoneNumber(phone_number);
+        const user = await selectOneUserByPhone(phone_number);
+        console.log('[RESET-PIN DEBUG] User found:', !!user);
+
         if (!user) {
             throw { status: 404, message: 'User not found' } as APIError;
         }
@@ -56,6 +65,8 @@ export async function POST(req: NextRequest) {
 
         // Prevent reusing the same PIN
         const isSameAsOld = await bcrypt.compare(new_pin, userWithPin.kv.pin);
+        console.log('[RESET-PIN DEBUG] Is same as old PIN:', isSameAsOld);
+
         if (isSameAsOld) {
             throw {
                 status: 400,
@@ -65,6 +76,8 @@ export async function POST(req: NextRequest) {
 
         const hashedNewPin = await bcrypt.hash(new_pin, 10);
         await updateUserPin(user.user_id, hashedNewPin);
+
+        console.log('[RESET-PIN DEBUG] PIN updated successfully');
 
         // Mirror changePin: return user without pin hash
         const updatedUser = await selectOneUserByUserIdWithPin(user.user_id);

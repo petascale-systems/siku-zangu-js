@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
     ActivityIndicator,
     Alert,
@@ -20,50 +20,46 @@ type Lang = 'en' | 'sw';
 
 const t = {
     en: {
-        headerTitle: 'Set New PIN',
+        title: 'Set New PIN',
         subtitle: "Choose a new 4-digit PIN for your account. Make sure it's memorable but hard to guess.",
-        newPinLabel: 'NEW PIN',
-        confirmPinLabel: 'CONFIRM NEW PIN',
-        placeholder: '****',
-        save: 'SAVE NEW PIN',
+        newPinLabel: 'New PIN',
+        confirmPinLabel: 'Confirm PIN',
+        placeholder: '••••',
+        save: 'Save New PIN',
         errorTitle: 'Error',
-        errorInvalid: 'PIN must be exactly 4 digits.',
-        errorNoMatch: 'PINs do not match.',
-        errorWeak: 'Please choose a PIN that is not easy to guess.',
-        errorGeneric: 'Failed to reset PIN. Please try again.',
-        successTitle: 'Success',
-        successMsg: 'Your PIN has been reset! Please log in with your new PIN.',
-        ok: 'OK',
-        tipsTitle: 'Security Tips:',
-        tips: [
-            'Use a PIN you can remember but others cannot guess',
-            'Avoid simple PINs like 1234 or 0000',
-            'Never share your PIN with anyone',
-            'Change your PIN regularly for added security',
-        ],
+        errorRequired: 'Please enter a PIN',
+        errorLength: 'PIN must be exactly 4 digits',
+        errorMatch: 'PINs do not match',
+        errorWeak: 'This PIN is too weak. Please choose a different PIN.',
+        errorSameAsOld: 'New PIN must be different from your current PIN',
+        successTitle: 'Success!',
+        successMsg: 'Your PIN has been reset successfully.',
+        securityTips: 'Security Tips:',
+        tip1: 'Use a PIN you can remember but others cannot guess',
+        tip2: 'Avoid simple PINs like 1234 or 0000',
+        tip3: 'Never share your PIN with anyone',
+        tip4: 'Change your PIN regularly for added security',
     },
     sw: {
-        headerTitle: 'Weka PIN Mpya',
-        subtitle: 'Chagua PIN mpya ya tarakimu 4 kwa akaunti yako. Hakikisha inakumbukwa lakini haiwezi kukisiwa.',
-        newPinLabel: 'PIN MPYA',
-        confirmPinLabel: 'THIBITISHA PIN MPYA',
-        placeholder: '****',
-        save: 'HIFADHI PIN MPYA',
+        title: 'Weka PIN Mpya',
+        subtitle: 'Chagua PIN mpya ya tarakimu 4 kwa akaunti yako. Hakikisha inakumbukwa lakini ni ngumu kukisia.',
+        newPinLabel: 'PIN Mpya',
+        confirmPinLabel: 'Thibitisha PIN',
+        placeholder: '••••',
+        save: 'Hifadhi PIN Mpya',
         errorTitle: 'Hitilafu',
-        errorInvalid: 'PIN lazima iwe na tarakimu 4 haswa.',
-        errorNoMatch: 'PIN hazilingani.',
-        errorWeak: 'Tafadhali chagua PIN ambayo haiwezi kukisiwa rahisi.',
-        errorGeneric: 'Imeshindwa kubadilisha PIN. Tafadhali jaribu tena.',
-        successTitle: 'Mafanikio',
-        successMsg: 'PIN yako imebadilishwa! Tafadhali ingia kwa kutumia PIN yako mpya.',
-        ok: 'Sawa',
-        tipsTitle: 'Vidokezo vya Usalama:',
-        tips: [
-            'Tumia PIN ambayo huwezi kusahau lakini haiwezi kukisiwa',
-            'Epuka PIN rahisi kama 1234 au 0000',
-            'Usimshirikishe mtu yeyote PIN yako',
-            'Badilisha PIN yako mara kwa mara kwa usalama zaidi',
-        ],
+        errorRequired: 'Tafadhali weka PIN',
+        errorLength: 'PIN lazima iwe tarakimu 4 haswa',
+        errorMatch: 'PIN hazifanani',
+        errorWeak: 'PIN hii ni dhaifu sana. Tafadhali chagua PIN tofauti.',
+        errorSameAsOld: 'PIN mpya lazima iwe tofauti na PIN yako ya sasa',
+        successTitle: 'Mafanikio!',
+        successMsg: 'PIN yako imebadilishwa kwa mafanikio.',
+        securityTips: 'Vidokezo vya Usalama:',
+        tip1: 'Tumia PIN unayoweza kukumbuka lakini wengine hawawezi kukisia',
+        tip2: 'Epuka PIN rahisi kama 1234 au 0000',
+        tip3: 'Usishiriki PIN yako na mtu yeyote',
+        tip4: 'Badilisha PIN yako mara kwa mara kwa usalama zaidi',
     },
 };
 
@@ -79,188 +75,213 @@ export default function ResetPinScreen() {
     const insets = useSafeAreaInsets();
 
     const language: Lang = (params.lang as Lang) ?? 'en';
+    const tx = t[language];
+
+    const phone = params.phone as string;
     const storagePhone = params.storagePhone as string;
     const resetToken = params.resetToken as string;
-    const tx = t[language];
 
     const { submitNewPin, isResettingPin } = useUser();
 
     const [newPin, setNewPin] = useState('');
     const [confirmPin, setConfirmPin] = useState('');
-    const [showNew, setShowNew] = useState(false);
-    const [showConfirm, setShowConfirm] = useState(false);
+    const [secureNew, setSecureNew] = useState(true);
+    const [secureConfirm, setSecureConfirm] = useState(true);
 
-    const handleSave = async () => {
-        if (!/^\d{4}$/.test(newPin)) {
-            Alert.alert(tx.errorTitle, tx.errorInvalid);
+    const pinsMatch = newPin === confirmPin && newPin.length === 4;
+    const isWeak = WEAK_PINS.includes(newPin);
+    const canSubmit = newPin.length === 4 && confirmPin.length === 4 && pinsMatch && !isWeak;
+
+    const handleSubmit = async () => {
+        if (!newPin || !confirmPin) {
+            Alert.alert(tx.errorTitle, tx.errorRequired);
+            return;
+        }
+        if (newPin.length !== 4 || confirmPin.length !== 4) {
+            Alert.alert(tx.errorTitle, tx.errorLength);
             return;
         }
         if (newPin !== confirmPin) {
-            Alert.alert(tx.errorTitle, tx.errorNoMatch);
+            Alert.alert(tx.errorTitle, tx.errorMatch);
             return;
         }
-        if (WEAK_PINS.includes(newPin)) {
+        if (isWeak) {
             Alert.alert(tx.errorTitle, tx.errorWeak);
             return;
         }
 
         try {
             await submitNewPin(storagePhone, resetToken, newPin);
-            Alert.alert(tx.successTitle, tx.successMsg, [
-                {
-                    text: tx.ok,
-                    onPress: () =>
-                        router.replace({
+            Alert.alert(
+                tx.successTitle,
+                tx.successMsg,
+                [
+                    {
+                        text: 'OK',
+                        onPress: () => router.replace({
                             pathname: '/auth/LoginScreen',
                             params: { lang: language },
                         }),
-                },
-            ]);
+                    },
+                ]
+            );
         } catch (e: any) {
-            Alert.alert(tx.errorTitle, e?.message ?? tx.errorGeneric);
+            let msg = e?.message;
+            if (e?.status === 400 && msg?.includes('different')) {
+                msg = tx.errorSameAsOld;
+            } else if (e?.status === 400) {
+                msg = tx.errorWeak;
+            } else if (!msg) {
+                msg = language === 'en'
+                    ? 'Failed to reset PIN. Please try again.'
+                    : 'Imeshindwa kubadilisha PIN. Tafadhali jaribu tena.';
+            }
+            Alert.alert(tx.errorTitle, msg);
         }
     };
-
-    const pinMatchState =
-        confirmPin.length === 4
-            ? confirmPin === newPin
-                ? 'match'
-                : 'mismatch'
-            : 'neutral';
-
-    const isDisabled = isResettingPin || !newPin || !confirmPin;
 
     return (
         <KeyboardAvoidingView
             style={[styles.container, { paddingTop: insets.top }]}
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         >
-            {/* Header */}
-            <View style={styles.header}>
-                <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-                    <Ionicons name="arrow-back" size={24} color="#000" />
-                </TouchableOpacity>
-                <Text style={styles.headerTitle}>{tx.headerTitle}</Text>
-                <View style={{ width: 36 }} />
-            </View>
-
             <ScrollView
-                showsVerticalScrollIndicator={false}
-                contentContainerStyle={styles.content}
+                contentContainerStyle={styles.scrollContent}
                 keyboardShouldPersistTaps="handled"
+                showsVerticalScrollIndicator={false}
             >
-                {/* Icon */}
+                <View style={styles.header}>
+                    <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+                        <Ionicons name="arrow-back" size={24} color="#333333" />
+                    </TouchableOpacity>
+                    <View style={{ width: 40 }} />
+                </View>
+
                 <View style={styles.iconCircle}>
                     <Ionicons name="key-outline" size={40} color="#E66386" />
                 </View>
 
+                <Text style={styles.title}>{tx.title}</Text>
                 <Text style={styles.subtitle}>{tx.subtitle}</Text>
 
-                {/* Form */}
-                <View style={styles.form}>
+                <View style={styles.formBox}>
                     {/* New PIN */}
-                    <View style={styles.inputGroup}>
-                        <Text style={styles.inputLabel}>{tx.newPinLabel}</Text>
-                        <View style={styles.inputContainer}>
+                    <View style={styles.fieldWrapper}>
+                        <Text style={styles.label}>{tx.newPinLabel}</Text>
+                        <View style={styles.pinWrapper}>
                             <TextInput
                                 style={styles.input}
+                                placeholder={tx.placeholder}
+                                placeholderTextColor="#BBBBBB"
+                                secureTextEntry={secureNew}
                                 value={newPin}
                                 onChangeText={(text) => {
                                     if (/^\d*$/.test(text)) setNewPin(text);
                                 }}
-                                placeholder={tx.placeholder}
-                                placeholderTextColor="#BBBBBB"
                                 keyboardType="numeric"
                                 maxLength={4}
-                                secureTextEntry={!showNew}
+                                accessibilityLabel={tx.newPinLabel}
                             />
-                            <TouchableOpacity
-                                style={styles.eyeButton}
-                                onPress={() => setShowNew(!showNew)}
-                            >
+                            <TouchableOpacity onPress={() => setSecureNew(!secureNew)}>
                                 <Ionicons
-                                    name={showNew ? 'eye-outline' : 'eye-off-outline'}
+                                    name={secureNew ? 'eye-off-outline' : 'eye-outline'}
                                     size={22}
-                                    color="#999"
+                                    color="gray"
                                 />
                             </TouchableOpacity>
                         </View>
-                        {/* Progress dots */}
-                        <View style={styles.dotsRow}>
-                            {Array(4).fill(null).map((_, i) => (
+                        <View style={styles.strengthIndicator}>
+                            {[1, 2, 3, 4].map((dot) => (
                                 <View
-                                    key={i}
-                                    style={[styles.dot, i < newPin.length && styles.dotFilled]}
+                                    key={dot}
+                                    style={[
+                                        styles.strengthDot,
+                                        newPin.length >= dot && styles.strengthDotFilled,
+                                        newPin.length === 4 && isWeak && styles.strengthDotWeak,
+                                    ]}
                                 />
                             ))}
                         </View>
                     </View>
 
                     {/* Confirm PIN */}
-                    <View style={styles.inputGroup}>
-                        <Text style={styles.inputLabel}>{tx.confirmPinLabel}</Text>
-                        <View style={[
-                            styles.inputContainer,
-                            pinMatchState === 'mismatch' && styles.inputError,
-                            pinMatchState === 'match'    && styles.inputSuccess,
-                        ]}>
+                    <View style={styles.fieldWrapper}>
+                        <Text style={styles.label}>{tx.confirmPinLabel}</Text>
+                        <View style={styles.pinWrapper}>
                             <TextInput
                                 style={styles.input}
+                                placeholder={tx.placeholder}
+                                placeholderTextColor="#BBBBBB"
+                                secureTextEntry={secureConfirm}
                                 value={confirmPin}
                                 onChangeText={(text) => {
                                     if (/^\d*$/.test(text)) setConfirmPin(text);
                                 }}
-                                placeholder={tx.placeholder}
-                                placeholderTextColor="#BBBBBB"
                                 keyboardType="numeric"
                                 maxLength={4}
-                                secureTextEntry={!showConfirm}
+                                accessibilityLabel={tx.confirmPinLabel}
                             />
-                            <TouchableOpacity
-                                style={styles.eyeButton}
-                                onPress={() => setShowConfirm(!showConfirm)}
-                            >
+                            <TouchableOpacity onPress={() => setSecureConfirm(!secureConfirm)}>
                                 <Ionicons
-                                    name={showConfirm ? 'eye-outline' : 'eye-off-outline'}
+                                    name={secureConfirm ? 'eye-off-outline' : 'eye-outline'}
                                     size={22}
-                                    color="#999"
+                                    color="gray"
                                 />
                             </TouchableOpacity>
-                            {pinMatchState !== 'neutral' && (
-                                <Ionicons
-                                    name={pinMatchState === 'match' ? 'checkmark-circle' : 'close-circle'}
-                                    size={20}
-                                    color={pinMatchState === 'match' ? '#10B981' : '#E66386'}
-                                    style={{ marginRight: 4 }}
-                                />
-                            )}
                         </View>
+                        {confirmPin.length === 4 && (
+                            <View style={styles.matchIndicator}>
+                                <Ionicons
+                                    name={pinsMatch ? 'checkmark-circle' : 'close-circle'}
+                                    size={18}
+                                    color={pinsMatch ? '#4CAF50' : '#E66386'}
+                                />
+                                <Text
+                                    style={[
+                                        styles.matchText,
+                                        pinsMatch ? styles.matchTextSuccess : styles.matchTextError,
+                                    ]}
+                                >
+                                    {pinsMatch
+                                        ? (language === 'en' ? 'PINs match' : 'PIN zinafanana')
+                                        : (language === 'en' ? 'PINs do not match' : 'PIN hazifanani')}
+                                </Text>
+                            </View>
+                        )}
                     </View>
+
+                    <TouchableOpacity
+                        style={[styles.saveButton, !canSubmit && styles.saveButtonDisabled]}
+                        onPress={handleSubmit}
+                        disabled={!canSubmit || isResettingPin}
+                        activeOpacity={0.8}
+                    >
+                        {isResettingPin ? (
+                            <ActivityIndicator size="small" color="#fff" />
+                        ) : (
+                            <Text style={styles.saveButtonText}>{tx.save}</Text>
+                        )}
+                    </TouchableOpacity>
                 </View>
 
-                {/* Save button */}
-                <TouchableOpacity
-                    style={[styles.saveButton, isDisabled && styles.saveButtonDisabled]}
-                    onPress={handleSave}
-                    disabled={isDisabled}
-                    activeOpacity={0.8}
-                >
-                    {isResettingPin ? (
-                        <ActivityIndicator size="small" color="#fff" />
-                    ) : (
-                        <Text style={styles.saveButtonText}>{tx.save}</Text>
-                    )}
-                </TouchableOpacity>
-
-                {/* Security tips */}
-                <View style={styles.tipsContainer}>
-                    <Text style={styles.tipsTitle}>{tx.tipsTitle}</Text>
-                    {tx.tips.map((tip, i) => (
-                        <View key={i} style={styles.tipItem}>
-                            <Ionicons name="checkmark-circle" size={16} color="#10B981" />
-                            <Text style={styles.tipText}>{tip}</Text>
-                        </View>
-                    ))}
+                <View style={styles.tipsBox}>
+                    <Text style={styles.tipsTitle}>{tx.securityTips}</Text>
+                    <View style={styles.tipRow}>
+                        <Ionicons name="checkmark-circle" size={18} color="#4CAF50" />
+                        <Text style={styles.tipText}>{tx.tip1}</Text>
+                    </View>
+                    <View style={styles.tipRow}>
+                        <Ionicons name="checkmark-circle" size={18} color="#4CAF50" />
+                        <Text style={styles.tipText}>{tx.tip2}</Text>
+                    </View>
+                    <View style={styles.tipRow}>
+                        <Ionicons name="checkmark-circle" size={18} color="#4CAF50" />
+                        <Text style={styles.tipText}>{tx.tip3}</Text>
+                    </View>
+                    <View style={styles.tipRow}>
+                        <Ionicons name="checkmark-circle" size={18} color="#4CAF50" />
+                        <Text style={styles.tipText}>{tx.tip4}</Text>
+                    </View>
                 </View>
             </ScrollView>
         </KeyboardAvoidingView>
@@ -270,27 +291,23 @@ export default function ResetPinScreen() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#FFF5F2',
+        backgroundColor: '#FFF4EC',
     },
-    header: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        paddingHorizontal: 16,
-        paddingVertical: 12,
-    },
-    backButton: { padding: 6 },
-    headerTitle: {
-        fontSize: 18,
-        fontWeight: '700',
-        color: '#333333',
-        textAlign: 'center',
-        flex: 1,
-    },
-    content: {
+    scrollContent: {
+        flexGrow: 1,
         paddingHorizontal: 20,
         paddingBottom: 40,
         alignItems: 'center',
+    },
+    header: {
+        width: '100%',
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        paddingVertical: 12,
+    },
+    backButton: {
+        padding: 6,
     },
     iconCircle: {
         width: 88,
@@ -299,122 +316,143 @@ const styles = StyleSheet.create({
         backgroundColor: '#FFE8F0',
         alignItems: 'center',
         justifyContent: 'center',
-        marginTop: 8,
-        marginBottom: 20,
+        marginTop: 24,
+        marginBottom: 24,
         shadowColor: '#E66386',
         shadowOpacity: 0.15,
         shadowRadius: 12,
         elevation: 4,
     },
+    title: {
+        fontSize: 24,
+        fontWeight: '600',
+        color: '#E66386',
+        textAlign: 'center',
+        marginBottom: 12,
+    },
     subtitle: {
         fontSize: 14,
-        color: '#645F5F',
-        lineHeight: 22,
-        marginBottom: 28,
+        fontWeight: '400',
+        color: '#666666',
         textAlign: 'center',
+        lineHeight: 22,
+        marginBottom: 32,
+        paddingHorizontal: 8,
     },
-    form: {
-        gap: 24,
-        marginBottom: 28,
-        width: '100%',
+    formBox: {
         backgroundColor: '#FFFFFF',
         borderRadius: 16,
-        padding: 20,
+        paddingVertical: 24,
+        paddingHorizontal: 20,
+        width: '100%',
         shadowColor: '#000',
-        shadowOpacity: 0.05,
-        shadowRadius: 10,
-        elevation: 2,
+        shadowOpacity: 0.06,
+        shadowRadius: 12,
+        elevation: 3,
+        marginBottom: 24,
     },
-    inputGroup: { gap: 8 },
-    inputLabel: {
-        fontSize: 12,
-        fontWeight: '600',
-        color: '#645F5F',
-        letterSpacing: 0.5,
+    fieldWrapper: {
+        marginBottom: 20,
     },
-    inputContainer: {
+    label: {
+        fontSize: 14,
+        fontWeight: '400',
+        color: '#333333',
+        marginBottom: 8,
+    },
+    pinWrapper: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#F9F9F9',
-        borderRadius: 12,
-        paddingHorizontal: 16,
-        borderWidth: 1.5,
-        borderColor: 'transparent',
-        shadowColor: '#000',
-        shadowOpacity: 0.04,
-        shadowRadius: 6,
-        elevation: 1,
-    },
-    inputError: {
-        borderColor: '#E66386',
-        backgroundColor: '#FFF5F8',
-    },
-    inputSuccess: {
-        borderColor: '#10B981',
-        backgroundColor: '#F0FDF4',
+        borderWidth: 1,
+        borderColor: '#FFB6C1',
+        borderRadius: 10,
+        paddingHorizontal: 12,
+        backgroundColor: '#FAFAFA',
     },
     input: {
         flex: 1,
         fontSize: 24,
-        color: '#333',
-        paddingVertical: 14,
+        fontWeight: '600',
+        color: '#333333',
+        paddingVertical: 13,
         letterSpacing: 8,
     },
-    eyeButton: { padding: 8 },
-    dotsRow: {
+    strengthIndicator: {
         flexDirection: 'row',
+        gap: 8,
+        marginTop: 12,
+    },
+    strengthDot: {
+        width: 12,
+        height: 12,
+        borderRadius: 6,
+        backgroundColor: '#E0E0E0',
+    },
+    strengthDotFilled: {
+        backgroundColor: '#4CAF50',
+    },
+    strengthDotWeak: {
+        backgroundColor: '#E66386',
+    },
+    matchIndicator: {
+        flexDirection: 'row',
+        alignItems: 'center',
         gap: 6,
-        marginTop: 2,
+        marginTop: 8,
     },
-    dot: {
-        width: 8,
-        height: 8,
-        borderRadius: 4,
-        backgroundColor: '#FFB6C1',
+    matchText: {
+        fontSize: 12,
+        fontWeight: '500',
     },
-    dotFilled: { backgroundColor: '#E66386' },
+    matchTextSuccess: {
+        color: '#4CAF50',
+    },
+    matchTextError: {
+        color: '#E66386',
+    },
     saveButton: {
-        backgroundColor: '#FF597D',
+        backgroundColor: '#E66386',
         borderRadius: 24,
-        paddingVertical: 16,
+        paddingVertical: 15,
         alignItems: 'center',
         justifyContent: 'center',
-        width: '100%',
-        shadowColor: '#FD5A7E',
+        marginTop: 8,
+        shadowColor: '#E66386',
         shadowOpacity: 0.3,
         shadowRadius: 8,
         elevation: 4,
-        marginBottom: 28,
     },
-    saveButtonDisabled: { opacity: 0.5 },
+    saveButtonDisabled: {
+        opacity: 0.5,
+    },
     saveButtonText: {
         fontSize: 16,
         fontWeight: '700',
         color: '#fff',
-        letterSpacing: 0.5,
+        letterSpacing: 0.3,
     },
-    tipsContainer: {
-        backgroundColor: '#F0FDF4',
+    tipsBox: {
+        backgroundColor: '#F8F9FA',
         borderRadius: 12,
         padding: 16,
-        gap: 12,
         width: '100%',
+        gap: 12,
     },
     tipsTitle: {
         fontSize: 14,
         fontWeight: '600',
-        color: '#059669',
+        color: '#333333',
         marginBottom: 4,
     },
-    tipItem: {
+    tipRow: {
         flexDirection: 'row',
         alignItems: 'flex-start',
-        gap: 8,
+        gap: 10,
     },
     tipText: {
-        fontSize: 13,
-        color: '#065F46',
         flex: 1,
+        fontSize: 13,
+        color: '#666666',
         lineHeight: 18,
     },
 });
