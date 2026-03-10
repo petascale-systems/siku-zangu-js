@@ -6,6 +6,7 @@ import {Ionicons} from '@expo/vector-icons';
 import {useAccessToken} from '@siku-zangu/react';
 import {APIError} from '@siku-zangu/core';
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { CountryCodePicker, COUNTRIES, Country } from '@siku-zangu/react-native';
 
 export default function LoginScreen() {
     const router = useRouter();
@@ -16,10 +17,9 @@ export default function LoginScreen() {
     const [secure, setSecure] = useState(true);
     const [phoneError, setPhoneError] = useState('');
     const [pinError, setPinError] = useState('');
+    const [selectedCountry, setSelectedCountry] = useState<Country>(COUNTRIES[0]); // Default to Kenya
 
     const language = (params.lang as 'en' | 'sw') ?? 'en';
-    const displayCountryCode = '+255';
-    const storageCountryCode = 'TZ';
     const LANGUAGE_KEY = 'language';
 
     useEffect(() => {
@@ -78,9 +78,17 @@ export default function LoginScreen() {
         }
     }, [pin, language]);
 
+    const goToForgotPin = () => {
+        Keyboard.dismiss();
+        router.push({
+            pathname: '/auth/ForgotPinScreen',
+            params: { lang: language },
+        });
+    };
+
     const handleLogin = async () => {
         const phoneNumber = phone.replace(/\D/g, '');
-        const storedPhoneNumber = `${storageCountryCode} ${phoneNumber}`;
+        const storedPhoneNumber = `${selectedCountry.code} ${phoneNumber}`;
 
         if (!phone) {
             setPhoneError(
@@ -214,7 +222,11 @@ export default function LoginScreen() {
                                 phoneError ? styles.errorBorder : null,
                             ]}
                         >
-                            <Text style={styles.countryCode}>{displayCountryCode}</Text>
+                            <CountryCodePicker
+                                selectedCountry={selectedCountry}
+                                onSelect={setSelectedCountry}
+                                language={language}
+                            />
                             <TextInput
                                 style={[styles.input, styles.phoneInput]}
                                 placeholder={language === 'en' ? '712345678' : '712345678'}
@@ -278,7 +290,7 @@ export default function LoginScreen() {
                         </View>
                         {pinError ? <Text style={styles.errorText}>{pinError}</Text> : null}
                     </View>
-                    <TouchableOpacity>
+                    <TouchableOpacity onPress={goToForgotPin}>
                         <Text style={styles.forgotLink}>
                             {language === 'en' ? 'Forgot PIN?' : 'Umesahau Nenosiri?'}
                         </Text>
@@ -360,17 +372,8 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderColor: '#FFB6C1',
         borderRadius: 10,
-        paddingHorizontal: 12,
+        paddingRight: 12,
         marginBottom: 15,
-    },
-    countryCode: {
-        fontSize: 16,
-        color: '#333333',
-        fontWeight: '600',
-        paddingVertical: 12,
-        paddingRight: 20,
-        borderRightWidth: 1,
-        borderRightColor: '#FFB6C1',
     },
     input: {
         flex: 1,

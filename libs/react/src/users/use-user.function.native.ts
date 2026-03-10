@@ -7,20 +7,32 @@ import {
     USERS_API_PATH,
     USER_BY_ID_API_PATH,
     CHANGE_PIN_API_PATH,
+    REQUEST_PIN_RESET_API_PATH,
+    VERIFY_OTP_API_PATH,
+    RESET_PIN_API_PATH,
     fetchUserById,
     createUser,
     updateUser,
     deleteUserById,
     changeUserPin,
+    requestPinReset,
+    verifyPinResetOtp,
+    resetUserPin,
 } from './use-user.shared';
 export {
     USERS_API_PATH,
     USER_BY_ID_API_PATH,
     CHANGE_PIN_API_PATH,
+    REQUEST_PIN_RESET_API_PATH,
+    VERIFY_OTP_API_PATH,
+    RESET_PIN_API_PATH,
     createUser,
     updateUser,
     deleteUserById,
     changeUserPin,
+    requestPinReset,
+    verifyPinResetOtp,
+    resetUserPin,
 };
 
 export function useUser(userId?: string) {
@@ -30,6 +42,9 @@ export function useUser(userId?: string) {
     const [isUpsertingUser, setIsUpsertingUser] = useState(false);
     const [isDeletingUser, setIsDeletingUser] = useState(false);
     const [isChangingPin, setIsChangingPin] = useState(false);
+    const [isRequestingReset, setIsRequestingReset] = useState(false);
+    const [isVerifyingOtp, setIsVerifyingOtp] = useState(false);
+    const [isResettingPin, setIsResettingPin] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
     const isFetchingRef = useRef(false);
@@ -58,10 +73,12 @@ export function useUser(userId?: string) {
             isFetchingRef.current = false;
         }
     }, [userId]);
+
     useEffect(() => {
         if (!userId) return;
         refetchUser(false);
     }, [userId, refetchUser]);
+
     useEffect(() => {
         if (!userId) return;
         const handleAppStateChange = (nextAppState: AppStateStatus) => {
@@ -101,6 +118,7 @@ export function useUser(userId?: string) {
             setIsUpsertingUser(false);
         }
     }
+
     async function deleteUser(): Promise<void> {
         if (!userId) return;
         setIsDeletingUser(true);
@@ -116,19 +134,16 @@ export function useUser(userId?: string) {
             setIsDeletingUser(false);
         }
     }
+
     async function changePin(currentPin: string, newPin: string): Promise<User | void> {
         if (!userId) {
             throw new Error('User ID is required to change PIN');
         }
-
         setIsChangingPin(true);
         setError(null);
-
         try {
             const updatedUser = await changeUserPin(userId, currentPin, newPin);
-            if (updatedUser) {
-                setUser(updatedUser);
-            }
+            if (updatedUser) setUser(updatedUser);
             return updatedUser;
         } catch (e: any) {
             const errorMessage = (e as APIError).message || 'Failed to change PIN';
@@ -138,6 +153,59 @@ export function useUser(userId?: string) {
             setIsChangingPin(false);
         }
     }
+
+    async function sendResetCode(phoneNumber: string): Promise<void> {
+        setIsRequestingReset(true);
+        setError(null);
+        try {
+            await requestPinReset(phoneNumber);
+        } catch (e: any) {
+            const errorMessage = (e as APIError).message || 'Failed to send reset code';
+            setError(errorMessage);
+            throw e;
+        } finally {
+            setIsRequestingReset(false);
+        }
+    }
+
+    async function verifyResetCode(
+        phoneNumber: string,
+        code: string
+    ): Promise<{reset_token: string}> {
+        setIsVerifyingOtp(true);
+        setError(null);
+        try {
+            const result = await verifyPinResetOtp(phoneNumber, code);
+            return result;
+        } catch (e: any) {
+            const errorMessage = (e as APIError).message || 'Failed to verify code';
+            setError(errorMessage);
+            throw e;
+        } finally {
+            setIsVerifyingOtp(false);
+        }
+    }
+
+    async function submitNewPin(
+        phoneNumber: string,
+        resetToken: string,
+        newPin: string
+    ): Promise<User | void> {
+        setIsResettingPin(true);
+        setError(null);
+        try {
+            const updatedUser = await resetUserPin(phoneNumber, resetToken, newPin);
+            if (updatedUser) setUser(updatedUser);
+            return updatedUser;
+        } catch (e: any) {
+            const errorMessage = (e as APIError).message || 'Failed to reset PIN';
+            setError(errorMessage);
+            throw e;
+        } finally {
+            setIsResettingPin(false);
+        }
+    }
+
     return {
         user,
         isFetchingUser: isInitialFetching || isBackgroundFetching,
@@ -146,10 +214,16 @@ export function useUser(userId?: string) {
         isUpsertingUser,
         isDeletingUser,
         isChangingPin,
+        isRequestingReset,
+        isVerifyingOtp,
+        isResettingPin,
         error,
         upsertUser,
         deleteUser,
         changePin,
+        sendResetCode,
+        verifyResetCode,
+        submitNewPin,
         refetchUser: (b: boolean) => refetchUser(false),
     };
 }

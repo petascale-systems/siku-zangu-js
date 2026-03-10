@@ -15,6 +15,7 @@ import {
 import { PrimaryButton } from '@siku-zangu/react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useUser } from '@siku-zangu/react';
+import { CountryCodePicker, COUNTRIES, Country } from '@siku-zangu/react-native';
 
 export default function RegisterScreen() {
   const router = useRouter();
@@ -25,10 +26,9 @@ export default function RegisterScreen() {
   const [secure, setSecure] = useState(true);
   const [phoneError, setPhoneError] = useState('');
   const [pinError, setPinError] = useState('');
+  const [selectedCountry, setSelectedCountry] = useState<Country>(COUNTRIES[0]); // Default to Kenya
 
   const language = (params.lang as 'en' | 'sw') ?? 'en';
-  const displayCountryCode = '+255';
-  const storageCountryCode = 'TZ';
 
   useEffect(() => {
     const phoneNumber = phone.replace(/\D/g, '');
@@ -52,6 +52,7 @@ export default function RegisterScreen() {
       setPhoneError('');
     }
   }, [phone, language]);
+
   useEffect(() => {
     if (pin.length === 0) {
       setPinError(
@@ -65,9 +66,10 @@ export default function RegisterScreen() {
       setPinError('');
     }
   }, [pin, language]);
+
   const handleRegister = async () => {
     const phoneNumber = phone.replace(/\D/g, '');
-    const storedPhoneNumber = `${storageCountryCode} ${phoneNumber}`;
+    const storedPhoneNumber = `${selectedCountry.code} ${phoneNumber}`;
 
     if (!phone) {
       setPhoneError(
@@ -161,6 +163,7 @@ export default function RegisterScreen() {
       params: { lang: language },
     });
   };
+
   return (
       <KeyboardAvoidingView
           style={styles.container}
@@ -190,7 +193,11 @@ export default function RegisterScreen() {
                     phoneError ? styles.errorBorder : null,
                   ]}
               >
-                <Text style={styles.countryCode}>{displayCountryCode}</Text>
+                <CountryCodePicker
+                    selectedCountry={selectedCountry}
+                    onSelect={setSelectedCountry}
+                    language={language}
+                />
                 <TextInput
                     style={[styles.input, styles.phoneInput]}
                     placeholder={language === 'en' ? '712345678' : '712345678'}
@@ -263,18 +270,18 @@ export default function RegisterScreen() {
                 accessibilityLabel={language === 'en' ? 'Register' : 'Jisajili'}
             />
           </View>
-         <View style={styles.footerContainer}>
-           <Text style={styles.footer}>
-             {language === 'en'
-                 ? 'Already have an Account? '
-                 : 'Tayari una Akaunti? '}
-           </Text>
-             <TouchableOpacity onPress={goToLogin}>
-               <Text style={styles.loginLink}>
-                 {language === 'en' ? 'Log in' : 'Ingia'}
-               </Text>
-             </TouchableOpacity>
-         </View>
+          <View style={styles.footerContainer}>
+            <Text style={styles.footer}>
+              {language === 'en'
+                  ? 'Already have an Account? '
+                  : 'Tayari una Akaunti? '}
+            </Text>
+            <TouchableOpacity onPress={goToLogin}>
+              <Text style={styles.loginLink}>
+                {language === 'en' ? 'Log in' : 'Ingia'}
+              </Text>
+            </TouchableOpacity>
+          </View>
         </ScrollView>
       </KeyboardAvoidingView>
   );
@@ -352,19 +359,10 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#FFB6C1',
     borderRadius: 10,
-    paddingHorizontal: 12,
+    paddingRight: 12,
     paddingVertical: 2,
     marginBottom: 15,
     width: '100%',
-  },
-  countryCode: {
-    fontSize: 16,
-    color: '#333333',
-    fontWeight: '600',
-    paddingVertical: 12,
-    paddingRight: 20,
-    borderRightWidth: 1,
-    borderRightColor: '#FFB6C1',
   },
   pinWrapper: {
     flexDirection: 'row',
