@@ -23,9 +23,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 type EditSection = 'name' | 'dob' | null;
 
-const MINIMUM_AGE = 17;
 const currentYear = new Date().getFullYear();
-const maxBirthYear = currentYear - MINIMUM_AGE;
+const maxBirthYear = currentYear;
 const minBirthYear = 1975;
 
 export default function UpdatePersonalInfoScreen() {
@@ -137,20 +136,6 @@ export default function UpdatePersonalInfoScreen() {
         );
     };
 
-    const meetsMinimumAge = (day: number, month: number, year: number): boolean => {
-        const today = new Date();
-        const birthDate = new Date(year, month, day);
-        let age = today.getFullYear() - birthDate.getFullYear();
-        const monthDiff = today.getMonth() - birthDate.getMonth();
-        if (
-            monthDiff < 0 ||
-            (monthDiff === 0 && today.getDate() < birthDate.getDate())
-        ) {
-            age--;
-        }
-        return age >= MINIMUM_AGE;
-    };
-
     const handleSaveName = async () => {
         setHasAttemptedSave(true);
         const firstError = validateName(firstName.trim(), 'first');
@@ -194,16 +179,6 @@ export default function UpdatePersonalInfoScreen() {
             Alert.alert(
                 language === 'en' ? 'Invalid Date' : 'Tarehe si sahihi',
                 language === 'en' ? 'Please select a valid date' : 'Tafadhali chagua tarehe sahihi'
-            );
-            return;
-        }
-
-        if (!meetsMinimumAge(selectedDay, selectedMonth, selectedYear)) {
-            Alert.alert(
-                language === 'en' ? 'Age Requirement' : 'Mahitaji ya Umri',
-                language === 'en'
-                    ? `You must be at least ${MINIMUM_AGE} years old to register.`
-                    : `Lazima uwe na umri wa angalau miaka ${MINIMUM_AGE} ili kusajiliwa.`
             );
             return;
         }

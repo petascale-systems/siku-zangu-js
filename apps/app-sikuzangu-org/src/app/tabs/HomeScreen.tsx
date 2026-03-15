@@ -213,26 +213,32 @@ export default function Dashboard() {
             </Text>
             <View style={styles.statRow}>
               <View style={styles.statItem}>
+                {language === 'sw' && (
+                  <Text style={styles.statLabel}>Siku</Text>
+                )}
                 <Text style={[styles.statValue, { color: '#FF597D' }]}>
                   {daysUntilPeriod}
                 </Text>
-                <Text style={styles.statLabel}>
-                  {language === 'sw' ? 'Siku' : 'days'}
-                </Text>
+                {language !== 'sw' && (
+                  <Text style={styles.statLabel}>days</Text>
+                )}
                 <Text style={styles.statSub}>
                   {language === 'sw' ? 'Hedhi ijayo' : 'Next period'}
                 </Text>
                 <Text style={styles.statDate}>{formattedNextPeriod}</Text>
               </View>
               <View style={styles.statItem}>
+                {language === 'sw' && (
+                  <Text style={styles.statLabel}>Siku</Text>
+                )}
                 <Text style={[styles.statValue, { color: '#1DA8AD' }]}>
                   {daysUntilOvulation}
                 </Text>
-                <Text style={styles.statLabel}>
-                  {language === 'sw' ? 'Siku' : 'days'}
-                </Text>
+                {language !== 'sw' && (
+                  <Text style={styles.statLabel}>days</Text>
+                )}
                 <Text style={styles.statSub}>
-                  {language === 'sw' ? 'Yai kupevuka ' : 'Ovulation in'}
+                  {language === 'sw' ? 'Yai kupevuka' : 'Ovulation in'}
                 </Text>
                 <View style={styles.iconRow}>
                   <Ionicons name="moon" color="#555" size={12} />
@@ -242,12 +248,15 @@ export default function Dashboard() {
                 </View>
               </View>
               <View style={styles.statItem}>
+                {language === 'sw' && (
+                  <Text style={styles.statLabel}>Siku</Text>
+                )}
                 <Text style={[styles.statValue, { color: '#A855F7' }]}>
                   {fertileDaysRemaining}
                 </Text>
-                <Text style={styles.statLabel}>
-                  {language === 'sw' ? 'Siku' : 'days'}
-                </Text>
+                {language !== 'sw' && (
+                  <Text style={styles.statLabel}>days</Text>
+                )}
                 <Text style={styles.statSub}>
                   {language === 'sw' ? 'Uzazi' : 'Fertile'}
                 </Text>
@@ -292,6 +301,28 @@ export default function Dashboard() {
               {language === 'sw' ? 'siku' : 'days'}
             </Text>
           </View>
+          <Text style={styles.ringDescription}>
+            {daysUntilPeriod === 0
+                ? language === 'sw'
+                    ? 'Uko katika siku za hedhi'
+                    : 'You are on your period'
+                : fertileDaysRemaining > 0
+                    ? language === 'sw'
+                        ? `Dirisha la uzazi - siku ${fertileDaysRemaining} zimebaki`
+                        : `Fertile window - ${fertileDaysRemaining} days remaining`
+                    : daysUntilOvulation <= 3 && daysUntilOvulation > 0
+                        ? language === 'sw'
+                            ? `Yai kupevuka baada ya siku ${daysUntilOvulation}`
+                            : `Ovulation in ${daysUntilOvulation} days`
+                        : language === 'sw'
+                            ? `Hedhi inatarajiwa baada ya siku ${daysUntilPeriod}`
+                            : `Period expected in ${daysUntilPeriod} days`}
+          </Text>
+          <Text style={styles.ringCycleDay}>
+            {language === 'sw'
+                ? `Siku ${dayInCycle} ya ${user?.kv?.avg_cycle_length_days ?? 28}`
+                : `Day ${dayInCycle} of ${user?.kv?.avg_cycle_length_days ?? 28}`}
+          </Text>
 
           <View style={styles.insightCard}>
             <View style={styles.insightHeader}>
@@ -502,6 +533,24 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     fontSize: 12,
     color: '#FF5C8D',
+  },
+  ringDescription: {
+    textAlign: 'center',
+    fontSize: 14,
+    color: '#333333',
+    fontWeight: '500',
+    fontFamily: 'inter',
+    marginTop: -8,
+    marginHorizontal: 40,
+  },
+  ringCycleDay: {
+    textAlign: 'center',
+    fontSize: 12,
+    color: '#666',
+    fontWeight: '600',
+    fontFamily: 'inter',
+    marginTop: 4,
+    marginBottom: 8,
   },
   insightCard: {
     backgroundColor: '#F8BBD0',

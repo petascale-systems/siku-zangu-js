@@ -19,9 +19,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
-const MINIMUM_AGE = 17;
 const currentYear = new Date().getFullYear();
-const maxBirthYear = currentYear - MINIMUM_AGE;
+const maxBirthYear = currentYear;
 const minBirthYear = 1975;
 
 export default function UpdatingDOBScreen() {
@@ -127,20 +126,6 @@ export default function UpdatingDOBScreen() {
         date.getDate() === day
     );
   };
-  const meetsMinimumAge = (day: number, month: number, year: number): boolean => {
-    const today = new Date();
-    const birthDate = new Date(year, month, day);
-    let age = today.getFullYear() - birthDate.getFullYear();
-    const monthDiff = today.getMonth() - birthDate.getMonth();
-    if (
-        monthDiff < 0 ||
-        (monthDiff === 0 && today.getDate() < birthDate.getDate())
-    ) {
-      age--;
-    }
-    return age >= MINIMUM_AGE;
-  };
-
   const handleSave = async () => {
     if (!userId) {
       Alert.alert(
@@ -158,16 +143,6 @@ export default function UpdatingDOBScreen() {
           language === 'en'
               ? 'Please select a valid date'
               : 'Tafadhali chagua tarehe sahihi'
-      );
-      return;
-    }
-
-    if (!meetsMinimumAge(selectedDay, selectedMonth, selectedYear)) {
-      Alert.alert(
-          language === 'en' ? 'Age Requirement' : 'Mahitaji ya Umri',
-          language === 'en'
-              ? `You must be at least ${MINIMUM_AGE} years old to register.`
-              : `Lazima uwe na umri wa angalau miaka ${MINIMUM_AGE} ili kusajiliwa.`
       );
       return;
     }
@@ -395,9 +370,8 @@ export default function UpdatingDOBScreen() {
                       onPress={() => Linking.openURL('https://sikuzangu.org/terms-of-service')}
                   >
                     Terms and Conditions
-                  </Text>{' '}
-                  to learn about the minimum age requirement. You can change your
-                  answer on your profile any time.
+                  </Text>
+                  . You can change your answer on your profile any time.
                 </>
             ) : (
                 <>
@@ -408,7 +382,7 @@ export default function UpdatingDOBScreen() {
                   >
                     Sheria na Masharti
                   </Text>{' '}
-                  yetu kujua kuhusu umri wa chini unaohitajika. Unaweza kubadilisha jibu lako kwenye wasifu wako wakati wowote.
+                  yetu. Unaweza kubadilisha jibu lako kwenye wasifu wako wakati wowote.
                 </>
             )}
           </Text>
