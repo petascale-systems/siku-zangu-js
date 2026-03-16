@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { APIError, handleAPIError } from '@siku-zangu/core';
+import { APIError, handleAPIError, toE164 } from '@siku-zangu/core';
 import { selectOneUserByPhone } from '@siku-zangu/knex';
 import twilio from 'twilio';
 import crypto from 'crypto';
@@ -38,21 +38,6 @@ export function consumeResetToken(phoneNumber: string, token: string): boolean {
 
     resetTokenStore.delete(phoneNumber);
     return true;
-}
-
-function toE164(storedPhone: string): string {
-
-    const [countryCode, ...numberParts] = storedPhone.split(' ');
-    const phoneDigits = numberParts.join('').replace(/\D/g, '').replace(/^0/, '');
-    let e164: string;
-    if (countryCode === 'KE') {
-        e164 = `+254${phoneDigits}`;
-    } else if (countryCode === 'TZ') {
-        e164 = `+255${phoneDigits}`;
-    } else {
-        e164 = `+254${phoneDigits}`;
-    }
-    return e164;
 }
 
 export async function POST(req: NextRequest) {
