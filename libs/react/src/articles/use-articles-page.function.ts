@@ -20,10 +20,10 @@ export function useArticlesPage(params: ArticlesFetchParams) {
             .then((page) => {
                 if (!page) return;
                 const filtered = params.language
-                    ? page.items.filter(
+                    ? (page.items ?? []).filter(
                         (a) => !a.kv?.language || a.kv.language === params.language
                     )
-                    : page.items;
+                    : page.items ?? [];
 
                 setArticlesPage({ ...page, items: filtered });
             })
