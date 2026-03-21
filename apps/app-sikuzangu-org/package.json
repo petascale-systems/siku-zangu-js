@@ -44,7 +44,11 @@
     "react-native-svg-transformer": "*",
     "react-native-web": "*",
     "recharts": "*",
-    "zod": "*"
+    "zod": "*",
+    "expo-device": "*",
+    "expo-notifications": "*",
+    "firebase-admin": "*",
+    "react-native-render-html": "*"
   },
   "devDependencies": {
     "@babel/core": "*",
