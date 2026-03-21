@@ -29,7 +29,7 @@
     "expo-splash-screen": "31.0.12",
     "expo-status-bar": "3.0.9",
     "expo-system-ui": "6.0.9",
-    "firebase-admin": "^13.6.0",
+    "firebase-admin": "^13.7.0",
     "flowbite-react": "^0.12.10",
     "jose": "^6.1.0",
     "jsonwebtoken": "^9.0.2",

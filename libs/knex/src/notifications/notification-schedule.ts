@@ -16,9 +16,11 @@ function calculateCycleMetrics(
     const daysUntilOvulation = ovulationDay - dayInCycle;
     const fertileDaysRemaining = Math.max(0, daysUntilOvulation + 5);
     return {
+        dayInCycle,
         daysUntilPeriod,
         daysUntilOvulation,
         fertileDaysRemaining,
+        ovulationDay,
     };
 }
 export async function schedulePeriodReminders() {
@@ -27,7 +29,7 @@ export async function schedulePeriodReminders() {
     let totalSent = 0;
     while (true) {
         const usersPage = await selectUsersPage({ page, size, q: '' });
-        for (const user of usersPage.data) {
+        for (const user of usersPage.items) {
             if (!user.kv?.receive_period_alerts ||
                 !user.kv?.prev_cycle_start_date ||
                 !user.kv?.fcm_token) {
@@ -68,7 +70,7 @@ export async function schedulePeriodReminders() {
                 totalSent++;
             }
         }
-        if (page >= usersPage.last_page) break;
+        if (page >= usersPage.totalPages) break;
         page++;
     }
     return totalSent;
@@ -81,7 +83,7 @@ export async function scheduleFertileWindowAlerts() {
     while (true) {
         const usersPage = await selectUsersPage({ page, size, q: '' });
 
-        for (const user of usersPage.data) {
+        for (const user of usersPage.items) {
             if (!user.kv?.receive_fertile_alerts ||
                 !user.kv?.prev_cycle_start_date ||
                 !user.kv?.fcm_token) {
@@ -119,7 +121,99 @@ export async function scheduleFertileWindowAlerts() {
                 totalSent++;
             }
         }
-        if (page >= usersPage.last_page) break;
+        if (page >= usersPage.totalPages) break;
+        page++;
+    }
+    return totalSent;
+}
+
+export async function scheduleMedicationReminders() {
+    let page = 1;
+    const size = 50;
+    let totalSent = 0;
+
+    while (true) {
+        const usersPage = await selectUsersPage({ page, size, q: '' });
+
+        for (const user of usersPage.items) {
+            if (!user.kv?.receive_medication_tips ||
+                !user.kv?.fcm_token ||
+                !user.kv?.selected_medications?.length) {
+                continue;
+            }
+            const lang = user.kv.language || 'en';
+            await sendPushNotification({
+                userId: user.user_id!,
+                type: 'medication_reminder',
+                title: lang === 'sw'
+                    ? 'Ukumbusho wa Dawa'
+                    : 'Medication Reminder',
+                body: lang === 'sw'
+                    ? 'Usisahau kutumia dawa yako leo'
+                    : "Don't forget to take your medication today",
+            });
+            totalSent++;
+        }
+        if (page >= usersPage.totalPages) break;
+        page++;
+    }
+    return totalSent;
+}
+
+function getDailyInsightMessage(dayInCycle: number, ovulationDay: number, lang: string): { title: string; body: string } {
+    // Menstrual phase (days 1-5)
+    if (dayInCycle >= 1 && dayInCycle <= 5) {
+        return lang === 'sw'
+            ? { title: 'Ushauri wa Kila Siku', body: 'Uko katika siku za hedhi. Kumbuka kunywa maji mengi na kupumzika vya kutosha.' }
+            : { title: 'Daily Insight', body: 'You are in your menstrual phase. Remember to stay hydrated and get plenty of rest.' };
+    }
+    // Follicular phase (day 6 to ovulation-1)
+    if (dayInCycle >= 6 && dayInCycle < ovulationDay) {
+        return lang === 'sw'
+            ? { title: 'Ushauri wa Kila Siku', body: 'Uko katika awamu ya follicular. Nishati yako inaongezeka — wakati mzuri wa mazoezi!' }
+            : { title: 'Daily Insight', body: 'You are in your follicular phase. Your energy is rising — great time for exercise!' };
+    }
+    // Ovulation (ovulation day +/- 1)
+    if (dayInCycle >= ovulationDay - 1 && dayInCycle <= ovulationDay + 1) {
+        return lang === 'sw'
+            ? { title: 'Ushauri wa Kila Siku', body: 'Uko karibu na siku ya kupevuka kwa yai. Fahamu kuhusu uwezo wako wa uzazi.' }
+            : { title: 'Daily Insight', body: 'You are near ovulation. Be aware of your fertility during this time.' };
+    }
+    // Luteal phase (ovulation+2 to period)
+    return lang === 'sw'
+        ? { title: 'Ushauri wa Kila Siku', body: 'Uko katika awamu ya luteal. Jitunze — dalili za PMS zinaweza kutokea.' }
+        : { title: 'Daily Insight', body: 'You are in your luteal phase. Practice self-care — PMS symptoms may occur.' };
+}
+
+export async function scheduleDailyInsights() {
+    let page = 1;
+    const size = 50;
+    let totalSent = 0;
+
+    while (true) {
+        const usersPage = await selectUsersPage({ page, size, q: '' });
+
+        for (const user of usersPage.items) {
+            if (!user.kv?.receive_insights_tips ||
+                !user.kv?.fcm_token ||
+                !user.kv?.prev_cycle_start_date) {
+                continue;
+            }
+            const metrics = calculateCycleMetrics(
+                user.kv.prev_cycle_start_date,
+                user.kv.avg_cycle_length_days || 28
+            );
+            const lang = user.kv.language || 'en';
+            const message = getDailyInsightMessage(metrics.dayInCycle, metrics.ovulationDay, lang);
+            await sendPushNotification({
+                userId: user.user_id!,
+                type: 'daily_insight',
+                title: message.title,
+                body: message.body,
+            });
+            totalSent++;
+        }
+        if (page >= usersPage.totalPages) break;
         page++;
     }
     return totalSent;

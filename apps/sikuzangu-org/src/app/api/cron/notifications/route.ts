@@ -2,7 +2,9 @@ import { NextRequest } from 'next/server';
 import { handleAPIError } from '@siku-zangu/core';
 import {
     schedulePeriodReminders,
-    scheduleFertileWindowAlerts
+    scheduleFertileWindowAlerts,
+    scheduleMedicationReminders,
+    scheduleDailyInsights
 } from '@siku-zangu/knex';
 
 export async function GET(req: NextRequest) {
@@ -16,9 +18,11 @@ export async function GET(req: NextRequest) {
         console.log('⏰ Starting scheduled notifications...');
         const startTime = Date.now();
 
-        const [periodCount, fertileCount] = await Promise.all([
+        const [periodCount, fertileCount, medicationCount, insightsCount] = await Promise.all([
             schedulePeriodReminders(),
             scheduleFertileWindowAlerts(),
+            scheduleMedicationReminders(),
+            scheduleDailyInsights(),
         ]);
 
         const duration = Date.now() - startTime;
@@ -29,6 +33,8 @@ export async function GET(req: NextRequest) {
             success: true,
             periodReminders: periodCount,
             fertileAlerts: fertileCount,
+            medicationReminders: medicationCount,
+            dailyInsights: insightsCount,
             duration: `${duration}ms`
         }, { status: 200 });
     });
