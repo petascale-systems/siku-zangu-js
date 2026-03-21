@@ -7,6 +7,7 @@ import {isOnboardingComplete, useNotifications, useFirebaseCrashlytics} from '@s
 import '../firebase.config';
 
 const LANGUAGE_KEY = 'language';
+const FIRST_LAUNCH_KEY = 'hasLaunchedBefore';
 
 export default function RootLayout() {
     const [appIsReady, setAppIsReady] = useState(false);
@@ -72,6 +73,17 @@ export default function RootLayout() {
             if (hasNavigated.current) return;
 
             try {
+                const hasLaunched = await AsyncStorage.getItem(FIRST_LAUNCH_KEY);
+
+                if (!hasLaunched) {
+                    await AsyncStorage.clear();
+                    await AsyncStorage.setItem(FIRST_LAUNCH_KEY, 'true');
+
+                    hasNavigated.current = true;
+                    router.replace('/LanguageScreen');
+                    return;
+                }
+
                 const [savedLanguage, storedToken] = await Promise.all([
                     AsyncStorage.getItem(LANGUAGE_KEY),
                     AsyncStorage.getItem(ACCESS_TOKEN_KEY),
@@ -114,6 +126,7 @@ export default function RootLayout() {
                     });
                     return;
                 }
+
                 setUserId(parsed.user.user_id);
 
                 const hasCompletedOnboarding = await isOnboardingComplete(parsed.user.user_id);

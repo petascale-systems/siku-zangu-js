@@ -1,11 +1,12 @@
 import React, {useEffect, useState} from 'react';
-import {Alert, StyleSheet, Text, TextInput, TouchableOpacity, View, Keyboard, ScrollView, KeyboardAvoidingView, Platform} from 'react-native';
+import {Alert, StyleSheet, Text, TextInput, TouchableOpacity, View, Keyboard, ScrollView, KeyboardAvoidingView, Platform, BackHandler} from 'react-native';
 import {useLocalSearchParams, useRouter} from 'expo-router';
 import {isOnboardingComplete, PrimaryButton} from '@siku-zangu/react-native';
 import {Ionicons} from '@expo/vector-icons';
 import {useAccessToken} from '@siku-zangu/react';
 import {APIError} from '@siku-zangu/core';
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { CountryCodePicker, COUNTRIES, Country } from '@siku-zangu/react-native';
 
 export default function LoginScreen() {
     const router = useRouter();
@@ -16,11 +17,18 @@ export default function LoginScreen() {
     const [secure, setSecure] = useState(true);
     const [phoneError, setPhoneError] = useState('');
     const [pinError, setPinError] = useState('');
+    const [selectedCountry, setSelectedCountry] = useState<Country>(COUNTRIES[0]); // Default to Kenya
 
     const language = (params.lang as 'en' | 'sw') ?? 'en';
-    const displayCountryCode = '+255';
-    const storageCountryCode = 'TZ';
     const LANGUAGE_KEY = 'language';
+
+    useEffect(() => {
+        const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
+            return true;
+        });
+
+        return () => backHandler.remove();
+    }, []);
 
     useEffect(() => {
         const saveLanguage = async () => {
@@ -32,13 +40,14 @@ export default function LoginScreen() {
         };
         saveLanguage();
     }, [language]);
+
     useEffect(() => {
         const phoneNumber = phone.replace(/\D/g, '');
         if (phone.length === 0) {
             setPhoneError(
                 language === 'en'
                     ? 'Phone number is required'
-                    : 'Nambari ya simu inahitajika'
+                    : 'Namba ya simu inahitajika'
             );
         } else if (!/^\d{6,12}$/.test(phoneNumber)) {
             setPhoneError(
@@ -54,6 +63,7 @@ export default function LoginScreen() {
             setPhoneError('');
         }
     }, [phone, language]);
+
     useEffect(() => {
         if (pin.length === 0) {
             setPinError(
@@ -67,15 +77,24 @@ export default function LoginScreen() {
             setPinError('');
         }
     }, [pin, language]);
+
+    const goToForgotPin = () => {
+        Keyboard.dismiss();
+        router.push({
+            pathname: '/auth/ForgotPinScreen',
+            params: { lang: language },
+        });
+    };
+
     const handleLogin = async () => {
         const phoneNumber = phone.replace(/\D/g, '');
-        const storedPhoneNumber = `${storageCountryCode} ${phoneNumber}`;
+        const storedPhoneNumber = `${selectedCountry.code} ${phoneNumber}`;
 
         if (!phone) {
             setPhoneError(
                 language === 'en'
                     ? 'Phone number is required'
-                    : 'Nambari ya simu inahitajika'
+                    : 'Namba ya simu inahitajika'
             );
             Alert.alert(
                 language === 'en' ? 'Error' : 'Hitilafu',
@@ -166,6 +185,7 @@ export default function LoginScreen() {
             Alert.alert(language === 'en' ? 'Error' : 'Hitilafu', errorMessage);
         }
     };
+
     const goToRegister = () => {
         Keyboard.dismiss();
         router.push({
@@ -173,6 +193,7 @@ export default function LoginScreen() {
             params: {lang: language},
         });
     };
+
     return (
         <KeyboardAvoidingView
             style={styles.container}
@@ -193,7 +214,7 @@ export default function LoginScreen() {
                 <View style={styles.formBox}>
                     <View style={styles.fieldWrapper}>
                         <Text style={styles.label}>
-                            {language === 'en' ? 'Phone Number' : 'Nambari ya Simu'}
+                            {language === 'en' ? 'Phone Number' : 'Namba ya Simu'}
                         </Text>
                         <View
                             style={[
@@ -201,7 +222,11 @@ export default function LoginScreen() {
                                 phoneError ? styles.errorBorder : null,
                             ]}
                         >
-                            <Text style={styles.countryCode}>{displayCountryCode}</Text>
+                            <CountryCodePicker
+                                selectedCountry={selectedCountry}
+                                onSelect={setSelectedCountry}
+                                language={language}
+                            />
                             <TextInput
                                 style={[styles.input, styles.phoneInput]}
                                 placeholder={language === 'en' ? '712345678' : '712345678'}
@@ -214,7 +239,7 @@ export default function LoginScreen() {
                                 }}
                                 maxLength={12}
                                 accessibilityLabel={
-                                    language === 'en' ? 'Phone Number' : 'Nambari ya Simu'
+                                    language === 'en' ? 'Phone Number' : 'Namba ya Simu'
                                 }
                             />
                         </View>
@@ -265,7 +290,7 @@ export default function LoginScreen() {
                         </View>
                         {pinError ? <Text style={styles.errorText}>{pinError}</Text> : null}
                     </View>
-                    <TouchableOpacity>
+                    <TouchableOpacity onPress={goToForgotPin}>
                         <Text style={styles.forgotLink}>
                             {language === 'en' ? 'Forgot PIN?' : 'Umesahau Nenosiri?'}
                         </Text>
@@ -278,14 +303,16 @@ export default function LoginScreen() {
                         accessibilityLabel={language === 'en' ? 'Login' : 'Ingia'}
                     />
                 </View>
-                <Text style={styles.footer}>
-                    {language === 'en' ? "Don't have an Account? " : 'Huna akaunti? '}
+                <View style={styles.footerContainer}>
+                    <Text style={styles.footer}>
+                        {language === 'en' ? "Don't have an Account?" : 'Huna akaunti?'}
+                    </Text>
                     <TouchableOpacity onPress={goToRegister}>
                         <Text style={styles.loginLink}>
                             {language === 'en' ? 'Register' : 'Jisajili'}
                         </Text>
                     </TouchableOpacity>
-                </Text>
+                </View>
             </ScrollView>
         </KeyboardAvoidingView>
     );
@@ -345,17 +372,8 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderColor: '#FFB6C1',
         borderRadius: 10,
-        paddingHorizontal: 12,
+        paddingRight: 12,
         marginBottom: 15,
-    },
-    countryCode: {
-        fontSize: 16,
-        color: '#333333',
-        fontWeight: '600',
-        paddingVertical: 12,
-        paddingRight: 20,
-        borderRightWidth: 1,
-        borderRightColor: '#FFB6C1',
     },
     input: {
         flex: 1,
@@ -386,6 +404,10 @@ const styles = StyleSheet.create({
         fontSize: 14,
         alignSelf: 'flex-end',
         marginBottom: 10,
+    },
+    footerContainer: {
+        alignItems: 'center',
+        gap: 4,
     },
     footer: {
         fontSize: 14,

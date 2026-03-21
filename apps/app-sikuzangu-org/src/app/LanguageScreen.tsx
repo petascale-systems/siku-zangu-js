@@ -36,12 +36,12 @@ export default function LanguageScreen() {
       await AsyncStorage.setItem('language', selectedLang);
       if (user) {
         router.replace({
-          pathname: '/tabs/UserProfileScreen',
+          pathname: '/tabs/HomeScreen',
           params: { lang: selectedLang, userId },
         });
       } else {
         router.push({
-          pathname: '/auth/RegisterScreen',
+          pathname: '/auth/LoginScreen',
           params: { lang: selectedLang },
         });
       }

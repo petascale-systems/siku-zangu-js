@@ -23,7 +23,8 @@
       ],
       "googleServicesFile": "./GoogleService-Info.plist",
       "infoPlist": {
-        "FirebaseCrashlyticsCollectionEnabled": true
+        "FirebaseCrashlyticsCollectionEnabled": true,
+        "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
@@ -31,7 +32,7 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "versionCode": 2,
+      "versionCode": 8,
       "edgeToEdgeEnabled": true,
       "package": "org.sikuzangu.app",
       "googleServicesFile": "./google-services.json",
@@ -96,6 +97,12 @@
           }
         }
       ]
-    ]
+    ],
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "de89f1b8-4458-4af8-8e32-dca66d650b79"
+      }
+    }
   }
 }

@@ -2,6 +2,7 @@
 
 import {
   Button,
+  Modal,
   Label,
   Radio,
   Select,
@@ -18,6 +19,7 @@ import {
 import { ChangeEvent, useEffect, useState } from 'react';
 import { Article, ArticleStatus, Language } from '@siku-zangu/core';
 import { useParams, useRouter } from 'next/navigation';
+import { CheckCircleIcon } from 'lucide-react';
 
 export default function ArticlePage() {
   const _router = useRouter();
@@ -27,6 +29,7 @@ export default function ArticlePage() {
   const [_coverImage, _setCoverImage] = useState<File>();
   const [_coverImageSrc, _setCoverImageSrc] = useState<string>();
   const [_content, _setContent] = useState<string>();
+  const [_showSuccessModal, _setShowSuccessModal] = useState<boolean>(false);
   const [_articleFormData, _setArticleFormData] = useState<Article>({
     kv: {
       slug: '',
@@ -82,14 +85,30 @@ export default function ArticlePage() {
   const _handlePublishBtnClick = () => {
     if (_articleId === 'new') {
       return createArticle(_articleFormData, _coverImage)
-        .then((a) => _router.push(`/dashboard/articles/${a.article_id}`))
-        .then(() => _setCoverImage(undefined))
-        .catch(console.error);
+          .then((a) => {
+            _setCoverImage(undefined);
+            _setShowSuccessModal(true);
+            setTimeout(() => {
+              _router.push('/dashboard/articles');
+            }, 2000);
+          })
+          .catch(console.error);
     }
 
     updateArticle(_articleFormData, _coverImage)
-      .then(() => _setCoverImage(undefined))
-      .catch(console.error);
+        .then(() => {
+          _setCoverImage(undefined);
+          _setShowSuccessModal(true);
+          setTimeout(() => {
+            _router.push('/dashboard/articles');
+          }, 2000);
+        })
+        .catch(console.error);
+  };
+
+  const _handleCloseModal = () => {
+    _setShowSuccessModal(false);
+    _router.push('/dashboard/articles');
   };
 
   useEffect(() => _setArticleId(_params.article_id), [_params]);
@@ -122,6 +141,7 @@ export default function ArticlePage() {
   );
 
   return (
+      <>
     <div className="w-full p-10">
       <div className="max-w-7xl mx-auto grid grid-cols-1 gap-6 xl:grid-cols-2">
         <div className="space-y-6">
@@ -195,7 +215,7 @@ export default function ArticlePage() {
               Category
             </Label>
             <Select
-              id="article_status"
+              id="article_category"
               required
               className="w-full"
               value={_articleFormData?.kv?.category}
@@ -276,5 +296,31 @@ export default function ArticlePage() {
         </div>
       </div>
     </div>
-  );
+  <Modal
+      show={_showSuccessModal}
+      onClose={_handleCloseModal}
+      size="md"
+      popup
+  >
+      <div className="text-center py-6">
+        <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-green-100 mb-4">
+          <CheckCircleIcon className="h-10 w-10 text-green-600" />
+        </div>
+        <h3 className="mb-2 text-xl font-semibold text-gray-900">
+          Article Saved Successfully!
+        </h3>
+        <p className="text-sm text-gray-500 mb-6">
+          Your article has been {_articleId === 'new' ? 'created' : 'updated'} successfully.
+        </p>
+        <Button
+            color="secondary"
+            onClick={_handleCloseModal}
+            className="w-full"
+        >
+          Go to Articles
+        </Button>
+      </div>
+  </Modal>
+</>
+);
 }

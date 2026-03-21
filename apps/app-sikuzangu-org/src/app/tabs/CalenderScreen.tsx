@@ -49,7 +49,7 @@ export default function Calendar() {
         const isStale = timeSinceLastFetch > STALE_TIME;
 
         if (userId && refetchUser && (!user || isStale)) {
-          refetchUser();
+          refetchUser(true);
           lastFetchRef.current = now;
         } else {
         }
@@ -96,7 +96,7 @@ export default function Calendar() {
   const handleBack = () => router.back();
   const handleRefresh = useCallback(async () => {
     if (refetchUser) {
-      await refetchUser();
+      await refetchUser(true);
       lastFetchRef.current = Date.now();
     }
   }, [refetchUser]);
@@ -236,11 +236,11 @@ export default function Calendar() {
               />
               <LegendItem
                   color="#D245D2"
-                  label={language === 'en' ? 'Ovulation' : 'Kupevuka kwa yai  '}
+                  label={language === 'en' ? 'Ovulation' : 'Yai kupevuka'}
               />
               <LegendItem
                   color="#27B3B3"
-                  label={language === 'en' ? 'Fertility' : 'Kipindi chenye uwezekano mkubwa wa kutunga mimba'}
+                  label={language === 'en' ? 'Fertility' : 'Uzazi'}
               />
               <LegendItem
                   color="#FF5E87"
@@ -259,7 +259,7 @@ export default function Calendar() {
                 graph
             />
             <InfoCard
-                title={language === 'en' ? 'Next Period' : 'Hedhi Inayofuata'}
+                title={language === 'en' ? 'Next Period' : 'Hedhi ijayo.'}
                 value={
                   daysUntilPeriod === 0
                       ? language === 'en'
@@ -289,7 +289,7 @@ export default function Calendar() {
                     description={
                       language === 'en'
                           ? 'Your body releases an egg — the most fertile day in your cycle.'
-                          : 'Mwili wako huachilia yai – siku yenye nafasi kubwa zaidi ya mimba kutungwa katika mzunguko wako.'
+                          : 'Mwili wako huachilia yai – siku yenye uwezekano mkubwa ya mimba kutungwa'
                     }
                     color="#9B59B6"
                     icon="flower-outline"

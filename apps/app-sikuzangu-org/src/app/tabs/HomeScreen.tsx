@@ -28,13 +28,26 @@ import { NavbarCard } from '@siku-zangu/react-native';
 const RING_RADIUS = 50;
 const RING_STROKE = 10;
 
+const filterTodayLogs = <T extends { timestamp: string }>(logs: T[] | undefined): T[] => {
+  if (!logs) return [];
+  const today = new Date();
+  return logs.filter((log) => {
+    const logDate = new Date(log.timestamp);
+    return (
+        logDate.getFullYear() === today.getFullYear() &&
+        logDate.getMonth() === today.getMonth() &&
+        logDate.getDate() === today.getDate()
+    );
+  });
+};
+
 export default function Dashboard() {
   const router = useRouter();
   const params = useLocalSearchParams();
   const insets = useSafeAreaInsets();
   const language = (params.lang as 'en' | 'sw') ?? 'en';
   const userId = params.userId as string;
-  const { user, refetchUser, isFetchingUser } = useUser(userId);
+  const { user, refetchUser, isInitialFetching, isBackgroundFetching, error, isFetchingUser } = useUser(userId);
   const lastFetchRef = useRef<number>(0);
   const STALE_TIME = 3 * 60 * 1000;
   const currentDate = new Date();
@@ -45,22 +58,38 @@ export default function Dashboard() {
         const timeSinceLastFetch = now - lastFetchRef.current;
         const isStale = timeSinceLastFetch > STALE_TIME;
         if (userId && refetchUser && (!user || isStale)) {
-          refetchUser();
+          refetchUser(true);
           lastFetchRef.current = now;
-        } else {
         }
       }, [userId, refetchUser, user])
   );
+
   const MOOD_CONFIG = useMemo(() => getMoodConfig(language), [language]);
   const SYMPTOM_CONFIG = useMemo(() => getSymptomConfig(language), [language]);
-  const mostRecentMood = useMemo(
-      () => getMostRecentMood(user?.kv?.mood_logs),
-      [user?.kv?.mood_logs]
-  );
-  const recentSymptoms = useMemo(
-      () => getRecentSymptoms(user?.kv?.symptom_logs, 3),
+
+  const todaySymptomLogs = useMemo(
+      () => filterTodayLogs(user?.kv?.symptom_logs),
       [user?.kv?.symptom_logs]
   );
+  const todayMoodLogs = useMemo(
+      () => filterTodayLogs(user?.kv?.mood_logs),
+      [user?.kv?.mood_logs]
+  );
+  const todayMedicationLogs = useMemo(
+      () => filterTodayLogs(user?.kv?.medication_logs),
+      [user?.kv?.medication_logs]
+  );
+
+  const mostRecentMood = useMemo(
+      () => getMostRecentMood(todayMoodLogs),
+      [todayMoodLogs]
+  );
+
+  const recentSymptoms = useMemo(
+      () => getRecentSymptoms(todaySymptomLogs, 3),
+      [todaySymptomLogs]
+  );
+
   const cycleMetrics = useMemo(
       () =>
           calculateCycleMetrics(
@@ -73,6 +102,7 @@ export default function Dashboard() {
         user?.kv?.avg_period_length_days,
       ]
   );
+
   const {
     daysUntilPeriod,
     ovulationDate,
@@ -82,6 +112,7 @@ export default function Dashboard() {
     progress,
     dayInCycle,
   } = cycleMetrics;
+
   const todayInsight = useMemo(
       () =>
           getCyclePhaseInsight(
@@ -99,6 +130,7 @@ export default function Dashboard() {
         language,
       ]
   );
+
   const formattedNextPeriod = `${MONTH_NAMES_EN[
       nextPeriodDate.getMonth()
       ].slice(0, 3)} ${nextPeriodDate.getDate()}`;
@@ -108,25 +140,28 @@ export default function Dashboard() {
     day: 'numeric',
     year: 'numeric',
   });
+
   const circumference = 2 * Math.PI * RING_RADIUS;
   const strokeDashoffset = circumference * (1 - progress);
+
   const handleAddLog = () => {
     router.push({
       pathname: '/tabs/LogEntryScreen',
       params: { lang: language, userId: userId },
     });
   };
+
   const handleRefresh = useCallback(async () => {
     if (refetchUser) {
-      console.log('🔄 Manual refresh triggered');
-      await refetchUser();
-      lastFetchRef.current = Date.now();
+      await refetchUser(true);
     }
   }, [refetchUser]);
+
   const moodData = mostRecentMood ? MOOD_CONFIG[mostRecentMood] : null;
   const remainingSymptoms =
       recentSymptoms.length > 3 ? recentSymptoms.length - 3 : 0;
-  if (!user && isFetchingUser) {
+
+  if (!user && isInitialFetching) {
     return (
         <View style={[styles.container, { paddingTop: insets.top, justifyContent: 'center', alignItems: 'center' }]}>
           <ActivityIndicator size="large" color="#FF5C8D" />
@@ -136,13 +171,19 @@ export default function Dashboard() {
         </View>
     );
   }
+
   return (
       <View style={[styles.container, { paddingTop: insets.top }]}>
+        {isBackgroundFetching && (
+            <View style={{ position: 'absolute', top: insets.top + 60, alignSelf: 'center' }}>
+              <ActivityIndicator size="small" color="#FF5C8D" />
+            </View>
+        )}
         <ScrollView
             showsVerticalScrollIndicator={false}
             refreshControl={
               <RefreshControl
-                  refreshing={isFetchingUser}
+                  refreshing={isInitialFetching}
                   onRefresh={handleRefresh}
                   tintColor="#FF5C8D"
                   colors={['#FF5C8D']}
@@ -165,32 +206,39 @@ export default function Dashboard() {
                   : "Here's your cycle overview"}
             </Text>
           </LinearGradient>
+
           <View style={styles.statsCard}>
             <Text style={[styles.statTitle]}>
               {language === 'sw' ? 'Muhtasari wa Mzunguko' : 'Cycle Overview'}
             </Text>
             <View style={styles.statRow}>
               <View style={styles.statItem}>
+                {language === 'sw' && (
+                  <Text style={styles.statLabel}>Siku</Text>
+                )}
                 <Text style={[styles.statValue, { color: '#FF597D' }]}>
                   {daysUntilPeriod}
                 </Text>
-                <Text style={styles.statLabel}>
-                  {language === 'sw' ? 'Siku' : 'days'}
-                </Text>
+                {language !== 'sw' && (
+                  <Text style={styles.statLabel}>days</Text>
+                )}
                 <Text style={styles.statSub}>
-                  {language === 'sw' ? 'Siku za hedhi zinazokuja' : 'Next period'}
+                  {language === 'sw' ? 'Hedhi ijayo' : 'Next period'}
                 </Text>
                 <Text style={styles.statDate}>{formattedNextPeriod}</Text>
               </View>
               <View style={styles.statItem}>
+                {language === 'sw' && (
+                  <Text style={styles.statLabel}>Siku</Text>
+                )}
                 <Text style={[styles.statValue, { color: '#1DA8AD' }]}>
                   {daysUntilOvulation}
                 </Text>
-                <Text style={styles.statLabel}>
-                  {language === 'sw' ? 'Siku' : 'days'}
-                </Text>
+                {language !== 'sw' && (
+                  <Text style={styles.statLabel}>days</Text>
+                )}
                 <Text style={styles.statSub}>
-                  {language === 'sw' ? 'Kupevuka kwa yai kutatokea baada ya' : 'Ovulation'}
+                  {language === 'sw' ? 'Yai kupevuka' : 'Ovulation in'}
                 </Text>
                 <View style={styles.iconRow}>
                   <Ionicons name="moon" color="#555" size={12} />
@@ -200,14 +248,17 @@ export default function Dashboard() {
                 </View>
               </View>
               <View style={styles.statItem}>
+                {language === 'sw' && (
+                  <Text style={styles.statLabel}>Siku</Text>
+                )}
                 <Text style={[styles.statValue, { color: '#A855F7' }]}>
                   {fertileDaysRemaining}
                 </Text>
-                <Text style={styles.statLabel}>
-                  {language === 'sw' ? 'Siku' : 'days'}
-                </Text>
+                {language !== 'sw' && (
+                  <Text style={styles.statLabel}>days</Text>
+                )}
                 <Text style={styles.statSub}>
-                  {language === 'sw' ? 'Kipindi chenye uwezekano mkubwa wa kutunga mimba' : 'Fertile'}
+                  {language === 'sw' ? 'Uzazi' : 'Fertile'}
                 </Text>
                 <Text style={styles.statDate}>
                   {fertileDaysRemaining > 0
@@ -221,6 +272,7 @@ export default function Dashboard() {
               </View>
             </View>
           </View>
+
           <View style={styles.ringContainer}>
             <Svg height="120" width="120">
               <Circle
@@ -249,6 +301,29 @@ export default function Dashboard() {
               {language === 'sw' ? 'siku' : 'days'}
             </Text>
           </View>
+          <Text style={styles.ringDescription}>
+            {daysUntilPeriod === 0
+                ? language === 'sw'
+                    ? 'Uko katika siku za hedhi'
+                    : 'You are on your period'
+                : fertileDaysRemaining > 0
+                    ? language === 'sw'
+                        ? `Dirisha la uzazi - siku ${fertileDaysRemaining} zimebaki`
+                        : `Fertile window - ${fertileDaysRemaining} days remaining`
+                    : daysUntilOvulation <= 3 && daysUntilOvulation > 0
+                        ? language === 'sw'
+                            ? `Yai kupevuka baada ya siku ${daysUntilOvulation}`
+                            : `Ovulation in ${daysUntilOvulation} days`
+                        : language === 'sw'
+                            ? `Hedhi inatarajiwa baada ya siku ${daysUntilPeriod}`
+                            : `Period expected in ${daysUntilPeriod} days`}
+          </Text>
+          <Text style={styles.ringCycleDay}>
+            {language === 'sw'
+                ? `Siku ${dayInCycle} ya ${user?.kv?.avg_cycle_length_days ?? 28}`
+                : `Day ${dayInCycle} of ${user?.kv?.avg_cycle_length_days ?? 28}`}
+          </Text>
+
           <View style={styles.insightCard}>
             <View style={styles.insightHeader}>
               <Ionicons name="bulb-outline" size={22} color="#D97706" />
@@ -263,6 +338,7 @@ export default function Dashboard() {
               {language === 'sw' ? 'ya mzunguko' : 'of cycle'}
             </Text>
           </View>
+
           <View style={styles.logCard}>
             <View style={styles.logHeader}>
               <Text style={styles.logTitle}>
@@ -273,6 +349,7 @@ export default function Dashboard() {
               </TouchableOpacity>
             </View>
             <Text style={styles.logDate}>{formattedToday}</Text>
+
             {moodData ? (
                 <View style={styles.moodRow}>
                   <View style={styles.moodIcon}>
@@ -295,6 +372,7 @@ export default function Dashboard() {
                   </Text>
                 </TouchableOpacity>
             )}
+
             {recentSymptoms.length > 0 ? (
                 <>
                   <Text style={styles.symptomTitle}>
@@ -306,7 +384,6 @@ export default function Dashboard() {
                     {recentSymptoms.slice(0, 3).map((symptom) => {
                       const config = SYMPTOM_CONFIG[symptom];
                       if (!config) return null;
-
                       return (
                           <View key={symptom} style={styles.symptomCircle}>
                             <Ionicons
@@ -353,6 +430,7 @@ export default function Dashboard() {
       </View>
   );
 }
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -455,6 +533,24 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     fontSize: 12,
     color: '#FF5C8D',
+  },
+  ringDescription: {
+    textAlign: 'center',
+    fontSize: 14,
+    color: '#333333',
+    fontWeight: '500',
+    fontFamily: 'inter',
+    marginTop: -8,
+    marginHorizontal: 40,
+  },
+  ringCycleDay: {
+    textAlign: 'center',
+    fontSize: 12,
+    color: '#666',
+    fontWeight: '600',
+    fontFamily: 'inter',
+    marginTop: 4,
+    marginBottom: 8,
   },
   insightCard: {
     backgroundColor: '#F8BBD0',
