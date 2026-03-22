@@ -2,7 +2,6 @@ import { useState, useEffect, useRef } from 'react';
 import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
 import { Platform } from 'react-native';
-import Constants from 'expo-constants';
 import { postJSON } from '../../../react/src/post-json.function';
 
 Notifications.setNotificationHandler({
@@ -13,8 +12,9 @@ Notifications.setNotificationHandler({
     }),
 });
 export function useNotifications(userId?: string) {
-    const [expoPushToken, setExpoPushToken] = useState<string>();
+    const [devicePushToken, setDevicePushToken] = useState<string>();
     const [notification, setNotification] = useState<Notifications.Notification>();
+    const [notificationResponse, setNotificationResponse] = useState<Notifications.NotificationResponse>();
     const notificationListener = useRef<Notifications.Subscription>();
     const responseListener = useRef<Notifications.Subscription>();
 
@@ -24,7 +24,7 @@ export function useNotifications(userId?: string) {
         }
         registerForPushNotificationsAsync().then(token => {
             if (token) {
-                setExpoPushToken(token);
+                setDevicePushToken(token);
                 saveFCMToken(userId, token);
             }
         }).catch(error => {
@@ -33,7 +33,14 @@ export function useNotifications(userId?: string) {
             setNotification(notification);
         });
         responseListener.current = Notifications.addNotificationResponseReceivedListener(response => {
-            const data = response.notification.request.content.data;
+            setNotificationResponse(response);
+        });
+
+        // Check if app was opened from a notification (killed state)
+        Notifications.getLastNotificationResponseAsync().then(response => {
+            if (response) {
+                setNotificationResponse(response);
+            }
         });
 
         return () => {
@@ -47,8 +54,9 @@ export function useNotifications(userId?: string) {
     }, [userId]);
 
     return {
-        expoPushToken,
+        expoPushToken: devicePushToken,
         notification,
+        notificationResponse,
     };
 }
 
@@ -79,12 +87,7 @@ async function registerForPushNotificationsAsync() {
         }
 
         try {
-            const projectId = Constants.expoConfig?.extra?.eas?.projectId;
-            if (!projectId) {
-                return;
-            }
-
-            token = (await Notifications.getExpoPushTokenAsync({ projectId })).data;
+            token = (await Notifications.getDevicePushTokenAsync()).data as string;
         } catch (error) {
         }
     } else {

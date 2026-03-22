@@ -10,8 +10,9 @@ function calculateCycleMetrics(
     const daysSinceStart = Math.floor(
         (today.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)
     );
-    const dayInCycle = daysSinceStart % avgCycleLengthDays;
-    const daysUntilPeriod = avgCycleLengthDays - dayInCycle;
+    const rawDayInCycle = daysSinceStart % avgCycleLengthDays;
+    const dayInCycle = rawDayInCycle === 0 ? 0 : rawDayInCycle;
+    const daysUntilPeriod = rawDayInCycle === 0 ? 0 : avgCycleLengthDays - rawDayInCycle;
     const ovulationDay = avgCycleLengthDays - 14;
     const daysUntilOvulation = ovulationDay - dayInCycle;
     const fertileDaysRemaining = Math.max(0, daysUntilOvulation + 5);
@@ -30,7 +31,7 @@ export async function schedulePeriodReminders() {
     while (true) {
         const usersPage = await selectUsersPage({ page, size, q: '' });
         for (const user of usersPage.items) {
-            if (!user.kv?.receive_period_alerts ||
+            if (user.kv?.receive_period_alerts === false ||
                 !user.kv?.prev_cycle_start_date ||
                 !user.kv?.fcm_token) {
                 continue;
@@ -84,7 +85,7 @@ export async function scheduleFertileWindowAlerts() {
         const usersPage = await selectUsersPage({ page, size, q: '' });
 
         for (const user of usersPage.items) {
-            if (!user.kv?.receive_fertile_alerts ||
+            if (user.kv?.receive_fertile_alerts === false ||
                 !user.kv?.prev_cycle_start_date ||
                 !user.kv?.fcm_token) {
                 continue;
@@ -136,7 +137,7 @@ export async function scheduleMedicationReminders() {
         const usersPage = await selectUsersPage({ page, size, q: '' });
 
         for (const user of usersPage.items) {
-            if (!user.kv?.receive_medication_tips ||
+            if (user.kv?.receive_medication_tips === false ||
                 !user.kv?.fcm_token ||
                 !user.kv?.selected_medications?.length) {
                 continue;
@@ -161,8 +162,8 @@ export async function scheduleMedicationReminders() {
 }
 
 function getDailyInsightMessage(dayInCycle: number, ovulationDay: number, lang: string): { title: string; body: string } {
-    // Menstrual phase (days 1-5)
-    if (dayInCycle >= 1 && dayInCycle <= 5) {
+    // Menstrual phase (day 0-5, where 0 is period start day)
+    if (dayInCycle >= 0 && dayInCycle <= 5) {
         return lang === 'sw'
             ? { title: 'Ushauri wa Kila Siku', body: 'Uko katika siku za hedhi. Kumbuka kunywa maji mengi na kupumzika vya kutosha.' }
             : { title: 'Daily Insight', body: 'You are in your menstrual phase. Remember to stay hydrated and get plenty of rest.' };
@@ -194,7 +195,7 @@ export async function scheduleDailyInsights() {
         const usersPage = await selectUsersPage({ page, size, q: '' });
 
         for (const user of usersPage.items) {
-            if (!user.kv?.receive_insights_tips ||
+            if (user.kv?.receive_insights_tips === false ||
                 !user.kv?.fcm_token ||
                 !user.kv?.prev_cycle_start_date) {
                 continue;

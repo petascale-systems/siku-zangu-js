@@ -17,7 +17,7 @@ export default function RootLayout() {
     const [language, setLanguage] = useState<string>('en');
     const hasNavigated = useRef(false);
     const crashlytics = useFirebaseCrashlytics(userId);
-    const {expoPushToken, notification} = useNotifications(userId || undefined);
+    const {expoPushToken, notification, notificationResponse} = useNotifications(userId || undefined);
 
     useEffect(() => {
         if (expoPushToken && userId) {
@@ -25,38 +25,36 @@ export default function RootLayout() {
             console.log('Token:', expoPushToken);
         }
     }, [expoPushToken, userId]);
+    const navigateByNotificationType = useCallback((type: string) => {
+        if (type === 'medication_reminder') {
+            router.push({
+                pathname: '/tabs/LogEntryScreen',
+                params: { lang: language, userId: userId! },
+            });
+        } else {
+            router.push({
+                pathname: '/tabs/HomeScreen',
+                params: { lang: language, userId: userId! },
+            });
+        }
+    }, [language, userId, router]);
+
+    // Handle foreground notifications
     useEffect(() => {
         if (notification && userId && appIsReady) {
             console.log('Notification received:', notification);
+        }
+    }, [notification, userId, appIsReady]);
 
-            const data = notification.request.content.data;
-            if (data.type === 'period_reminder' || data.type === 'fertile_window') {
-                router.push({
-                    pathname: '/tabs/HomeScreen',
-                    params: {
-                        lang: language,
-                        userId: userId,
-                    },
-                });
-            } else if (data.type === 'medication_reminder') {
-                router.push({
-                    pathname: '/tabs/LogEntryScreen',
-                    params: {
-                        lang: language,
-                        userId: userId,
-                    },
-                });
-            } else if (data.type === 'daily_insight') {
-                router.push({
-                    pathname: '/tabs/HomeScreen',
-                    params: {
-                        lang: language,
-                        userId: userId,
-                    },
-                });
+    // Handle notification taps (background + killed state)
+    useEffect(() => {
+        if (notificationResponse && userId && appIsReady) {
+            const data = notificationResponse.notification.request.content.data;
+            if (data.type) {
+                navigateByNotificationType(data.type as string);
             }
         }
-    }, [notification, userId, appIsReady, language]);
+    }, [notificationResponse, userId, appIsReady, navigateByNotificationType]);
 
     const onLayoutRootView = useCallback(async () => {
         if (appIsReady) {

@@ -58,6 +58,10 @@ export async function sendPushNotification(payload: NotificationPayload) {
     } catch (error: any) {
         if (error.code === 'messaging/invalid-registration-token' ||
             error.code === 'messaging/registration-token-not-registered') {
+            // Clear the stale token so we stop trying to send to it
+            const { updateOneUser } = await import('../users/update-one-user.function');
+            await updateOneUser(payload.userId, { kv: { fcm_token: undefined } }).catch(() => {});
+            return null;
         }
 
         throw error;
