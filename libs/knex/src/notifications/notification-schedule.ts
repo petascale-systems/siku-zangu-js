@@ -30,7 +30,7 @@ export async function schedulePeriodReminders() {
     let totalSent = 0;
     while (true) {
         const usersPage = await selectUsersPage({ page, size, q: '' });
-        for (const user of usersPage.items) {
+        for (const user of usersPage.items || []) {
             if (user.kv?.receive_period_alerts === false ||
                 !user.kv?.prev_cycle_start_date ||
                 !user.kv?.fcm_token) {
@@ -71,7 +71,7 @@ export async function schedulePeriodReminders() {
                 totalSent++;
             }
         }
-        if (page >= usersPage.totalPages) break;
+        if (page >= (usersPage.totalPages || 0)) break;
         page++;
     }
     return totalSent;
@@ -84,7 +84,7 @@ export async function scheduleFertileWindowAlerts() {
     while (true) {
         const usersPage = await selectUsersPage({ page, size, q: '' });
 
-        for (const user of usersPage.items) {
+        for (const user of usersPage.items || []) {
             if (user.kv?.receive_fertile_alerts === false ||
                 !user.kv?.prev_cycle_start_date ||
                 !user.kv?.fcm_token) {
@@ -122,7 +122,7 @@ export async function scheduleFertileWindowAlerts() {
                 totalSent++;
             }
         }
-        if (page >= usersPage.totalPages) break;
+        if (page >= (usersPage.totalPages || 0)) break;
         page++;
     }
     return totalSent;
@@ -136,7 +136,7 @@ export async function scheduleMedicationReminders() {
     while (true) {
         const usersPage = await selectUsersPage({ page, size, q: '' });
 
-        for (const user of usersPage.items) {
+        for (const user of usersPage.items || []) {
             if (user.kv?.receive_medication_tips === false ||
                 !user.kv?.fcm_token ||
                 !user.kv?.selected_medications?.length) {
@@ -155,7 +155,7 @@ export async function scheduleMedicationReminders() {
             });
             totalSent++;
         }
-        if (page >= usersPage.totalPages) break;
+        if (page >= (usersPage.totalPages || 0)) break;
         page++;
     }
     return totalSent;
@@ -194,7 +194,7 @@ export async function scheduleDailyInsights() {
     while (true) {
         const usersPage = await selectUsersPage({ page, size, q: '' });
 
-        for (const user of usersPage.items) {
+        for (const user of usersPage.items || []) {
             if (user.kv?.receive_insights_tips === false ||
                 !user.kv?.fcm_token ||
                 !user.kv?.prev_cycle_start_date) {
@@ -214,7 +214,7 @@ export async function scheduleDailyInsights() {
             });
             totalSent++;
         }
-        if (page >= usersPage.totalPages) break;
+        if (page >= (usersPage.totalPages || 0)) break;
         page++;
     }
     return totalSent;
@@ -225,7 +225,7 @@ export async function scheduleNewArticleNotifications() {
     const now = new Date();
     const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
 
-    const newArticles = recentArticles.items.filter(article => {
+    const newArticles = (recentArticles.items || []).filter(article => {
         const updatedAt = article.updated_at ? new Date(article.updated_at) : null;
         return updatedAt && updatedAt >= oneDayAgo;
     });
@@ -239,7 +239,7 @@ export async function scheduleNewArticleNotifications() {
     while (true) {
         const usersPage = await selectUsersPage({ page, size, q: '' });
 
-        for (const user of usersPage.items) {
+        for (const user of usersPage.items || []) {
             if (user.kv?.receive_new_articles === false || !user.kv?.fcm_token) {
                 continue;
             }
@@ -267,7 +267,7 @@ export async function scheduleNewArticleNotifications() {
                 totalSent++;
             }
         }
-        if (page >= usersPage.totalPages) break;
+        if (page >= (usersPage.totalPages || 0)) break;
         page++;
     }
     return totalSent;
