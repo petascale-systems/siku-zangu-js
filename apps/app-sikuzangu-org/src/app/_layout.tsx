@@ -25,11 +25,16 @@ export default function RootLayout() {
             console.log('Token:', expoPushToken);
         }
     }, [expoPushToken, userId]);
-    const navigateByNotificationType = useCallback((type: string) => {
+    const navigateByNotificationType = useCallback((type: string, data?: Record<string, any>) => {
         if (type === 'medication_reminder') {
             router.push({
                 pathname: '/tabs/LogEntryScreen',
                 params: { lang: language, userId: userId! },
+            });
+        } else if (type === 'new_article') {
+            router.push({
+                pathname: '/tabs/ArticleDetailScreen',
+                params: { lang: language, userId: userId!, articleId: data?.articleId || '' },
             });
         } else {
             router.push({
@@ -51,7 +56,7 @@ export default function RootLayout() {
         if (notificationResponse && userId && appIsReady) {
             const data = notificationResponse.notification.request.content.data;
             if (data.type) {
-                navigateByNotificationType(data.type as string);
+                navigateByNotificationType(data.type as string, data);
             }
         }
     }, [notificationResponse, userId, appIsReady, navigateByNotificationType]);

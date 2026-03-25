@@ -85,6 +85,17 @@ export default function NotificationsScreen() {
       iconBg: '#FFF9C4',
       enabled: false,
     },
+    {
+      id: 'new_articles',
+      title: 'New articles',
+      titleSw: 'Makala mpya',
+      description: 'Get notified when new articles are published',
+      descriptionSw: 'Pata arifa makala mpya zinapochapishwa',
+      iconType: 'ionicons',
+      iconName: 'newspaper',
+      iconBg: '#E1BEE7',
+      enabled: false,
+    },
   ]);
 
   React.useEffect(() => {
@@ -105,6 +116,9 @@ export default function NotificationsScreen() {
           break;
         case 'insights':
           enabledValue = user.kv.receive_insights_tips;
+          break;
+        case 'new_articles':
+          enabledValue = user.kv.receive_new_articles;
           break;
         default:
           enabledValue = notif.enabled;
@@ -154,6 +168,8 @@ export default function NotificationsScreen() {
             (n) => n.id === 'medication'
         )?.enabled,
         receive_insights_tips: notifications.find((n) => n.id === 'insights')
+            ?.enabled,
+        receive_new_articles: notifications.find((n) => n.id === 'new_articles')
             ?.enabled,
       };
 

@@ -38,6 +38,10 @@ export function userToKv(user: User) {
         kvs.push({k: 'receive_insights_tips', v: userKv?.receive_insights_tips.toString(),});
     }
 
+    if (userKv?.receive_new_articles == true || userKv?.receive_new_articles == false) {
+        kvs.push({k: 'receive_new_articles', v: userKv?.receive_new_articles.toString(),});
+    }
+
     if (user.kv.selected_symptoms !== undefined) {
         kvs.push({k: 'selected_symptoms', v: JSON.stringify(user.kv.selected_symptoms),});
     }

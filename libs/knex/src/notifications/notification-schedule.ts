@@ -1,4 +1,4 @@
-import { selectUsersPage } from '@siku-zangu/knex';
+import { selectUsersPage, selectArticlesPage } from '@siku-zangu/knex';
 import { sendPushNotification } from '@siku-zangu/knex';
 
 function calculateCycleMetrics(
@@ -213,6 +213,59 @@ export async function scheduleDailyInsights() {
                 body: message.body,
             });
             totalSent++;
+        }
+        if (page >= usersPage.totalPages) break;
+        page++;
+    }
+    return totalSent;
+}
+
+export async function scheduleNewArticleNotifications() {
+    const recentArticles = await selectArticlesPage({ page: 1, size: 50, status: 'published' });
+    const now = new Date();
+    const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+
+    const newArticles = recentArticles.items.filter(article => {
+        const updatedAt = article.updated_at ? new Date(article.updated_at) : null;
+        return updatedAt && updatedAt >= oneDayAgo;
+    });
+
+    if (newArticles.length === 0) return 0;
+
+    let totalSent = 0;
+    let page = 1;
+    const size = 50;
+
+    while (true) {
+        const usersPage = await selectUsersPage({ page, size, q: '' });
+
+        for (const user of usersPage.items) {
+            if (user.kv?.receive_new_articles === false || !user.kv?.fcm_token) {
+                continue;
+            }
+
+            const lang = user.kv.language || 'en';
+
+            for (const article of newArticles) {
+                if (article.kv?.language && article.kv.language !== lang) {
+                    continue;
+                }
+
+                await sendPushNotification({
+                    userId: user.user_id!,
+                    type: 'new_article',
+                    title: lang === 'sw'
+                        ? 'Makala Mpya'
+                        : 'New Article',
+                    body: lang === 'sw'
+                        ? `Soma: ${article.kv?.title || 'Makala mpya imepatikana'}`
+                        : `Read: ${article.kv?.title || 'A new article is available'}`,
+                    data: {
+                        articleId: article.article_id || '',
+                    },
+                });
+                totalSent++;
+            }
         }
         if (page >= usersPage.totalPages) break;
         page++;

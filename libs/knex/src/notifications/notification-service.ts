@@ -5,7 +5,8 @@ export type NotificationType =
     | 'period_reminder'
     | 'fertile_window'
     | 'medication_reminder'
-    | 'daily_insight';
+    | 'daily_insight'
+    | 'new_article';
 
 interface NotificationPayload {
     userId: string;
@@ -78,6 +79,8 @@ function checkNotificationPreference(user: any, type: NotificationType): boolean
             return kv.receive_medication_tips !== false;
         case 'daily_insight':
             return kv.receive_insights_tips !== false;
+        case 'new_article':
+            return kv.receive_new_articles !== false;
         default:
             return true;
     }

@@ -4,7 +4,8 @@ import {
     schedulePeriodReminders,
     scheduleFertileWindowAlerts,
     scheduleMedicationReminders,
-    scheduleDailyInsights
+    scheduleDailyInsights,
+    scheduleNewArticleNotifications
 } from '@siku-zangu/knex';
 
 export async function GET(req: NextRequest) {
@@ -18,11 +19,12 @@ export async function GET(req: NextRequest) {
         console.log('⏰ Starting scheduled notifications...');
         const startTime = Date.now();
 
-        const [periodCount, fertileCount, medicationCount, insightsCount] = await Promise.all([
+        const [periodCount, fertileCount, medicationCount, insightsCount, newArticlesCount] = await Promise.all([
             schedulePeriodReminders(),
             scheduleFertileWindowAlerts(),
             scheduleMedicationReminders(),
             scheduleDailyInsights(),
+            scheduleNewArticleNotifications(),
         ]);
 
         const duration = Date.now() - startTime;
@@ -35,6 +37,7 @@ export async function GET(req: NextRequest) {
             fertileAlerts: fertileCount,
             medicationReminders: medicationCount,
             dailyInsights: insightsCount,
+            newArticles: newArticlesCount,
             duration: `${duration}ms`
         }, { status: 200 });
     });

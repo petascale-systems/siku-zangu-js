@@ -25,6 +25,7 @@ export const USER_TABLE_COLUMN_ALIASES = {
     receive_fertile_alerts: '_receive_fertile_alerts.v',
     receive_medication_tips: '_receive_medication_tips.v',
     receive_insights_tips: '_receive_insights_tips.v',
+    receive_new_articles: '_receive_new_articles.v',
     selected_symptoms: '_selected_symptoms.v',
     selected_moods: '_selected_moods.v',
     selected_medications: '_selected_medications.v',
@@ -55,6 +56,7 @@ export function buildUserTableJoins(db: Knex | Knex.Transaction) {
         .leftJoin('s_user_kv as _receive_fertile_alerts', DATABASE.raw('_receive_fertile_alerts.id_user=_u.id_user and _receive_fertile_alerts.k="receive_fertile_alerts"'))
         .leftJoin('s_user_kv as _receive_medication_tips', DATABASE.raw('_receive_medication_tips.id_user=_u.id_user and _receive_medication_tips.k="receive_medication_tips"'))
         .leftJoin('s_user_kv as _receive_insights_tips', DATABASE.raw('_receive_insights_tips.id_user=_u.id_user and _receive_insights_tips.k="receive_insights_tips"'))
+        .leftJoin('s_user_kv as _receive_new_articles', DATABASE.raw('_receive_new_articles.id_user=_u.id_user and _receive_new_articles.k="receive_new_articles"'))
         .leftJoin('s_user_kv as _selected_symptoms', DATABASE.raw('_selected_symptoms.id_user=_u.id_user and _selected_symptoms.k="selected_symptoms"'))
         .leftJoin('s_user_kv as _selected_moods', DATABASE.raw('_selected_moods.id_user=_u.id_user and _selected_moods.k="selected_moods"'))
         .leftJoin('s_user_kv as _selected_medications', DATABASE.raw('_selected_medications.id_user=_u.id_user and _selected_medications.k="selected_medications"'))
@@ -90,6 +92,7 @@ export function rowToUser(row: any) {
             receive_fertile_alerts: row.receive_fertile_alerts === 'true' ? true : row.receive_fertile_alerts === 'false' ? false : undefined,
             receive_medication_tips: row.receive_medication_tips === 'true' ? true : row.receive_medication_tips === 'false' ? false : undefined,
             receive_insights_tips: row.receive_insights_tips === 'true' ? true : row.receive_insights_tips === 'false' ? false : undefined,
+            receive_new_articles: row.receive_new_articles === 'true' ? true : row.receive_new_articles === 'false' ? false : undefined,
             selected_symptoms: row.selected_symptoms ? JSON.parse(row.selected_symptoms) : undefined,
             selected_moods: row.selected_moods ? JSON.parse(row.selected_moods) : undefined,
             selected_medications: row.selected_medications ? JSON.parse(row.selected_medications) : undefined,

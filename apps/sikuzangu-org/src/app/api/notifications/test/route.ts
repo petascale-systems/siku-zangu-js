@@ -4,7 +4,7 @@ import { sendPushNotification } from '@siku-zangu/knex';
 
 export async function POST(req: NextRequest) {
     return handleAPIError(async () => {
-        const { userId, title, body } = await req.json();
+        const { userId, title, body, type, data } = await req.json();
 
         if (!userId) {
             return Response.json(
@@ -15,9 +15,10 @@ export async function POST(req: NextRequest) {
 
         const result = await sendPushNotification({
             userId,
-            type: 'daily_insight',
+            type: type || 'daily_insight',
             title: title || 'Test Notification',
             body: body || 'This is a test notifications from Siku Zangu',
+            data,
         });
 
         return Response.json({
