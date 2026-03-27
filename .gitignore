@@ -182,3 +182,6 @@ yarn-error.log
 # Firebase Configuration Files
 apps/app-sikuzangu-org/GoogleService-Info.plist
 apps/app-sikuzangu-org/google-services.json
+
+.claude/worktrees
+.claude/settings.local.json

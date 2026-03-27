@@ -1,60 +1,38 @@
 {
   "migrations": [
     {
-      "version": "22.2.0-beta.2",
-      "description": "Convert jest.config.ts files from ESM to CJS syntax (export default -> module.exports, import -> require) for projects using CommonJS resolution to ensure correct loading under Node.js type-stripping.",
-      "implementation": "./src/migrations/update-22-2-0/convert-jest-config-to-cjs",
+      "cli": "nx",
+      "version": "22.6.0-beta.10",
+      "description": "Adds .claude/worktrees to .gitignore",
+      "implementation": "./src/migrations/update-22-6-0/add-claude-worktrees-to-git-ignore",
+      "package": "nx",
+      "name": "22-6-1-add-claude-worktrees-to-git-ignore"
+    },
+    {
+      "cli": "nx",
+      "version": "22.6.0-rc.0",
+      "description": "Adds .claude/settings.local.json to .gitignore",
+      "implementation": "./src/migrations/update-22-6-0/add-claude-settings-local-to-git-ignore",
+      "package": "nx",
+      "name": "22-6-0-add-claude-settings-local-to-git-ignore"
+    },
+    {
+      "cli": "nx",
+      "version": "22.6.0-beta.11",
+      "description": "Prompts to enable usage analytics",
+      "implementation": "./src/migrations/update-22-6-0/enable-analytics-prompt",
+      "package": "nx",
+      "name": "22-6-0-enable-analytics-prompt"
+    },
+    {
+      "version": "22.3.2-beta.0",
+      "requires": {
+        "jest": ">=30.0.0"
+      },
+      "description": "Replace removed matcher aliases in Jest v30 with their corresponding matcher",
+      "implementation": "./src/migrations/update-21-3-0/replace-removed-matcher-aliases",
       "package": "@nx/jest",
-      "name": "convert-jest-config-to-cjs"
-    },
-    {
-      "cli": "nx",
-      "version": "22.2.0-beta.1",
-      "requires": { "next": ">=16.0.0" },
-      "description": "Create AI Instructions to help migrate users workspaces to Next.js 16.",
-      "factory": "./src/migrations/update-22-2-0/create-ai-instructions-for-next-16",
-      "package": "@nx/next",
-      "name": "update-22-2-0-create-ai-instructions-for-next-16"
-    },
-    {
-      "version": "22.2.0-beta.3",
-      "cli": "nx",
-      "description": "Create AI migration instructions for Expo SDK 54 upgrade",
-      "factory": "./src/migrations/update-22-2-0/create-ai-instructions-for-expo-54",
-      "package": "@nx/expo",
-      "name": "update-22-2-0-create-ai-instructions-for-expo-54"
-    },
-    {
-      "version": "22.2.0-beta.3",
-      "cli": "nx",
-      "description": "Add expo-system-ui dependency for Expo SDK 54",
-      "factory": "./src/migrations/update-22-2-0/add-expo-system-ui",
-      "package": "@nx/expo",
-      "name": "update-22-2-0-add-expo-system-ui"
-    },
-    {
-      "requires": { "expo": ">= 54.0.0" },
-      "version": "22.2.0-beta.3",
-      "cli": "nx",
-      "description": "Update Jest configuration for Expo SDK 54",
-      "factory": "./src/migrations/update-22-2-0/update-jest-for-expo-54",
-      "package": "@nx/expo",
-      "name": "update-22-2-0-update-jest-for-expo-54"
-    },
-    {
-      "version": "22.2.0-beta.1",
-      "requires": { "vitest": ">=4.0.0" },
-      "description": "Create AI Instructions to help migrate users workspaces past breaking changes for Vitest 4.",
-      "implementation": "./src/migrations/update-22-2-0/create-ai-instructions-for-vitest-4",
-      "package": "@nx/vite",
-      "name": "update-22-2-0"
-    },
-    {
-      "version": "22.2.0-beta.2",
-      "description": "Migrate Vitest usage from @nx/vite to @nx/vitest package.",
-      "implementation": "./src/migrations/update-22-2-0/migrate-vitest-to-vitest-package",
-      "package": "@nx/vite",
-      "name": "migrate-vitest-to-vitest-package"
+      "name": "replace-removed-matcher-aliases-v22-3"
     }
   ]
 }
