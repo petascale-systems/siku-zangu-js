@@ -6,7 +6,7 @@ import { composePlugins, withNx } from '@nx/next';
 const nextConfig = {
   output: 'standalone',
   nx: {},
-  serverExternalPackages: ['knex', 'mysql2'],
+  serverExternalPackages: ['knex', 'mysql2', 'node-cron'],
   images: {
     remotePatterns: [
       {

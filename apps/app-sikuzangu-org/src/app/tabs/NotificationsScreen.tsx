@@ -101,24 +101,31 @@ export default function NotificationsScreen() {
   React.useEffect(() => {
     if (!user?.kv) return;
 
+    const toBool = (val: any): boolean | undefined => {
+      if (val === undefined || val === null) return undefined;
+      if (typeof val === 'boolean') return val;
+      if (typeof val === 'string') return val !== 'false';
+      return !!val;
+    };
+
     const updatedNotifications = notifications.map((notif) => {
       let enabledValue: boolean | undefined;
 
       switch (notif.id) {
         case 'period':
-          enabledValue = user.kv.receive_period_alerts;
+          enabledValue = toBool(user.kv.receive_period_alerts);
           break;
         case 'fertile':
-          enabledValue = user.kv.receive_fertile_alerts;
+          enabledValue = toBool(user.kv.receive_fertile_alerts);
           break;
         case 'medication':
-          enabledValue = user.kv.receive_medication_tips;
+          enabledValue = toBool(user.kv.receive_medication_tips);
           break;
         case 'insights':
-          enabledValue = user.kv.receive_insights_tips;
+          enabledValue = toBool(user.kv.receive_insights_tips);
           break;
         case 'new_articles':
-          enabledValue = user.kv.receive_new_articles;
+          enabledValue = toBool(user.kv.receive_new_articles);
           break;
         default:
           enabledValue = notif.enabled;
