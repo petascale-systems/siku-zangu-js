@@ -10,6 +10,16 @@ steps:
       - docker build -t sikuzangu-org:${DRONE_TAG} -f ./sikuzangu-org-Dockerfile .
   - name: docker-run
     environment:
+      FIREBASE_SERVICE_ACCOUNT:
+        from_secret: _FIREBASE_SERVICE_ACCOUNT
+      TWILIO_ACCOUNT_SID:
+        from_secret: _TWILIO_ACCOUNT_SID
+      TWILIO_AUTH_TOKEN:
+        from_secret: _TWILIO_AUTH_TOKEN
+      TWILIO_VERIFY_SERVICE_SID:
+        from_secret: _TWILIO_VERIFY_SERVICE_SID
+      CRON_SECRET:
+        from_secret: _CRON_SECRET
       S_DATABASE_HOST:
         from_secret: _S_DATABASE_HOST
       S_DATABASE_USER:
@@ -41,7 +51,12 @@ steps:
         --env=S_DATABASE_NAME=$S_DATABASE_NAME 
         --env=ATLASGO_VAR_DATABASE=$ATLASGO_VAR_DATABASE 
         --env=ATLASGO_URL=$ATLASGO_URL 
-        --env=S_BREVO_API_KEY=$S_BREVO_API_KEY 
+        --env=S_BREVO_API_KEY=$S_BREVO_API_KEY
+        --env=FIREBASE_SERVICE_ACCOUNT=$FIREBASE_SERVICE_ACCOUNT
+        --env=TWILIO_ACCOUNT_SID=$TWILIO_ACCOUNT_SID
+        --env=TWILIO_AUTH_TOKEN=$TWILIO_AUTH_TOKEN
+        --env=TWILIO_VERIFY_SERVICE_SID=$TWILIO_VERIFY_SERVICE_SID
+        --env=CRON_SECRET=$CRON_SECRET
         sikuzangu-org:${DRONE_TAG}
 trigger:
   event:

@@ -45,6 +45,9 @@
     "react-native-web": "*",
     "recharts": "*",
     "zod": "*",
+    "expo-device": "*",
+    "expo-notifications": "*",
+    "firebase-admin": "*",
     "react-native-render-html": "*"
   },
   "devDependencies": {

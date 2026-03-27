@@ -3,7 +3,8 @@ import {useCallback, useEffect, useRef, useState} from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {Animated, ImageBackground, StyleSheet} from 'react-native';
 import {ACCESS_TOKEN_KEY} from '@siku-zangu/react';
-import {useFirebaseCrashlytics, isOnboardingComplete} from '@siku-zangu/react-native';
+import {isOnboardingComplete, useNotifications, useFirebaseCrashlytics} from '@siku-zangu/react-native';
+import '../firebase.config';
 
 const LANGUAGE_KEY = 'language';
 const FIRST_LAUNCH_KEY = 'hasLaunchedBefore';
@@ -13,8 +14,52 @@ export default function RootLayout() {
     const fadeAnim = useRef(new Animated.Value(1)).current;
     const router = useRouter();
     const [userId, setUserId] = useState<string | null>(null);
-    const crashlytics = useFirebaseCrashlytics(userId);
+    const [language, setLanguage] = useState<string>('en');
     const hasNavigated = useRef(false);
+    const crashlytics = useFirebaseCrashlytics(userId);
+    const {expoPushToken, notification, notificationResponse} = useNotifications(userId || undefined);
+
+    useEffect(() => {
+        if (expoPushToken && userId) {
+            console.log('Push token registered for user:', userId);
+            console.log('Token:', expoPushToken);
+        }
+    }, [expoPushToken, userId]);
+    const navigateByNotificationType = useCallback((type: string, data?: Record<string, any>) => {
+        if (type === 'medication_reminder') {
+            router.push({
+                pathname: '/tabs/LogEntryScreen',
+                params: { lang: language, userId: userId! },
+            });
+        } else if (type === 'new_article') {
+            router.push({
+                pathname: '/tabs/ArticleDetailScreen',
+                params: { lang: language, userId: userId!, articleId: data?.articleId || '' },
+            });
+        } else {
+            router.push({
+                pathname: '/tabs/HomeScreen',
+                params: { lang: language, userId: userId! },
+            });
+        }
+    }, [language, userId, router]);
+
+    // Handle foreground notifications
+    useEffect(() => {
+        if (notification && userId && appIsReady) {
+            console.log('Notification received:', notification);
+        }
+    }, [notification, userId, appIsReady]);
+
+    // Handle notification taps (background + killed state)
+    useEffect(() => {
+        if (notificationResponse && userId && appIsReady) {
+            const data = notificationResponse.notification.request.content.data;
+            if (data.type) {
+                navigateByNotificationType(data.type as string, data);
+            }
+        }
+    }, [notificationResponse, userId, appIsReady, navigateByNotificationType]);
 
     const onLayoutRootView = useCallback(async () => {
         if (appIsReady) {
@@ -48,6 +93,8 @@ export default function RootLayout() {
                 ]);
 
                 const currentLanguage = savedLanguage || 'en';
+                setLanguage(currentLanguage);
+
                 if (!savedLanguage) {
                     await AsyncStorage.setItem(LANGUAGE_KEY, currentLanguage);
                 }
@@ -84,6 +131,7 @@ export default function RootLayout() {
                 }
 
                 setUserId(parsed.user.user_id);
+
                 const hasCompletedOnboarding = await isOnboardingComplete(parsed.user.user_id);
 
                 hasNavigated.current = true;
@@ -106,9 +154,11 @@ export default function RootLayout() {
                 }
 
             } catch (error) {
+                console.error('❌ Bootstrap error:', error);
                 if (error instanceof Error) {
                     crashlytics.logError(error, 'Bootstrap failed');
                 }
+
                 await AsyncStorage.removeItem(ACCESS_TOKEN_KEY);
                 const lang = await AsyncStorage.getItem(LANGUAGE_KEY);
                 hasNavigated.current = true;
