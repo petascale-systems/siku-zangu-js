@@ -27,7 +27,7 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "versionCode": 8,
+      "versionCode": 13,
       "edgeToEdgeEnabled": true,
       "package": "org.sikuzangu.app",
       "googleServicesFile": "./google-services.json",
