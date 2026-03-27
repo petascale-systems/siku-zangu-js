@@ -8,7 +8,20 @@ const nextConfig = {
   nx: {},
   serverExternalPackages: ['knex', 'mysql2'],
   images: {
-    domains: ['images.pexels.com', 'sikuzangu.org', 'placehold.co'],
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'images.pexels.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'sikuzangu.org',
+      },
+      {
+        protocol: 'https',
+        hostname: 'placehold.co',
+      },
+    ],
   },
   async headers() {
     return [

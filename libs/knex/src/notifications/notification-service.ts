@@ -1,4 +1,4 @@
-import { messaging } from '../firebase/admin';
+import { getMessaging } from '../firebase/admin';
 import { selectOneUserByUserId } from '@siku-zangu/knex';
 
 export type NotificationType =
@@ -53,7 +53,7 @@ export async function sendPushNotification(payload: NotificationPayload) {
                 },
             },
         };
-        const response = await messaging.send(message);
+        const response = await getMessaging().send(message);
         return response;
 
     } catch (error: any) {
