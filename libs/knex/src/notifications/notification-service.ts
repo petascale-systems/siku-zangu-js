@@ -72,15 +72,15 @@ function checkNotificationPreference(user: any, type: NotificationType): boolean
     const kv = user.kv;
     switch (type) {
         case 'period_reminder':
-            return kv.receive_period_alerts !== false;
+            return kv.receive_period_alerts !== 'false' && kv.receive_period_alerts !== false;
         case 'fertile_window':
-            return kv.receive_fertile_alerts !== false;
+            return kv.receive_fertile_alerts !== 'false' && kv.receive_fertile_alerts !== false;
         case 'medication_reminder':
-            return kv.receive_medication_tips !== false;
+            return kv.receive_medication_tips !== 'false' && kv.receive_medication_tips !== false;
         case 'daily_insight':
-            return kv.receive_insights_tips !== false;
+            return kv.receive_insights_tips !== 'false' && kv.receive_insights_tips !== false;
         case 'new_article':
-            return kv.receive_new_articles !== false;
+            return kv.receive_new_articles !== 'false' && kv.receive_new_articles !== false;
         default:
             return true;
     }

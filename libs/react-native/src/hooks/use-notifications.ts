@@ -23,11 +23,13 @@ export function useNotifications(userId?: string) {
             return;
         }
         registerForPushNotificationsAsync().then(token => {
+            console.log('[Notifications] Token received:', token ? token.substring(0, 20) + '...' : 'none');
             if (token) {
                 setDevicePushToken(token);
                 saveFCMToken(userId, token);
             }
         }).catch(error => {
+            console.error('[Notifications] Registration error:', error);
         });
         notificationListener.current = Notifications.addNotificationReceivedListener(notification => {
             setNotification(notification);
@@ -88,7 +90,9 @@ async function registerForPushNotificationsAsync() {
 
         try {
             token = (await Notifications.getDevicePushTokenAsync()).data as string;
+            console.log('[Notifications] FCM token obtained');
         } catch (error) {
+            console.error('[Notifications] getDevicePushTokenAsync error:', error);
         }
     } else {
     }
@@ -98,7 +102,9 @@ async function registerForPushNotificationsAsync() {
 
 async function saveFCMToken(userId: string, token: string) {
     try {
-        await postJSON(`/api/users/${userId}/fcm-token`, { fcm_token: token });
+        const result = await postJSON(`/api/users/${userId}/fcm-token`, { fcm_token: token });
+        console.log('[Notifications] FCM token saved to server:', result);
     } catch (error) {
+        console.error('[Notifications] saveFCMToken error:', error);
     }
 }
