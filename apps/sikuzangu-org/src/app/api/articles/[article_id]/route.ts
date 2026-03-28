@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { selectOneArticle, updateOneArticle } from '@siku-zangu/knex';
+import { selectOneArticle, updateOneArticle, scheduleNewArticleNotifications } from '@siku-zangu/knex';
 import { handleAPIError } from '@siku-zangu/core';
 
 export async function GET(
@@ -20,7 +20,20 @@ export async function PATCH(
   return handleAPIError(async () => {
     const { article_id } = await params;
     const body = await req.json();
-    const user = await updateOneArticle(article_id, body);
-    return Response.json(user, { status: 200 });
+
+    // Check if article is being published
+    const previousArticle = await selectOneArticle(article_id);
+    const isBeingPublished = previousArticle?.kv?.status !== 'published' && body?.kv?.status === 'published';
+
+    const article = await updateOneArticle(article_id, body);
+
+    // Send notifications when article is published
+    if (isBeingPublished) {
+      scheduleNewArticleNotifications().catch((error) => {
+        console.error('Failed to send new article notifications:', error);
+      });
+    }
+
+    return Response.json(article, { status: 200 });
   });
 }

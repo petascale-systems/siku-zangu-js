@@ -1,6 +1,10 @@
 import { selectUsersPage, selectArticlesPage } from '@siku-zangu/knex';
 import { sendPushNotification } from '@siku-zangu/knex';
 
+function isDisabled(value: any): boolean {
+    return value === false || value === 'false';
+}
+
 function calculateCycleMetrics(
     prevCycleStartDate: string,
     avgCycleLengthDays: number = 28
@@ -31,7 +35,7 @@ export async function schedulePeriodReminders() {
     while (true) {
         const usersPage = await selectUsersPage({ page, size, q: '' });
         for (const user of usersPage.items || []) {
-            if (user.kv?.receive_period_alerts === false ||
+            if (isDisabled(user.kv?.receive_period_alerts) ||
                 !user.kv?.prev_cycle_start_date ||
                 !user.kv?.fcm_token) {
                 continue;
@@ -85,7 +89,7 @@ export async function scheduleFertileWindowAlerts() {
         const usersPage = await selectUsersPage({ page, size, q: '' });
 
         for (const user of usersPage.items || []) {
-            if (user.kv?.receive_fertile_alerts === false ||
+            if (isDisabled(user.kv?.receive_fertile_alerts) ||
                 !user.kv?.prev_cycle_start_date ||
                 !user.kv?.fcm_token) {
                 continue;
@@ -137,7 +141,7 @@ export async function scheduleMedicationReminders() {
         const usersPage = await selectUsersPage({ page, size, q: '' });
 
         for (const user of usersPage.items || []) {
-            if (user.kv?.receive_medication_tips === false ||
+            if (isDisabled(user.kv?.receive_medication_tips) ||
                 !user.kv?.fcm_token ||
                 !user.kv?.selected_medications?.length) {
                 continue;
@@ -195,7 +199,7 @@ export async function scheduleDailyInsights() {
         const usersPage = await selectUsersPage({ page, size, q: '' });
 
         for (const user of usersPage.items || []) {
-            if (user.kv?.receive_insights_tips === false ||
+            if (isDisabled(user.kv?.receive_insights_tips) ||
                 !user.kv?.fcm_token ||
                 !user.kv?.prev_cycle_start_date) {
                 continue;
@@ -240,7 +244,7 @@ export async function scheduleNewArticleNotifications() {
         const usersPage = await selectUsersPage({ page, size, q: '' });
 
         for (const user of usersPage.items || []) {
-            if (user.kv?.receive_new_articles === false || !user.kv?.fcm_token) {
+            if (isDisabled(user.kv?.receive_new_articles) || !user.kv?.fcm_token) {
                 continue;
             }
 
