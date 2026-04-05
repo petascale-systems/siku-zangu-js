@@ -1,7 +1,7 @@
 import React, {useEffect, useState} from 'react';
 import {Alert, StyleSheet, Text, TextInput, TouchableOpacity, View, Keyboard, ScrollView, KeyboardAvoidingView, Platform, BackHandler} from 'react-native';
 import {useLocalSearchParams, useRouter} from 'expo-router';
-import {isOnboardingComplete, PrimaryButton} from '@siku-zangu/react-native';
+import {PrimaryButton} from '@siku-zangu/react-native';
 import {Ionicons} from '@expo/vector-icons';
 import {useAccessToken} from '@siku-zangu/react';
 import {APIError} from '@siku-zangu/core';
@@ -141,25 +141,14 @@ export default function LoginScreen() {
             }
             const userId = accessToken.user.user_id;
             await AsyncStorage.setItem(LANGUAGE_KEY, language);
-            const hasCompletedOnboarding = await isOnboardingComplete(userId);
 
-            if (!hasCompletedOnboarding) {
-                router.replace({
-                    pathname: '/onboarding/UpdatingNamesScreen',
-                    params: {
-                        lang: language,
-                        userId: userId,
-                    },
-                });
-            } else {
-                router.replace({
-                    pathname: '/tabs/HomeScreen',
-                    params: {
-                        lang: language,
-                        userId: userId,
-                    },
-                });
-            }
+            router.replace({
+                pathname: '/LanguageScreen',
+                params: {
+                    lang: language,
+                    userId: userId,
+                },
+            });
         } catch (e: any) {
             let errorMessage = '';
             if (e.status === 401) {
