@@ -291,7 +291,7 @@ export const getCyclePhaseInsight = (
     return {
       phase: isSw ? 'Hedhi' : 'Menstrual',
       text: isSw
-        ? 'Siku za hedhi. Pumzika, nywa maji mengi, tumia kibanio cha joto.'
+        ? 'Siku za hedhi. Pumzika, kunywa maji mengi, jikande na maji ya moto unapokuwa na maumivu.'
         : 'Period days. Rest, hydrate, use a heating pad for cramps.',
     };
   }
@@ -305,14 +305,14 @@ export const getCyclePhaseInsight = (
       return {
         phase: isSw ? 'Uzazi' : 'Ovulation',
         text: isSw
-          ? 'Leo unatoa yai! Kipindi cha juu cha uzazi.'
+          ? 'Leo ovari inapevuka. Kipindi hiki kina uwezekano mkubwa wa kutunga mimba'
           : "You're ovulating today! Peak fertility.",
       };
     }
     return {
       phase: isSw ? 'Dirisha la Uzazi' : 'Fertile Window',
       text: isSw
-        ? 'Kipindi cha uzazi. Unaweza kuhisi na nguvu zaidi.'
+        ? 'Dirisha la uzazi. Unaweza kuhisi umechangamka zaidi'
         : 'Fertile days. You may feel more energetic.',
     };
   }
@@ -321,7 +321,7 @@ export const getCyclePhaseInsight = (
     return {
       phase: isSw ? 'Folikula' : 'Follicular',
       text: isSw
-        ? 'Nguvu zinaongezeka. Wakati mzuri wa mazoezi!'
+        ? 'Nguvu zinaongezeka. Huu ni wakati mzuri wa mazoezi!'
         : 'Energy rising. Great time for workouts!',
     };
   }
@@ -329,7 +329,7 @@ export const getCyclePhaseInsight = (
   return {
     phase: isSw ? 'Luteal' : 'Luteal',
     text: isSw
-      ? 'Awamu ya luteal. Kula vyakula vya chuma. PMS inaweza kuja.'
+      ? 'Awamu ya luteal. Kula vyakula vyenye madini chuma. Ugonjwa wa kabla ya hedhi unaweza kuja.'
       : 'Luteal phase. Eat iron-rich foods. PMS may start.',
   };
 };

@@ -2,8 +2,7 @@ import { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, Alert } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { LanguageCard } from '@siku-zangu/react-native';
-import { PrimaryButton } from '@siku-zangu/react-native';
+import { LanguageCard, PrimaryButton, isOnboardingComplete } from '@siku-zangu/react-native';
 import { useAccessToken } from '@siku-zangu/react';
 
 export default function LanguageScreen() {
@@ -34,11 +33,19 @@ export default function LanguageScreen() {
     setIsLoading(true);
     try {
       await AsyncStorage.setItem('language', selectedLang);
-      if (user) {
-        router.replace({
-          pathname: '/tabs/HomeScreen',
-          params: { lang: selectedLang, userId },
-        });
+      if (user && userId) {
+        const hasCompletedOnboarding = await isOnboardingComplete(userId);
+        if (!hasCompletedOnboarding) {
+          router.replace({
+            pathname: '/onboarding/UpdatingNamesScreen',
+            params: { lang: selectedLang, userId },
+          });
+        } else {
+          router.replace({
+            pathname: '/tabs/HomeScreen',
+            params: { lang: selectedLang, userId },
+          });
+        }
       } else {
         router.push({
           pathname: '/auth/LoginScreen',
