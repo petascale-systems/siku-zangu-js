@@ -10,8 +10,8 @@ import {
 } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { NavbarCard } from '@siku-zangu/react-native';
-import { useArticlesPage } from '@siku-zangu/react';
+import { NavbarCard } from '@siku-zangu/expo';
+import { useArticlesPage } from '@siku-zangu/react-native';
 import { Article } from '@siku-zangu/core';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 const ARTICLE_COVER_IMAGE_API_PATH = (articleId: string) => {

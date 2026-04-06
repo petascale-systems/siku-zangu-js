@@ -1,9 +1,0 @@
-{
-  "plugins": [
-    "expo-asset",
-    "expo-router"
-  ],
-  "android": {
-    "package": "com.rnzembei.sikuzangu.com"
-  }
-}

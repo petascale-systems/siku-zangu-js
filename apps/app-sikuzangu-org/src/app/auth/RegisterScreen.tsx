@@ -12,10 +12,10 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
-import { PrimaryButton } from '@siku-zangu/react-native';
+import { PrimaryButton } from '@siku-zangu/expo';
 import { Ionicons } from '@expo/vector-icons';
-import { useUser } from '@siku-zangu/react';
-import { CountryCodePicker, COUNTRIES, Country } from '@siku-zangu/react-native';
+import { useUser } from '@siku-zangu/react-native';
+import { CountryCodePicker, COUNTRIES, Country } from '@siku-zangu/expo';
 
 export default function RegisterScreen() {
   const router = useRouter();

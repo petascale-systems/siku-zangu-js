@@ -9,9 +9,9 @@ import {
   View,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useUser } from '@siku-zangu/react';
+import { useUser } from '@siku-zangu/react-native';
 import { UserKv } from '@siku-zangu/core';
-import { NavbarCard } from '@siku-zangu/react-native';
+import { NavbarCard } from '@siku-zangu/expo';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 

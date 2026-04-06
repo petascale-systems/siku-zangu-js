@@ -18,7 +18,13 @@
           "@heroicons/react",
           "@getbrevo/brevo",
           "lucide-react",
-          "mysql2"
+          "mysql2",
+          "twilio",
+          "flowbite-react",
+          "node-cron",
+          "bcrypt-ts",
+          "bcryptjs",
+          "recharts"
         ]
       }
     }

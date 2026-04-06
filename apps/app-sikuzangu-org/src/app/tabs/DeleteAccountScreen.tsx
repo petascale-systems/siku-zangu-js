@@ -11,7 +11,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { useUser } from '@siku-zangu/react';
+import { useUser } from '@siku-zangu/react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 
 export default function DeleteAccountScreen() {

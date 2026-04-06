@@ -10,8 +10,8 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import Svg, { Circle, Text as SvgText } from 'react-native-svg';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { NavbarCard } from '@siku-zangu/react-native';
-import { useUser } from '@siku-zangu/react';
+import { NavbarCard } from '@siku-zangu/expo';
+import { useUser } from '@siku-zangu/react-native';
 import {
   calculateCycleData,
   formatDate,
@@ -20,7 +20,7 @@ import {
   getDaysInMonth,
   MONTH_NAMES_EN,
   MONTH_NAMES_SW,
-} from '@siku-zangu/react-native';
+} from '@siku-zangu/expo';
 import { useLocalSearchParams, useRouter, useFocusEffect } from 'expo-router';
 
 const RADIUS = 120;

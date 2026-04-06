@@ -12,11 +12,11 @@ import {
 } from 'react-native';
 import { Ionicons, MaterialIcons, FontAwesome5 } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useAccessToken, useUser } from '@siku-zangu/react';
-import { NavbarCard } from '@siku-zangu/react-native';
+import { useAccessToken, useUser } from '@siku-zangu/react-native';
+import { NavbarCard } from '@siku-zangu/expo';
 import { useLocalSearchParams, useRouter, useFocusEffect } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useAuthProtection } from '@siku-zangu/react-native';
+import { useAuthProtection } from '@siku-zangu/expo';
 
 interface MenuItem {
   id: string;

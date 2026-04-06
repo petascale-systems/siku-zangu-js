@@ -2,8 +2,8 @@ import { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, Alert } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { LanguageCard, PrimaryButton, isOnboardingComplete } from '@siku-zangu/react-native';
-import { useAccessToken } from '@siku-zangu/react';
+import { LanguageCard, PrimaryButton, isOnboardingComplete } from '@siku-zangu/expo';
+import { useAccessToken } from '@siku-zangu/react-native';
 
 export default function LanguageScreen() {
   const [selectedLang, setSelectedLang] = useState<'en' | 'sw'>('en');
