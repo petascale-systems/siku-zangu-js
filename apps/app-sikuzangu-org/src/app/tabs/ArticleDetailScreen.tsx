@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useArticle } from '@siku-zangu/react';
+import { useArticle } from '@siku-zangu/react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import RenderHTML from 'react-native-render-html';
 

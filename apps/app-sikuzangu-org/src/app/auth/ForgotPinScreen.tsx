@@ -14,8 +14,8 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useUser } from '@siku-zangu/react';
-import { CountryCodePicker, COUNTRIES, Country } from '@siku-zangu/react-native';
+import { useUser } from '@siku-zangu/react-native';
+import { CountryCodePicker, COUNTRIES, Country } from '@siku-zangu/expo';
 
 type Lang = 'en' | 'sw';
 

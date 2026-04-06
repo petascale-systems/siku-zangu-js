@@ -3,9 +3,6 @@
     "name": "Siku zangu",
     "slug": "app-sikuzangu-org",
     "version": "1.0.0",
-    "cli": {
-      "appVersionSource": "remote"
-    },
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "org.sikuzangu.app",
@@ -20,14 +17,15 @@
       "infoPlist": {
         "FirebaseCrashlyticsCollectionEnabled": true,
         "ITSAppUsesNonExemptEncryption": false
-      }
+      },
+      "appleTeamId": "C236Q758J2"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "versionCode": 13,
+      "versionCode": 14,
       "edgeToEdgeEnabled": true,
       "package": "org.sikuzangu.app",
       "googleServicesFile": "./google-services.json",
@@ -51,8 +49,7 @@
       "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
-      "expo-router",
-      "expo-asset",
+      ["expo-router", { "root": "apps/app-sikuzangu-org/src/app" }],
       "@react-native-firebase/app",
       "@react-native-firebase/crashlytics",
       [
@@ -77,13 +74,13 @@
         "expo-build-properties",
         {
           "android": {
-            "compileSdkVersion": 35,
-            "targetSdkVersion": 35,
-            "buildToolsVersion": "35.0.0",
+            "compileSdkVersion": 36,
+            "targetSdkVersion": 36,
+            "buildToolsVersion": "36.0.0",
             "extraMavenRepos": []
           },
           "ios": {
-            "deploymentTarget": "15.1",
+            "deploymentTarget": "16.1",
             "useFrameworks": "static",
             "forceStaticLinking": [
               "RNFBApp",
@@ -94,7 +91,9 @@
       ]
     ],
     "extra": {
-      "router": {},
+      "router": {
+        "root": "apps/app-sikuzangu-org/src/app"
+      },
       "eas": {
         "projectId": "de89f1b8-4458-4af8-8e32-dca66d650b79"
       }

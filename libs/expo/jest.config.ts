@@ -1,5 +1,5 @@
 module.exports = {
-  displayName: 'react-native',
+  displayName: 'expo',
   preset: 'react-native',
   resolver: '@nx/jest/plugins/resolver',
   moduleFileExtensions: ['ts', 'js', 'html', 'tsx', 'jsx'],
@@ -18,5 +18,5 @@ module.exports = {
       'react-native/jest/assetFileTransformer.js'
     ),
   },
-  coverageDirectory: '../../coverage/libs/react-native',
+  coverageDirectory: '../../coverage/libs/expo',
 };

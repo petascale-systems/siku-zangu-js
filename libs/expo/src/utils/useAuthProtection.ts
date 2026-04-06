@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { ACCESS_TOKEN_KEY } from '@siku-zangu/react';
+import { ACCESS_TOKEN_KEY } from '@siku-zangu/react-native';
 
 /**
  * Hook to protect routes that require authentication

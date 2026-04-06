@@ -1,9 +1,9 @@
 import {Stack, useRouter} from 'expo-router';
 import {useCallback, useEffect, useRef, useState} from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {Animated, ImageBackground, StyleSheet} from 'react-native';
-import {ACCESS_TOKEN_KEY} from '@siku-zangu/react';
-import {isOnboardingComplete, useNotifications, useFirebaseCrashlytics} from '@siku-zangu/react-native';
+import {Animated, ImageBackground, StyleSheet, View} from 'react-native';
+import {ACCESS_TOKEN_KEY} from '@siku-zangu/react-native';
+import {isOnboardingComplete, useNotifications, useFirebaseCrashlytics} from '@siku-zangu/expo';
 import '../firebase.config';
 
 const LANGUAGE_KEY = 'language';
@@ -177,11 +177,8 @@ export default function RootLayout() {
     }, []);
 
     return (
-        <>
-            <Stack
-                screenOptions={{headerShown: false}}
-                onLayout={onLayoutRootView}
-            >
+        <View style={{flex: 1}} onLayout={onLayoutRootView}>
+            <Stack screenOptions={{headerShown: false}}>
                 <Stack.Screen name="index" options={{headerShown: false}}/>
                 <Stack.Screen name="LanguageScreen"/>
                 <Stack.Screen name="auth"/>
@@ -205,7 +202,7 @@ export default function RootLayout() {
                     />
                 </Animated.View>
             )}
-        </>
+        </View>
     );
 }
 

@@ -21,9 +21,9 @@ import {
   getSymptomConfig,
   getMostRecentMood,
   getRecentSymptoms,
-} from '@siku-zangu/react-native';
-import { useUser } from '@siku-zangu/react';
-import { NavbarCard } from '@siku-zangu/react-native';
+} from '@siku-zangu/expo';
+import { useUser } from '@siku-zangu/react-native';
+import { NavbarCard } from '@siku-zangu/expo';
 
 const RING_RADIUS = 50;
 const RING_STROKE = 10;

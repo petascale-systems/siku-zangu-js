@@ -1,12 +1,12 @@
 import React, {useEffect, useState} from 'react';
 import {Alert, StyleSheet, Text, TextInput, TouchableOpacity, View, Keyboard, ScrollView, KeyboardAvoidingView, Platform, BackHandler} from 'react-native';
 import {useLocalSearchParams, useRouter} from 'expo-router';
-import {PrimaryButton} from '@siku-zangu/react-native';
+import {PrimaryButton} from '@siku-zangu/expo';
 import {Ionicons} from '@expo/vector-icons';
-import {useAccessToken} from '@siku-zangu/react';
+import {useAccessToken} from '@siku-zangu/react-native';
 import {APIError} from '@siku-zangu/core';
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { CountryCodePicker, COUNTRIES, Country } from '@siku-zangu/react-native';
+import { CountryCodePicker, COUNTRIES, Country } from '@siku-zangu/expo';
 
 export default function LoginScreen() {
     const router = useRouter();
