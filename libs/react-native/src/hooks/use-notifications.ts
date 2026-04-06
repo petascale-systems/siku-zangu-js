@@ -6,7 +6,8 @@ import { postJSON } from '../../../react/src/post-json.function';
 
 Notifications.setNotificationHandler({
     handleNotification: async () => ({
-        shouldShowAlert: true,
+        shouldShowBanner: true,
+        shouldShowList: true,
         shouldPlaySound: true,
         shouldSetBadge: true,
     }),
@@ -15,8 +16,8 @@ export function useNotifications(userId?: string) {
     const [devicePushToken, setDevicePushToken] = useState<string>();
     const [notification, setNotification] = useState<Notifications.Notification>();
     const [notificationResponse, setNotificationResponse] = useState<Notifications.NotificationResponse>();
-    const notificationListener = useRef<Notifications.Subscription>();
-    const responseListener = useRef<Notifications.Subscription>();
+    const notificationListener = useRef<Notifications.EventSubscription | null>(null);
+    const responseListener = useRef<Notifications.EventSubscription | null>(null);
 
     useEffect(() => {
         if (!userId) {
@@ -39,11 +40,10 @@ export function useNotifications(userId?: string) {
         });
 
         // Check if app was opened from a notification (killed state)
-        Notifications.getLastNotificationResponseAsync().then(response => {
-            if (response) {
-                setNotificationResponse(response);
-            }
-        });
+        const lastResponse = Notifications.getLastNotificationResponse();
+        if (lastResponse) {
+            setNotificationResponse(lastResponse);
+        }
 
         return () => {
             if (notificationListener.current) {
@@ -85,6 +85,7 @@ async function registerForPushNotificationsAsync() {
 
         if (finalStatus !== 'granted') {
             alert('Failed to get push token for push notification!');
+
             return;
         }
 
