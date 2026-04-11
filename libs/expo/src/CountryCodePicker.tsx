@@ -335,6 +335,7 @@ const styles = StyleSheet.create({
         justifyContent: 'flex-end',
     },
     keyboardAvoid: {
+        flex: 1,
         justifyContent: 'flex-end',
     },
     modalContent: {
