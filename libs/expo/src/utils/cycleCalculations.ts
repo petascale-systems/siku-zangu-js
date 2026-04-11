@@ -148,7 +148,7 @@ export const getSymptomConfig = (language = 'en'): Record<string, SymptomConfig>
   bloating: {
     icon: 'water',
     color: '#3B82F6',
-    label: language === 'en' ? 'Bloating' : 'Kuvimba',
+    label: language === 'en' ? 'Bloating' : 'Kuvimbiwa',
   },
   tender_breast: {
     icon: 'female',

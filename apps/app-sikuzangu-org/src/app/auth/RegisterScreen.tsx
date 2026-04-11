@@ -26,7 +26,7 @@ export default function RegisterScreen() {
   const [secure, setSecure] = useState(true);
   const [phoneError, setPhoneError] = useState('');
   const [pinError, setPinError] = useState('');
-  const [selectedCountry, setSelectedCountry] = useState<Country>(COUNTRIES[0]); // Default to Kenya
+  const [selectedCountry, setSelectedCountry] = useState<Country>(COUNTRIES.find(c => c.code === 'TZ') ?? COUNTRIES[0]);
 
   const language = (params.lang as 'en' | 'sw') ?? 'en';
 

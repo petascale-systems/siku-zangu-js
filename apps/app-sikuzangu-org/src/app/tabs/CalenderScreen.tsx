@@ -240,7 +240,7 @@ export default function Calendar() {
               />
               <LegendItem
                   color="#27B3B3"
-                  label={language === 'en' ? 'Fertility' : 'Uzazi'}
+                  label={language === 'en' ? 'Fertility' : 'Dirisha la uzazi'}
               />
               <LegendItem
                   color="#FF5E87"
@@ -252,8 +252,10 @@ export default function Calendar() {
           <View style={styles.row}>
             <InfoCard
                 title={language === 'en' ? 'Cycle Length' : 'Urefu wa Mzunguko wa Hedhi'}
-                value={String(user?.kv?.avg_cycle_length_days || 28)}
-                unit={language === 'en' ? 'days' : 'siku'}
+                value={language === 'sw'
+                  ? `Siku ${user?.kv?.avg_cycle_length_days || 28}`
+                  : String(user?.kv?.avg_cycle_length_days || 28)}
+                unit={language === 'en' ? 'days' : undefined}
                 icon="calendar-outline"
                 iconColor="#FF4C7C"
                 graph

@@ -238,12 +238,12 @@ export default function Dashboard() {
                   <Text style={styles.statLabel}>days</Text>
                 )}
                 <Text style={styles.statSub}>
-                  {language === 'sw' ? 'Yai kupevuka' : 'Ovulation in'}
+                  {language === 'sw' ? 'Yai kupevuka' : 'Ovulation'}
                 </Text>
                 <View style={styles.iconRow}>
                   <Ionicons name="moon" color="#555" size={12} />
                   <Text style={styles.statDate}>
-                    {language === 'sw' ? 'Karibu' : 'Coming'}
+                    {language === 'sw' ? 'inakaribia' : 'Coming'}
                   </Text>
                 </View>
               </View>
@@ -258,7 +258,7 @@ export default function Dashboard() {
                   <Text style={styles.statLabel}>days</Text>
                 )}
                 <Text style={styles.statSub}>
-                  {language === 'sw' ? 'Uzazi' : 'Fertile'}
+                  {language === 'sw' ? 'Dirisha la uzazi' : 'Fertile'}
                 </Text>
                 <Text style={styles.statDate}>
                   {fertileDaysRemaining > 0
