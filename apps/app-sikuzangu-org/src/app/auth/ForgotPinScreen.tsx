@@ -55,7 +55,7 @@ export default function ForgotPinScreen() {
     const tx = t[language];
 
     const { sendResetCode, isRequestingReset } = useUser();
-    const [selectedCountry, setSelectedCountry] = useState<Country>(COUNTRIES[0]); // Default to Kenya
+    const [selectedCountry, setSelectedCountry] = useState<Country>(COUNTRIES.find(c => c.code === 'TZ') ?? COUNTRIES[0]);
 
     const [phone, setPhone] = useState('');
     const [phoneError, setPhoneError] = useState('');

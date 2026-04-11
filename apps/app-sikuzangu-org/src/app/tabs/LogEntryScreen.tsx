@@ -39,7 +39,7 @@ export default function LogEntry() {
     },
     {
       key: 'bloating',
-      label: language === 'en' ? 'Bloating' : 'Kuvimba',
+      label: language === 'en' ? 'Bloating' : 'Kuvimbiwa',
       icon: 'water-outline',
       color: '#3B82F6',
     },
