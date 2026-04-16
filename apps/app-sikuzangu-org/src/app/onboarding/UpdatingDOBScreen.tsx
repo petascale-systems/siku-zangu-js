@@ -20,7 +20,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 const currentYear = new Date().getFullYear();
-const maxBirthYear = currentYear;
+const MIN_AGE = 17;
+const maxBirthYear = currentYear - MIN_AGE;
 const minBirthYear = 1975;
 
 export default function UpdatingDOBScreen() {
@@ -34,9 +35,7 @@ export default function UpdatingDOBScreen() {
 
   const [selectedDay, setSelectedDay] = useState<number>(12);
   const [selectedMonth, setSelectedMonth] = useState<number>(8);
-  const [selectedYear, setSelectedYear] = useState<number>(
-      Math.min(2003, maxBirthYear)
-  );
+  const [selectedYear, setSelectedYear] = useState<number>(maxBirthYear);
   const [activePicker, setActivePicker] = useState<'day' | 'month' | 'year'>(
       'day'
   );
@@ -143,6 +142,21 @@ export default function UpdatingDOBScreen() {
           language === 'en'
               ? 'Please select a valid date'
               : 'Tafadhali chagua tarehe sahihi'
+      );
+      return;
+    }
+
+    const today = new Date();
+    const dob = new Date(selectedYear, selectedMonth, selectedDay);
+    const age = today.getFullYear() - dob.getFullYear() -
+        (today.getMonth() < dob.getMonth() ||
+        (today.getMonth() === dob.getMonth() && today.getDate() < dob.getDate()) ? 1 : 0);
+    if (age < MIN_AGE) {
+      Alert.alert(
+          language === 'en' ? 'Age Requirement' : 'Sharti la Umri',
+          language === 'en'
+              ? `You must be at least ${MIN_AGE} years old to use this app.`
+              : `Unapaswa kuwa na umri wa miaka ${MIN_AGE} au zaidi kutumia programu hii.`
       );
       return;
     }

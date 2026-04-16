@@ -327,7 +327,7 @@ export const getCyclePhaseInsight = (
   }
 
   return {
-    phase: isSw ? 'Luteal' : 'Luteal',
+    phase: isSw ? 'Awamu ya Luteal' : 'Luteal',
     text: isSw
       ? 'Awamu ya luteal. Kula vyakula vyenye madini chuma. Ugonjwa wa kabla ya hedhi unaweza kuja.'
       : 'Luteal phase. Eat iron-rich foods. PMS may start.',

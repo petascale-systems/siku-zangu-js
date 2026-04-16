@@ -329,7 +329,7 @@ export default function Dashboard() {
               <Ionicons name="bulb-outline" size={22} color="#D97706" />
               <Text style={styles.insightTitle}>
                 {language === 'sw' ? 'Dondoo za leo' : "Today's Insight"} -{' '}
-                {todayInsight.phase} {language === 'sw' ? 'Awamu' : 'Phase'}
+                {todayInsight.phase}{language === 'en' ? ' Phase' : ''}
               </Text>
             </View>
             <Text style={styles.insightText}>{todayInsight.text}</Text>
