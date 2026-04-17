@@ -3,7 +3,7 @@ import {useCallback, useEffect, useRef, useState} from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {Animated, ImageBackground, StyleSheet, View} from 'react-native';
 import {ACCESS_TOKEN_KEY} from '@siku-zangu/react-native';
-import {isOnboardingComplete, useNotifications, useFirebaseCrashlytics} from '@siku-zangu/expo';
+import {isOnboardingComplete, useFirebaseCrashlytics, useNotifications} from '@siku-zangu/expo';
 import '../firebase.config';
 
 const LANGUAGE_KEY = 'language';
@@ -21,25 +21,25 @@ export default function RootLayout() {
 
     useEffect(() => {
         if (expoPushToken && userId) {
-            console.log('Push token registered for user:', userId);
-            console.log('Token:', expoPushToken);
+            // console.log('Push token registered for user:', userId);
+            // console.log('Token:', expoPushToken);
         }
     }, [expoPushToken, userId]);
     const navigateByNotificationType = useCallback((type: string, data?: Record<string, any>) => {
         if (type === 'medication_reminder') {
             router.push({
                 pathname: '/tabs/LogEntryScreen',
-                params: { lang: language, userId: userId! },
+                params: {lang: language, userId: userId!},
             });
         } else if (type === 'new_article') {
             router.push({
                 pathname: '/tabs/ArticleDetailScreen',
-                params: { lang: language, userId: userId!, articleId: data?.articleId || '' },
+                params: {lang: language, userId: userId!, articleId: data?.articleId || ''},
             });
         } else {
             router.push({
                 pathname: '/tabs/HomeScreen',
-                params: { lang: language, userId: userId! },
+                params: {lang: language, userId: userId!},
             });
         }
     }, [language, userId, router]);
@@ -103,7 +103,7 @@ export default function RootLayout() {
                     hasNavigated.current = true;
                     router.replace({
                         pathname: '/auth/LoginScreen',
-                        params: { lang: currentLanguage },
+                        params: {lang: currentLanguage},
                     });
                     return;
                 }
@@ -114,7 +114,7 @@ export default function RootLayout() {
                     hasNavigated.current = true;
                     router.replace({
                         pathname: '/auth/LoginScreen',
-                        params: { lang: currentLanguage },
+                        params: {lang: currentLanguage},
                     });
                     return;
                 }
@@ -125,7 +125,7 @@ export default function RootLayout() {
                     hasNavigated.current = true;
                     router.replace({
                         pathname: '/auth/LoginScreen',
-                        params: { lang: currentLanguage },
+                        params: {lang: currentLanguage},
                     });
                     return;
                 }
@@ -164,7 +164,7 @@ export default function RootLayout() {
                 hasNavigated.current = true;
                 router.replace({
                     pathname: '/auth/LoginScreen',
-                    params: { lang: lang || 'en' },
+                    params: {lang: lang || 'en'},
                 });
             } finally {
                 setTimeout(() => {

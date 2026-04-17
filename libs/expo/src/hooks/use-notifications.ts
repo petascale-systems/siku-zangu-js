@@ -1,8 +1,8 @@
-import { useState, useEffect, useRef } from 'react';
+import {useEffect, useRef, useState} from 'react';
 import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
-import { Platform } from 'react-native';
-import { postJSON } from '../../../react/src/post-json.function';
+import {Platform} from 'react-native';
+import {postJSON} from '../../../react/src/post-json.function';
 
 Notifications.setNotificationHandler({
     handleNotification: async () => ({
@@ -11,6 +11,7 @@ Notifications.setNotificationHandler({
         shouldSetBadge: true,
     }),
 });
+
 export function useNotifications(userId?: string) {
     const [devicePushToken, setDevicePushToken] = useState<string>();
     const [notification, setNotification] = useState<Notifications.Notification>();
@@ -23,7 +24,6 @@ export function useNotifications(userId?: string) {
             return;
         }
         registerForPushNotificationsAsync().then(token => {
-            console.log('[Notifications] Token received:', token ? token.substring(0, 20) + '...' : 'none');
             if (token) {
                 setDevicePushToken(token);
                 saveFCMToken(userId, token);
@@ -75,11 +75,11 @@ async function registerForPushNotificationsAsync() {
     }
 
     if (Device.isDevice) {
-        const { status: existingStatus } = await Notifications.getPermissionsAsync();
+        const {status: existingStatus} = await Notifications.getPermissionsAsync();
         let finalStatus = existingStatus;
 
         if (existingStatus !== 'granted') {
-            const { status } = await Notifications.requestPermissionsAsync();
+            const {status} = await Notifications.requestPermissionsAsync();
             finalStatus = status;
         }
 
@@ -90,7 +90,6 @@ async function registerForPushNotificationsAsync() {
 
         try {
             token = (await Notifications.getDevicePushTokenAsync()).data as string;
-            console.log('[Notifications] FCM token obtained');
         } catch (error) {
             console.error('[Notifications] getDevicePushTokenAsync error:', error);
         }
@@ -102,8 +101,7 @@ async function registerForPushNotificationsAsync() {
 
 async function saveFCMToken(userId: string, token: string) {
     try {
-        const result = await postJSON(`/api/users/${userId}/fcm-token`, { fcm_token: token });
-        console.log('[Notifications] FCM token saved to server:', result);
+        await postJSON(`/api/users/${userId}/fcm-token`, {fcm_token: token});
     } catch (error) {
         console.error('[Notifications] saveFCMToken error:', error);
     }
