@@ -24,7 +24,8 @@ const { width: SCREEN_WIDTH } = Dimensions.get('window');
 type EditSection = 'name' | 'dob' | null;
 
 const currentYear = new Date().getFullYear();
-const maxBirthYear = currentYear;
+const MIN_AGE = 17;
+const maxBirthYear = currentYear - MIN_AGE;
 const minBirthYear = 1975;
 
 export default function UpdatePersonalInfoScreen() {
@@ -42,9 +43,7 @@ export default function UpdatePersonalInfoScreen() {
 
     const [selectedDay, setSelectedDay] = useState<number>(1);
     const [selectedMonth, setSelectedMonth] = useState<number>(0);
-    const [selectedYear, setSelectedYear] = useState<number>(
-        Math.min(2000, maxBirthYear)
-    );
+    const [selectedYear, setSelectedYear] = useState<number>(maxBirthYear);
     const [activePicker, setActivePicker] = useState<'day' | 'month' | 'year'>('day');
 
     const [editingSection, setEditingSection] = useState<EditSection>(null);
@@ -179,6 +178,21 @@ export default function UpdatePersonalInfoScreen() {
             Alert.alert(
                 language === 'en' ? 'Invalid Date' : 'Tarehe si sahihi',
                 language === 'en' ? 'Please select a valid date' : 'Tafadhali chagua tarehe sahihi'
+            );
+            return;
+        }
+
+        const today = new Date();
+        const dob = new Date(selectedYear, selectedMonth, selectedDay);
+        const age = today.getFullYear() - dob.getFullYear() -
+            (today.getMonth() < dob.getMonth() ||
+            (today.getMonth() === dob.getMonth() && today.getDate() < dob.getDate()) ? 1 : 0);
+        if (age < MIN_AGE) {
+            Alert.alert(
+                language === 'en' ? 'Age Requirement' : 'Sharti la Umri',
+                language === 'en'
+                    ? `You must be at least ${MIN_AGE} years old to use this app.`
+                    : `Unapaswa kuwa na umri wa miaka ${MIN_AGE} au zaidi kutumia programu hii.`
             );
             return;
         }
