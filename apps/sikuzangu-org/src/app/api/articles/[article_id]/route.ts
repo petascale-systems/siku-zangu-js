@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { selectOneArticle, updateOneArticle, scheduleNewArticleNotifications } from '@siku-zangu/knex';
+import { selectOneArticle, updateOneArticle, deleteOneArticle, scheduleNewArticleNotifications } from '@siku-zangu/knex';
 import { handleAPIError } from '@siku-zangu/core';
 
 export async function GET(
@@ -35,5 +35,16 @@ export async function PATCH(
     }
 
     return Response.json(article, { status: 200 });
+  });
+}
+
+export async function DELETE(
+  req: NextRequest,
+  { params }: { params: Promise<{ article_id: string }> }
+) {
+  return handleAPIError(async () => {
+    const { article_id } = await params;
+    await deleteOneArticle(article_id);
+    return new Response(null, { status: 204 });
   });
 }

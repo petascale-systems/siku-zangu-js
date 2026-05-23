@@ -20,7 +20,7 @@ import {
 import { ChangeEvent, useEffect, useState } from 'react';
 import { Article, ArticleStatus, Language } from '@siku-zangu/core';
 import { useParams, useRouter } from 'next/navigation';
-import { CheckCircleIcon } from 'lucide-react';
+import { CheckCircleIcon, Trash2 } from 'lucide-react';
 
 export default function ArticlePage() {
   const _router = useRouter();
@@ -31,6 +31,7 @@ export default function ArticlePage() {
   const [_coverImageSrc, _setCoverImageSrc] = useState<string>();
   const [_content, _setContent] = useState<string>();
   const [_showSuccessModal, _setShowSuccessModal] = useState<boolean>(false);
+  const [_showDeleteModal, _setShowDeleteModal] = useState<boolean>(false);
   const [_articleFormData, _setArticleFormData] = useState<Article>({
     kv: {
       slug: '',
@@ -47,8 +48,10 @@ export default function ArticlePage() {
     isFetchingArticle,
     isCreatingArticle,
     isUpdatingArticle,
+    isDeletingArticle,
     createArticle,
     updateArticle,
+    deleteArticle,
   } = useArticle(_articleId);
 
   const _handleChangeTitle = (e: ChangeEvent<HTMLInputElement>) => {
@@ -125,6 +128,15 @@ export default function ArticlePage() {
     _router.push('/dashboard/articles');
   };
 
+  const _handleConfirmDelete = () => {
+    deleteArticle()
+      .then(() => {
+        _setShowDeleteModal(false);
+        _router.push('/dashboard/articles');
+      })
+      .catch(console.error);
+  };
+
   useEffect(() => _setArticleId(_params.article_id), [_params]);
   useEffect(() => {
     if (_coverImage) _setCoverImageSrc(URL.createObjectURL(_coverImage));
@@ -152,9 +164,9 @@ export default function ArticlePage() {
   useEffect(
     () =>
       _setIsLoading(
-        isFetchingArticle || isUpdatingArticle || isCreatingArticle
+        isFetchingArticle || isUpdatingArticle || isCreatingArticle || isDeletingArticle
       ),
-    [isFetchingArticle, isUpdatingArticle, isCreatingArticle]
+    [isFetchingArticle, isUpdatingArticle, isCreatingArticle, isDeletingArticle]
   );
 
   return (
@@ -334,9 +346,58 @@ export default function ArticlePage() {
               Cancel
             </Button>
           </div>
+          {_articleId !== 'new' && (
+            <Button
+              color="red"
+              outline
+              disabled={_isLoading}
+              className="w-full gap-2"
+              onClick={() => _setShowDeleteModal(true)}
+            >
+              <Trash2 className="h-4 w-4" />
+              <span>Delete article</span>
+            </Button>
+          )}
         </div>
       </div>
     </div>
+  <Modal
+      show={_showDeleteModal}
+      onClose={() => _setShowDeleteModal(false)}
+      size="md"
+      popup
+  >
+      <div className="text-center py-6 px-4">
+        <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-red-100 mb-4">
+          <Trash2 className="h-8 w-8 text-red-600" />
+        </div>
+        <h3 className="mb-2 text-xl font-semibold text-gray-900">
+          Delete this article?
+        </h3>
+        <p className="text-sm text-gray-500 mb-6">
+          This will permanently remove the article and its references from the database. This action cannot be undone.
+        </p>
+        <div className="grid grid-cols-2 gap-3">
+          <Button
+              color="gray"
+              outline
+              onClick={() => _setShowDeleteModal(false)}
+              disabled={isDeletingArticle}
+          >
+            Cancel
+          </Button>
+          <Button
+              color="red"
+              onClick={_handleConfirmDelete}
+              disabled={isDeletingArticle}
+              className="gap-2"
+          >
+            {isDeletingArticle && <Spinner size={'sm'} color={'gray'} />}
+            <span>Delete</span>
+          </Button>
+        </div>
+      </div>
+  </Modal>
   <Modal
       show={_showSuccessModal}
       onClose={_handleCloseModal}

@@ -6,6 +6,7 @@ import {APIError, Article} from "@siku-zangu/core";
 import {getJSON} from "../get-json.function";
 import {patchJSON} from "../patch-json.function";
 import {postJSON} from "../post-json.function";
+import {deleteJSON} from "../delete-json.function";
 
 export const ARTICLE_BY_ID_API_PATH = (id?: string) => `${ARTICLES_API_PATH}/${id}`;
 export const ARTICLE_COVER_IMAGE_API_PATH = (id?: string) => `${ARTICLES_API_PATH}/${id}/cover-image`;
@@ -20,6 +21,10 @@ async function _fetchArticle(articleId: string) {
 
 async function _updateArticle(articleId: string, article: Article) {
     return patchJSON<Article, Article>(ARTICLE_BY_ID_API_PATH(articleId), article);
+}
+
+async function _deleteArticle(articleId: string) {
+    return deleteJSON(ARTICLE_BY_ID_API_PATH(articleId));
 }
 
 async function _updateArticleCoverImage(articleId: string, img: File) {
@@ -42,6 +47,7 @@ export function useArticle(articleId?: string) {
     const [isFetchingArticle, setIsFetchingArticle] = useState<boolean>();
     const [isCreatingArticle, setIsCreatingArticle] = useState<boolean>();
     const [isUpdatingArticle, setIsUpdatingArticle] = useState<boolean>();
+    const [isDeletingArticle, setIsDeletingArticle] = useState<boolean>();
 
     async function createArticle(newArticle: Article, coverImage?: File) {
         setIsCreatingArticle(true);
@@ -69,6 +75,18 @@ export function useArticle(articleId?: string) {
             .finally(() => setIsUpdatingArticle(false));
     }
 
+    async function deleteArticle() {
+        if (!articleId || articleId === 'new') {
+            return Promise.reject('ID is not set.');
+        }
+        setIsDeletingArticle(true);
+        return _deleteArticle(articleId)
+            .then(() => {
+                setArticle(undefined);
+            })
+            .finally(() => setIsDeletingArticle(false));
+    }
+
     useEffect(() => {
         if (!articleId || articleId === 'new') return;
 
@@ -83,7 +101,9 @@ export function useArticle(articleId?: string) {
         isFetchingArticle,
         isCreatingArticle,
         isUpdatingArticle,
+        isDeletingArticle,
         createArticle,
         updateArticle,
+        deleteArticle,
     };
 }

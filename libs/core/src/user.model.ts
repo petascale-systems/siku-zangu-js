@@ -28,6 +28,7 @@ export type UserKv = {
     mood_logs?: Array<{ mood: string; timestamp: string; }>;
     medication_logs?: Array<{ medication: string; timestamp: string; }>;
     fcm_token?: string;
+    onboarding_complete?: boolean;
 };
 
 export type User = {
@@ -63,5 +64,6 @@ export const USER_ZOD_SCHEMA = z.object({
         mood_logs: z.array(z.object({mood: z.string(), timestamp: z.string(),})).optional(),
         medication_logs: z.array(z.object({medication: z.string(), timestamp: z.string(),})).optional(),
         fcm_token: z.string().optional(),
+        onboarding_complete: z.boolean().optional(),
     }),
 });
