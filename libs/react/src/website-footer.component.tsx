@@ -3,7 +3,7 @@ import Link from "next/link";
 
 export function WebsiteFooter({logo}: { logo: string | StaticImport }) {
     return (
-        <footer className='bg-black text-white px-4 py-12'>
+        <footer id='download' className='bg-black text-white px-4 py-12 scroll-mt-20'>
             <div className='max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8'>
                 <div className='flex flex-col gap-4'>
                     <p className='text-lg font-bold'>Siku Zangu</p>
@@ -12,7 +12,9 @@ export function WebsiteFooter({logo}: { logo: string | StaticImport }) {
                     </p>
                     <div className='flex flex-col gap-3 mt-4'>
                         <Link
-                            href={'#'}
+                            href={'https://apps.apple.com/us/app/siku-zangu/id6755812712'}
+                            target='_blank'
+                            rel='noopener noreferrer'
                             className='bg-primary text-white py-3 px-6 rounded-full font-semibold flex items-center gap-2 hover:from-pink-500 hover:to-pink-600 transition-all w-fit'
                         >
                             <svg className='w-5 h-5' fill='currentColor' viewBox='0 0 24 24'>
@@ -22,7 +24,9 @@ export function WebsiteFooter({logo}: { logo: string | StaticImport }) {
                             App Store
                         </Link>
                         <Link
-                            href={'#'}
+                            href={'https://play.google.com/store/apps/details?id=org.sikuzangu.app'}
+                            target='_blank'
+                            rel='noopener noreferrer'
                             className='bg-primary text-white py-3 px-6 rounded-full font-semibold flex items-center gap-2 hover:from-pink-500 hover:to-pink-600 transition-all w-fit'
                         >
                             <svg className='w-5 h-5' fill='currentColor' viewBox='0 0 24 24'>
