@@ -8,6 +8,7 @@ import {
   Select,
   Spinner,
   TextInput,
+  Textarea,
 } from 'flowbite-react';
 import {
   ARTICLE_COVER_IMAGE_API_PATH,
@@ -37,8 +38,10 @@ export default function ArticlePage() {
       status: 'draft',
       category: '',
       content: '',
+      references: [],
     },
   });
+  const [_referencesText, _setReferencesText] = useState<string>('');
   const {
     article,
     isFetchingArticle,
@@ -82,6 +85,17 @@ export default function ArticlePage() {
     });
   };
 
+  const _handleChangeReferences = (e: ChangeEvent<HTMLTextAreaElement>) => {
+    _setReferencesText(e.target.value);
+    const references = e.target.value
+      .split('\n')
+      .map((line) => line.trim())
+      .filter((line) => line.length > 0);
+    _setArticleFormData({
+      kv: { ..._articleFormData.kv, references },
+    });
+  };
+
   const _handlePublishBtnClick = () => {
     if (_articleId === 'new') {
       return createArticle(_articleFormData, _coverImage)
@@ -120,6 +134,7 @@ export default function ArticlePage() {
     if (!article || !article.kv) return;
     if (article.kv.has_cover_image)
       _setCoverImageSrc(ARTICLE_COVER_IMAGE_API_PATH(_articleId));
+    const references = article.kv.references ?? [];
     _setArticleFormData({
       kv: {
         slug: article.kv.slug,
@@ -128,8 +143,10 @@ export default function ArticlePage() {
         category: article.kv.category ?? '',
         content: article.kv.content ?? '',
         language: article.kv.language ?? 'sw',
+        references,
       },
     });
+    _setReferencesText(references.join('\n'));
   }, [article]);
 
   useEffect(
@@ -188,6 +205,30 @@ export default function ArticlePage() {
               content={_articleFormData.kv?.content}
               loading={_isLoading}
               onChange={_handleChangeContent}
+            />
+          </div>
+
+          <div className="flex flex-col items-start gap-2 w-full">
+            <Label
+              htmlFor="article_references"
+              className="text-base text-gray-700"
+            >
+              References / Citations
+            </Label>
+            <p className="text-xs text-gray-500">
+              One citation per line. Include credible sources (peer-reviewed
+              journals, WHO, MoH, etc.) for any medical claims. Required for
+              health and medication content.
+            </p>
+            <Textarea
+              id="article_references"
+              className="w-full"
+              rows={6}
+              placeholder={
+                'e.g. Symul L, Wac K, Hillard P et al. Assessment of menstrual health status... npj Digit. Med. 2, 64 (2019). https://doi.org/10.1038/s41746-019-0139-4'
+              }
+              value={_referencesText}
+              onChange={_handleChangeReferences}
             />
           </div>
         </div>

@@ -21,6 +21,7 @@ import {
   getSymptomConfig,
   getMostRecentMood,
   getRecentSymptoms,
+  CyclePredictionSources,
 } from '@siku-zangu/expo';
 import { useUser } from '@siku-zangu/react-native';
 import { NavbarCard } from '@siku-zangu/expo';
@@ -324,6 +325,10 @@ export default function Dashboard() {
                 : `Day ${dayInCycle} of ${user?.kv?.avg_cycle_length_days ?? 28}`}
           </Text>
 
+          <View style={styles.sourcesRow}>
+            <CyclePredictionSources language={language} variant="link" />
+          </View>
+
           <View style={styles.insightCard}>
             <View style={styles.insightHeader}>
               <Ionicons name="bulb-outline" size={22} color="#D97706" />
@@ -550,6 +555,10 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     fontFamily: 'inter',
     marginTop: 4,
+    marginBottom: 8,
+  },
+  sourcesRow: {
+    alignItems: 'center',
     marginBottom: 8,
   },
   insightCard: {

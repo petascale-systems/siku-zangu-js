@@ -15,5 +15,9 @@ export function articleToKv(article: Article) {
         k: 'language',
         v: article?.kv?.language as string
     });
+    if (Array.isArray(article?.kv?.references)) kvs.push({
+        k: 'references',
+        v: JSON.stringify(article!.kv!.references)
+    });
     return kvs
 }

@@ -7,6 +7,7 @@ import {
   ScrollView,
   ActivityIndicator,
   Image,
+  Linking,
   useWindowDimensions,
 } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
@@ -27,6 +28,9 @@ const translations = {
     goBack: 'Go Back',
     lastUpdated: 'Last updated:',
     noContent: 'No content available.',
+    references: 'References',
+    medicalDisclaimer:
+      'The information in this article is for educational purposes only and is not a substitute for professional medical advice. Always consult a qualified healthcare provider for medical concerns.',
     categories: {
       'body-education': 'Body Education',
       'birth-control': 'Birth Control',
@@ -42,6 +46,9 @@ const translations = {
     goBack: 'Rudi Nyuma',
     lastUpdated: 'Imesasishwa mwisho:',
     noContent: 'Hakuna maudhui yanayopatikana.',
+    references: 'Marejeleo',
+    medicalDisclaimer:
+      'Maudhui ya makala hii ni kwa madhumuni ya elimu pekee na siyo mbadala wa ushauri wa kitabibu. Tafadhali wasiliana na mtaalamu wa afya kwa masuala ya kiafya.',
     categories: {
       'body-education': 'Elimu ya Mwili',
       'birth-control': 'Uzazi wa Mpango',
@@ -52,6 +59,8 @@ const translations = {
     },
   },
 };
+
+const URL_REGEX = /(https?:\/\/[^\s)]+)/i;
 
 interface ArticleCoverImageProps {
   coverImageUrl: string | null;
@@ -387,6 +396,40 @@ export default function ArticleDetailScreen() {
             )}
           </View>
 
+          {Array.isArray(article.kv?.references) && article.kv!.references!.length > 0 && (
+              <View style={styles.referencesContainer}>
+                <View style={styles.referencesHeader}>
+                  <Ionicons name="document-text-outline" size={18} color="#FF4C7C" />
+                  <Text style={styles.referencesTitle}>{t.references}</Text>
+                </View>
+                {article.kv!.references!.map((ref, idx) => {
+                  const match = ref.match(URL_REGEX);
+                  const url = match ? match[1] : null;
+                  return (
+                      <View key={idx} style={styles.referenceItem}>
+                        <Text style={styles.referenceNumber}>{idx + 1}.</Text>
+                        <Text style={styles.referenceText} selectable>
+                          {url ? (
+                              <>
+                                <Text>{ref.replace(url, '')}</Text>
+                                <Text
+                                    style={styles.referenceLink}
+                                    onPress={() => Linking.openURL(url).catch(() => undefined)}
+                                >
+                                  {url}
+                                </Text>
+                              </>
+                          ) : (
+                              ref
+                          )}
+                        </Text>
+                      </View>
+                  );
+                })}
+                <Text style={styles.medicalDisclaimer}>{t.medicalDisclaimer}</Text>
+              </View>
+          )}
+
           <View style={styles.footer}>
             <Text style={styles.footerText}>
               {t.lastUpdated}{' '}
@@ -541,5 +584,59 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#999',
     fontStyle: 'italic',
+  },
+  referencesContainer: {
+    marginTop: 24,
+    marginHorizontal: 20,
+    paddingTop: 20,
+    paddingBottom: 16,
+    paddingHorizontal: 16,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#FFE0E8',
+  },
+  referencesHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 12,
+  },
+  referencesTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#1a1a1a',
+  },
+  referenceItem: {
+    flexDirection: 'row',
+    marginBottom: 10,
+    paddingRight: 4,
+  },
+  referenceNumber: {
+    fontSize: 13,
+    color: '#666',
+    fontWeight: '600',
+    marginRight: 6,
+    minWidth: 20,
+  },
+  referenceText: {
+    flex: 1,
+    fontSize: 13,
+    color: '#444',
+    lineHeight: 20,
+  },
+  referenceLink: {
+    color: '#FF4C7C',
+    textDecorationLine: 'underline',
+  },
+  medicalDisclaimer: {
+    marginTop: 12,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: '#FFE0E8',
+    fontSize: 12,
+    fontStyle: 'italic',
+    color: '#777',
+    lineHeight: 18,
   },
 });
