@@ -15,6 +15,7 @@ export type Article = {
         content?: string;
         language?: Language;
         has_cover_image?: boolean;
+        references?: string[];
     }
 }
 
@@ -27,5 +28,8 @@ export const ARTICLE_SCHEMA = z.object({
         category: z.string().optional(),
         content: z.string().max(16384, {message: 'Article content is too long'}).optional(),
         language: z.enum(['sw', 'en'], {message: 'Article language is invalid'}).optional(),
+        references: z.array(z.string().max(1024, {message: 'Reference is too long'}))
+            .max(50, {message: 'Too many references'})
+            .optional(),
     })
 });

@@ -32,7 +32,8 @@ export const USER_TABLE_COLUMN_ALIASES = {
     symptom_logs: '_symptom_logs.v',
     mood_logs: '_mood_logs.v',
     medication_logs: '_medication_logs.v',
-    fcm_token: '_fcm_token.v'
+    fcm_token: '_fcm_token.v',
+    onboarding_complete: '_onboarding_complete.v',
 };
 export const USER_TABLE_COLUMN_ALIASES_WITH_PIN = {
     ...USER_TABLE_COLUMN_ALIASES,
@@ -63,7 +64,8 @@ export function buildUserTableJoins(db: Knex | Knex.Transaction) {
         .leftJoin('s_user_kv as _symptom_logs', DATABASE.raw('_symptom_logs.id_user=_u.id_user and _symptom_logs.k="symptom_logs"'))
         .leftJoin('s_user_kv as _mood_logs', DATABASE.raw('_mood_logs.id_user=_u.id_user and _mood_logs.k="mood_logs"'))
         .leftJoin('s_user_kv as _medication_logs', DATABASE.raw('_medication_logs.id_user=_u.id_user and _medication_logs.k="medication_logs"'))
-        .leftJoin('s_user_kv as _fcm_token', DATABASE.raw('_fcm_token.id_user=_u.id_user and _fcm_token.k="fcm_token"'));
+        .leftJoin('s_user_kv as _fcm_token', DATABASE.raw('_fcm_token.id_user=_u.id_user and _fcm_token.k="fcm_token"'))
+        .leftJoin('s_user_kv as _onboarding_complete', DATABASE.raw('_onboarding_complete.id_user=_u.id_user and _onboarding_complete.k="onboarding_complete"'));
 }
 
 export function buildUserTableJoinsWithPin(db: Knex | Knex.Transaction) {
@@ -100,6 +102,7 @@ export function rowToUser(row: any) {
             mood_logs: row.mood_logs ? JSON.parse(row.mood_logs) : [],
             medication_logs: row.medication_logs ? JSON.parse(row.medication_logs) : [],
             fcm_token: row.fcm_token ?? undefined,
+            onboarding_complete: row.onboarding_complete === 'true' ? true : row.onboarding_complete === 'false' ? false : undefined,
         },
     } as User;
 }

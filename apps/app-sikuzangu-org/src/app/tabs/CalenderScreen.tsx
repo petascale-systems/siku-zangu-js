@@ -10,7 +10,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import Svg, { Circle, Text as SvgText } from 'react-native-svg';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { NavbarCard } from '@siku-zangu/expo';
+import { NavbarCard, CyclePredictionSources } from '@siku-zangu/expo';
 import { useUser } from '@siku-zangu/react-native';
 import {
   calculateCycleData,
@@ -359,6 +359,8 @@ export default function Calendar() {
             </View>
             <Ionicons name="chevron-forward" size={20} color="#fff" />
           </TouchableOpacity>
+
+          <CyclePredictionSources language={language} variant="inline" />
         </ScrollView>
 
         <NavbarCard language={language} userId={userId} />

@@ -12,7 +12,7 @@ export default function TermsOfServicePage() {
               <span className="text-primary">Terms of Service</span>
             </h1>
             <p className="text-sm sm:text-base text-neutral-placeholder">
-              Effective Date: 30 August 2025
+              Effective Date: 10 May 2026
             </p>
           </div>
           <div className="space-y-6 sm:space-y-8 text-neutral-dark-text">
@@ -98,9 +98,97 @@ export default function TermsOfServicePage() {
               <h2 className="text-md sm:text-xl font-bold text-gray-900 mb-4">
                 7. Disclaimers
               </h2>
-              <p className="text-sm sm:text-base leading-relaxed">
+              <p className="text-sm sm:text-base leading-relaxed mb-4">
                 We provide the App 'as is'. We do not guarantee uninterrupted or
                 error-free service. Use the App at your own risk.
+              </p>
+              <h3 className="text-sm sm:text-base font-semibold text-gray-900 mt-4 mb-2">
+                7.1 No Medical Advice
+              </h3>
+              <p className="text-sm sm:text-base leading-relaxed mb-4">
+                The App provides general health, menstrual, and reproductive
+                wellness information for educational purposes only. It is not a
+                medical device and is not intended to diagnose, treat, cure, or
+                prevent any disease or condition. Information in the App, including
+                articles, insights, and predictions, is not a substitute for
+                professional medical advice, diagnosis, or treatment. Always seek
+                the advice of a qualified healthcare provider with any questions
+                you may have regarding a medical condition. Never disregard
+                professional medical advice or delay in seeking it because of
+                content in the App.
+              </p>
+              <h3 className="text-sm sm:text-base font-semibold text-gray-900 mt-4 mb-2">
+                7.2 Sources & Citations for Educational Content
+              </h3>
+              <p className="text-sm sm:text-base leading-relaxed mb-4">
+                Articles containing medical or health-related recommendations
+                include references to peer-reviewed publications, public health
+                authorities (e.g., WHO, Ministry of Health publications), and
+                other credible sources. Citations are displayed at the end of
+                each article. Where citations are missing, the content should be
+                treated as general educational material only.
+              </p>
+              <h3 className="text-sm sm:text-base font-semibold text-gray-900 mt-4 mb-2">
+                7.3 Cycle, Period & Fertility Predictions
+              </h3>
+              <p className="text-sm sm:text-base leading-relaxed mb-2">
+                Period, ovulation, and fertile-window predictions shown in the
+                App are statistical estimates based on the cycle history you log.
+                They are <strong>not</strong> a contraceptive method, a fertility
+                treatment, or a medical diagnosis, and they should not be used as
+                the sole basis for family-planning decisions. Prediction
+                methodology is informed by the following peer-reviewed research:
+              </p>
+              <ul className="list-disc pl-6 space-y-2 text-sm sm:text-base leading-relaxed mb-4">
+                <li>
+                  Symul L, Wac K, Hillard P, et al. Assessment of menstrual
+                  health status and evolution through mobile apps for fertility
+                  awareness. <em>npj Digit. Med.</em> 2, 64 (2019).{' '}
+                  <a
+                    href="https://doi.org/10.1038/s41746-019-0139-4"
+                    className="text-primary hover:underline break-all"
+                    rel="noopener noreferrer"
+                    target="_blank"
+                  >
+                    https://doi.org/10.1038/s41746-019-0139-4
+                  </a>
+                </li>
+                <li>
+                  Bull JR, Rowland SP, Scherwitzl EB, et al. Real-world menstrual
+                  cycle characteristics of more than 600,000 menstrual cycles.{' '}
+                  <em>npj Digit. Med.</em> 2, 83 (2019).{' '}
+                  <a
+                    href="https://doi.org/10.1038/s41746-019-0152-7"
+                    className="text-primary hover:underline break-all"
+                    rel="noopener noreferrer"
+                    target="_blank"
+                  >
+                    https://doi.org/10.1038/s41746-019-0152-7
+                  </a>
+                </li>
+                <li>
+                  Faust L, Bradley D, Landau E, Noddin K, Farland LV, Baron A,
+                  Wolfberg A. Findings from a mobile application-based cohort are
+                  consistent with established knowledge of the menstrual cycle,
+                  fertile window, and conception. <em>Fertil Steril.</em> 2019
+                  Sep;112(3):450-457.e3.{' '}
+                  <a
+                    href="https://doi.org/10.1016/j.fertnstert.2019.05.008"
+                    className="text-primary hover:underline break-all"
+                    rel="noopener noreferrer"
+                    target="_blank"
+                  >
+                    https://doi.org/10.1016/j.fertnstert.2019.05.008
+                  </a>
+                </li>
+              </ul>
+              <h3 className="text-sm sm:text-base font-semibold text-gray-900 mt-4 mb-2">
+                7.4 Emergencies
+              </h3>
+              <p className="text-sm sm:text-base leading-relaxed">
+                If you believe you are experiencing a medical emergency, contact
+                your local emergency services or visit the nearest healthcare
+                facility immediately. Do not rely on the App for emergency care.
               </p>
             </div>
             <div>

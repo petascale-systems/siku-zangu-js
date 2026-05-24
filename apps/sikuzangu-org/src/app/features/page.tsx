@@ -26,7 +26,9 @@ export default function FeaturesPage() {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start items-center pt-4">
               <Link
-                href="#"
+                href="https://apps.apple.com/us/app/siku-zangu/id6755812712"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="inline-flex items-center justify-center gap-2 bg-primary text-white py-3 px-8 rounded-full font-semibold hover:bg-pink-600 transition-all text-base shadow-lg hover:shadow-xl w-full sm:w-auto"
               >
                 <svg
@@ -39,7 +41,9 @@ export default function FeaturesPage() {
                 App Store
               </Link>
               <Link
-                href="#"
+                href="https://play.google.com/store/apps/details?id=org.sikuzangu.app"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="inline-flex items-center justify-center gap-2 bg-primary text-white py-3 px-8 rounded-full font-semibold hover:bg-pink-600 transition-all text-base shadow-lg hover:shadow-xl w-full sm:w-auto"
               >
                 <svg

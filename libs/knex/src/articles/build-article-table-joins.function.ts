@@ -10,6 +10,7 @@ export function buildArticleTableJoins(db: Knex | Knex.Transaction, options = {i
         .leftJoin('s_article_kv as _slug', DATABASE.raw('_slug.id_article=_a.id_article and _slug.k="slug"'))
         .leftJoin('s_article_kv as _category', DATABASE.raw('_category.id_article=_a.id_article and _category.k="category"'))
         .leftJoin('s_article_kv as _language', DATABASE.raw('_language.id_article=_a.id_article and _language.k="language"'))
+        .leftJoin('s_article_kv as _references', DATABASE.raw('_references.id_article=_a.id_article and _references.k="references"'))
         .leftJoin('s_article_cover_image as _cover_image', '_cover_image.id_article', '_a.id_article');
 
     if (!options.includeContent) return sql;
@@ -27,6 +28,7 @@ export const ARTICLE_TABLE_COLUMN_ALIASES = {
     category: '_category.v',
     language: '_language.v',
     has_cover_image: DATABASE.raw('_cover_image.id_article is not null'),
+    references: '_references.v',
 }
 
 export const ARTICLE_TABLE_COLUMN_ALIASES_WITH_CONTENT = {

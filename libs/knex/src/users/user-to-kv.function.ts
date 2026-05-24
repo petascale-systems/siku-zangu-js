@@ -68,6 +68,9 @@ export function userToKv(user: User) {
     if (user.kv.fcm_token !== undefined) {
         kvs.push({k: 'fcm_token', v: user.kv.fcm_token});
     }
+    if (userKv?.onboarding_complete == true || userKv?.onboarding_complete == false) {
+        kvs.push({k: 'onboarding_complete', v: userKv?.onboarding_complete.toString()});
+    }
 
     return kvs;
 }

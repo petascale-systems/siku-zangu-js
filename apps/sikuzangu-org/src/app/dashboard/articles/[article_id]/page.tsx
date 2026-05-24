@@ -8,6 +8,7 @@ import {
   Select,
   Spinner,
   TextInput,
+  Textarea,
 } from 'flowbite-react';
 import {
   ARTICLE_COVER_IMAGE_API_PATH,
@@ -19,7 +20,7 @@ import {
 import { ChangeEvent, useEffect, useState } from 'react';
 import { Article, ArticleStatus, Language } from '@siku-zangu/core';
 import { useParams, useRouter } from 'next/navigation';
-import { CheckCircleIcon } from 'lucide-react';
+import { CheckCircleIcon, Trash2 } from 'lucide-react';
 
 export default function ArticlePage() {
   const _router = useRouter();
@@ -30,6 +31,7 @@ export default function ArticlePage() {
   const [_coverImageSrc, _setCoverImageSrc] = useState<string>();
   const [_content, _setContent] = useState<string>();
   const [_showSuccessModal, _setShowSuccessModal] = useState<boolean>(false);
+  const [_showDeleteModal, _setShowDeleteModal] = useState<boolean>(false);
   const [_articleFormData, _setArticleFormData] = useState<Article>({
     kv: {
       slug: '',
@@ -37,15 +39,19 @@ export default function ArticlePage() {
       status: 'draft',
       category: '',
       content: '',
+      references: [],
     },
   });
+  const [_referencesText, _setReferencesText] = useState<string>('');
   const {
     article,
     isFetchingArticle,
     isCreatingArticle,
     isUpdatingArticle,
+    isDeletingArticle,
     createArticle,
     updateArticle,
+    deleteArticle,
   } = useArticle(_articleId);
 
   const _handleChangeTitle = (e: ChangeEvent<HTMLInputElement>) => {
@@ -82,6 +88,17 @@ export default function ArticlePage() {
     });
   };
 
+  const _handleChangeReferences = (e: ChangeEvent<HTMLTextAreaElement>) => {
+    _setReferencesText(e.target.value);
+    const references = e.target.value
+      .split('\n')
+      .map((line) => line.trim())
+      .filter((line) => line.length > 0);
+    _setArticleFormData({
+      kv: { ..._articleFormData.kv, references },
+    });
+  };
+
   const _handlePublishBtnClick = () => {
     if (_articleId === 'new') {
       return createArticle(_articleFormData, _coverImage)
@@ -111,6 +128,15 @@ export default function ArticlePage() {
     _router.push('/dashboard/articles');
   };
 
+  const _handleConfirmDelete = () => {
+    deleteArticle()
+      .then(() => {
+        _setShowDeleteModal(false);
+        _router.push('/dashboard/articles');
+      })
+      .catch(console.error);
+  };
+
   useEffect(() => _setArticleId(_params.article_id), [_params]);
   useEffect(() => {
     if (_coverImage) _setCoverImageSrc(URL.createObjectURL(_coverImage));
@@ -120,6 +146,7 @@ export default function ArticlePage() {
     if (!article || !article.kv) return;
     if (article.kv.has_cover_image)
       _setCoverImageSrc(ARTICLE_COVER_IMAGE_API_PATH(_articleId));
+    const references = article.kv.references ?? [];
     _setArticleFormData({
       kv: {
         slug: article.kv.slug,
@@ -128,16 +155,18 @@ export default function ArticlePage() {
         category: article.kv.category ?? '',
         content: article.kv.content ?? '',
         language: article.kv.language ?? 'sw',
+        references,
       },
     });
+    _setReferencesText(references.join('\n'));
   }, [article]);
 
   useEffect(
     () =>
       _setIsLoading(
-        isFetchingArticle || isUpdatingArticle || isCreatingArticle
+        isFetchingArticle || isUpdatingArticle || isCreatingArticle || isDeletingArticle
       ),
-    [isFetchingArticle, isUpdatingArticle, isCreatingArticle]
+    [isFetchingArticle, isUpdatingArticle, isCreatingArticle, isDeletingArticle]
   );
 
   return (
@@ -188,6 +217,30 @@ export default function ArticlePage() {
               content={_articleFormData.kv?.content}
               loading={_isLoading}
               onChange={_handleChangeContent}
+            />
+          </div>
+
+          <div className="flex flex-col items-start gap-2 w-full">
+            <Label
+              htmlFor="article_references"
+              className="text-base text-gray-700"
+            >
+              References / Citations
+            </Label>
+            <p className="text-xs text-gray-500">
+              One citation per line. Include credible sources (peer-reviewed
+              journals, WHO, MoH, etc.) for any medical claims. Required for
+              health and medication content.
+            </p>
+            <Textarea
+              id="article_references"
+              className="w-full"
+              rows={6}
+              placeholder={
+                'e.g. Symul L, Wac K, Hillard P et al. Assessment of menstrual health status... npj Digit. Med. 2, 64 (2019). https://doi.org/10.1038/s41746-019-0139-4'
+              }
+              value={_referencesText}
+              onChange={_handleChangeReferences}
             />
           </div>
         </div>
@@ -293,9 +346,58 @@ export default function ArticlePage() {
               Cancel
             </Button>
           </div>
+          {_articleId !== 'new' && (
+            <Button
+              color="red"
+              outline
+              disabled={_isLoading}
+              className="w-full gap-2"
+              onClick={() => _setShowDeleteModal(true)}
+            >
+              <Trash2 className="h-4 w-4" />
+              <span>Delete article</span>
+            </Button>
+          )}
         </div>
       </div>
     </div>
+  <Modal
+      show={_showDeleteModal}
+      onClose={() => _setShowDeleteModal(false)}
+      size="md"
+      popup
+  >
+      <div className="text-center py-6 px-4">
+        <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-red-100 mb-4">
+          <Trash2 className="h-8 w-8 text-red-600" />
+        </div>
+        <h3 className="mb-2 text-xl font-semibold text-gray-900">
+          Delete this article?
+        </h3>
+        <p className="text-sm text-gray-500 mb-6">
+          This will permanently remove the article and its references from the database. This action cannot be undone.
+        </p>
+        <div className="grid grid-cols-2 gap-3">
+          <Button
+              color="gray"
+              outline
+              onClick={() => _setShowDeleteModal(false)}
+              disabled={isDeletingArticle}
+          >
+            Cancel
+          </Button>
+          <Button
+              color="red"
+              onClick={_handleConfirmDelete}
+              disabled={isDeletingArticle}
+              className="gap-2"
+          >
+            {isDeletingArticle && <Spinner size={'sm'} color={'gray'} />}
+            <span>Delete</span>
+          </Button>
+        </div>
+      </div>
+  </Modal>
   <Modal
       show={_showSuccessModal}
       onClose={_handleCloseModal}
