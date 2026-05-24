@@ -21,7 +21,12 @@ export async function patchJSON<T, U>(
             if (res.status === 204) return;
             if (res.ok) return (await res.json()) as U;
 
-            const err = await res.json()
+            let err: APIError;
+            try {
+                err = await res.json();
+            } catch {
+                err = { status: res.status as APIError['status'], message: res.statusText || 'Request failed', issues: [] };
+            }
             return Promise.reject((err ?? {message: 'Failed'}) as APIError);
         })
         .catch(e => Promise.reject((e ?? {message: `Could not PATCH ${path}`}) as APIError));

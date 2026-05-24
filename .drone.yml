@@ -1,18 +1,26 @@
 ---
 kind: pipeline
 type: exec
-name: Deploy https://sikuzangu.org
+name: release
 steps:
   - name: docker-build
-    image: node:20.9.0-alpine
-    privileged: true
     commands:
-      - npm install
-      - npx nx build sikuzangu-com --skip-nx-cache
-      - docker build -t sikuzangu-com -f ./sikuzangu-com-Dockerfile .
+      - rm -rf node_modules
+      - npm install --force
+      - npx nx build sikuzangu-org --skip-nx-cache
+      - docker build -t sikuzangu-org:${DRONE_TAG} -f ./sikuzangu-org-Dockerfile .
   - name: docker-run
-    privileged: true
     environment:
+      FIREBASE_SERVICE_ACCOUNT:
+        from_secret: _FIREBASE_SERVICE_ACCOUNT
+      TWILIO_ACCOUNT_SID:
+        from_secret: _TWILIO_ACCOUNT_SID
+      TWILIO_AUTH_TOKEN:
+        from_secret: _TWILIO_AUTH_TOKEN
+      TWILIO_VERIFY_SERVICE_SID:
+        from_secret: _TWILIO_VERIFY_SERVICE_SID
+      CRON_SECRET:
+        from_secret: _CRON_SECRET
       S_DATABASE_HOST:
         from_secret: _S_DATABASE_HOST
       S_DATABASE_USER:
@@ -25,29 +33,32 @@ steps:
         from_secret: _ATLASGO_VAR_DATABASE
       ATLASGO_URL:
         from_secret: _ATLASGO_URL
+      S_BREVO_API_KEY:
+        from_secret: _S_BREVO_API_KEY
     depends_on:
       - docker-build
     commands:
-      - docker stop sikuzangu-com || true && docker rm sikuzangu-com || true
+      - docker stop sikuzangu-org || true && docker rm sikuzangu-org || true
       - >-
-        docker \
-        run \
-        --publish 40001:3000 \                             
-        --network petascale.systems \
-        --env S_DATABASE_HOST=$S_DATABASE_HOST \
-        --env S_DATABASE_USER=$S_DATABASE_USER \
-        --env S_DATABASE_PASSWORD==$S_DATABASE_PASSWORD \
-        --env S_DATABASE_NAME=$S_DATABASE_NAME \
-        --env ATLASGO_VAR_DATABASE=$ATLASGO_VAR_DATABASE \
-        --env ATLASGO_URL=$ATLASGO_URL \
-        sikuzangu-com
+        docker 
+        run 
+        --detach
+        --name=sikuzangu-org 
+        --publish=40001:3000                           
+        --network=petascale.systems 
+        --env=S_DATABASE_HOST=$S_DATABASE_HOST 
+        --env=S_DATABASE_USER=$S_DATABASE_USER 
+        --env=S_DATABASE_PASSWORD=$S_DATABASE_PASSWORD 
+        --env=S_DATABASE_NAME=$S_DATABASE_NAME 
+        --env=ATLASGO_VAR_DATABASE=$ATLASGO_VAR_DATABASE 
+        --env=ATLASGO_URL=$ATLASGO_URL 
+        --env=S_BREVO_API_KEY=$S_BREVO_API_KEY
+        --env=FIREBASE_SERVICE_ACCOUNT="$FIREBASE_SERVICE_ACCOUNT"
+        --env=TWILIO_ACCOUNT_SID=$TWILIO_ACCOUNT_SID
+        --env=TWILIO_AUTH_TOKEN=$TWILIO_AUTH_TOKEN
+        --env=TWILIO_VERIFY_SERVICE_SID=$TWILIO_VERIFY_SERVICE_SID
+        --env=CRON_SECRET=$CRON_SECRET
+        sikuzangu-org:${DRONE_TAG}
 trigger:
-  branch:
-    include:
-      - main
-    exclude:
-      - releases/*
-      - issues/*
   event:
-    include:
-      - push
+    - tag

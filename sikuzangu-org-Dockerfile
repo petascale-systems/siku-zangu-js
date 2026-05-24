@@ -1,0 +1,17 @@
+FROM node:22-alpine
+
+WORKDIR /var/lib/sikuzangu-org
+COPY dist/apps/sikuzangu-org/.next/standalone .
+COPY dist/apps/sikuzangu-org/public ./dist/apps/sikuzangu-org/public
+COPY dist/apps/sikuzangu-org/.next/static ./dist/apps/sikuzangu-org/.next/static
+COPY atlasgo ./atlasgo
+COPY sikuzangu-org-docker-entrypoint.sh /usr/bin/
+
+# RUN npm install
+RUN apk add --no-cache curl
+RUN curl -sSf https://atlasgo.sh | sh
+RUN chmod 550 /usr/bin/sikuzangu-org-docker-entrypoint.sh
+
+EXPOSE 3000
+ENTRYPOINT [ "sikuzangu-org-docker-entrypoint.sh" ]
+CMD ["node", "./apps/sikuzangu-org/server.js"]

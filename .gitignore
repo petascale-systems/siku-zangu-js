@@ -1,4 +1,5 @@
 # See http://help.github.com/ignore-files/ for more about ignoring files.
+/android/
 /.vscode
 .htaccess
 .env
@@ -69,6 +70,7 @@ environment.ts
 environment.prod.ts
 *serviceAccount.json
 *service-account.json
+*firebase service.json
 .vscode/settings.json
 
 # Nuxt dev/build outputs
@@ -175,3 +177,12 @@ yarn-error.log
 
 # testing
 /coverage
+/apps/app-sikuzangu-org/ios/
+/apps/app-sikuzangu-org/android/
+
+# Firebase Configuration Files
+apps/app-sikuzangu-org/GoogleService-Info.plist
+apps/app-sikuzangu-org/google-services.json
+
+.claude/worktrees
+.claude/settings.local.json

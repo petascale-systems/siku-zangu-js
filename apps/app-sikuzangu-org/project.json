@@ -1,0 +1,32 @@
+{
+  "name": "app-sikuzangu-org",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/app-sikuzangu-org/src",
+  "projectType": "application",
+  "tags": [],
+  "targets": {
+    "sync-deps": {
+      "executor": "@nx/expo:sync-deps",
+      "options": {
+        "all": true,
+        "excludeImplicit": false,
+        "exclude": [
+          "express",
+          "next",
+          "knex",
+          "@headlessui/react",
+          "@heroicons/react",
+          "@getbrevo/brevo",
+          "lucide-react",
+          "mysql2",
+          "twilio",
+          "flowbite-react",
+          "node-cron",
+          "bcrypt-ts",
+          "bcryptjs",
+          "recharts"
+        ]
+      }
+    }
+  }
+}
