@@ -41,6 +41,8 @@ export const NUIInputField: React.FC<Props> = ({
         onChangeText={onChangeText}
         secureTextEntry={secureTextEntry}
         keyboardType={keyboardType}
+        // See NUIFormField: the app is light-only, so the keyboard is too.
+        keyboardAppearance="light"
         style={[styles.input, !!error && styles.inputError]}
         accessibilityLabel={accessibilityLabel ?? label ?? placeholder}
       />

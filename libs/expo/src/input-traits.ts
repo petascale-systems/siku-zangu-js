@@ -2,6 +2,7 @@ import { TextInputProps } from 'react-native';
 
 type Trait = Pick<
   TextInputProps,
+  | 'keyboardAppearance'
   | 'keyboardType'
   | 'autoComplete'
   | 'textContentType'
@@ -26,6 +27,24 @@ type Trait = Pick<
  * (see `TextInput.js`), so `textContentType` is only stated where the
  * web-standard value has no iOS equivalent.
  */
+
+/**
+ * Carried by every field, regardless of kind.
+ *
+ * `keyboardAppearance` defaults to `'default'`, which means "follow the iOS
+ * trait collection" — so on a phone in dark mode the keyboard would come up
+ * dark under an otherwise light app. That cannot happen today, because
+ * `UIUserInterfaceStyle = Light` in `ios/Sikuzangu/Info.plist` pins the trait
+ * collection itself. Stating it here anyway makes the app's own light-only
+ * contract local and explicit rather than a remote consequence of a plist key
+ * three layers away: the keyboard is the largest surface the app does not
+ * draw, and it is the first thing to go dark if that pin is ever relaxed.
+ *
+ * Android has no equivalent — the IME picks its own theme — which is what
+ * `forceDarkAllowed=false` and the `Theme.AppCompat.Light` parent are for.
+ */
+const LIGHT_KEYBOARD = { keyboardAppearance: 'light' } as const;
+
 export const inputTraits = {
   /**
    * The dial code lives in a separate picker beside the field, so this asks for
@@ -34,6 +53,7 @@ export const inputTraits = {
    * mapping, hence the explicit `textContentType`.
    */
   phone: {
+    ...LIGHT_KEYBOARD,
     keyboardType: 'phone-pad',
     autoComplete: 'tel-national',
     textContentType: 'telephoneNumber',
@@ -55,6 +75,7 @@ export const inputTraits = {
    * and a sign key that a PIN can never use.
    */
   pin: {
+    ...LIGHT_KEYBOARD,
     keyboardType: 'number-pad',
     autoComplete: 'off',
     textContentType: 'none',
@@ -65,6 +86,7 @@ export const inputTraits = {
 
   /** The last PIN in a form — submits rather than advancing. */
   pinLast: {
+    ...LIGHT_KEYBOARD,
     keyboardType: 'number-pad',
     autoComplete: 'off',
     textContentType: 'none',
@@ -74,6 +96,7 @@ export const inputTraits = {
   },
 
   givenName: {
+    ...LIGHT_KEYBOARD,
     keyboardType: 'default',
     autoComplete: 'given-name',
     returnKeyType: 'next',
@@ -84,6 +107,7 @@ export const inputTraits = {
   },
 
   familyName: {
+    ...LIGHT_KEYBOARD,
     keyboardType: 'default',
     autoComplete: 'family-name',
     returnKeyType: 'done',
@@ -98,6 +122,7 @@ export const inputTraits = {
    * `oneTimeCode` and Android `sms-otp` on its own.
    */
   otpFirst: {
+    ...LIGHT_KEYBOARD,
     keyboardType: 'number-pad',
     autoComplete: 'one-time-code',
     autoCapitalize: 'none',
@@ -106,6 +131,7 @@ export const inputTraits = {
 
   /** The remaining boxes must not each offer the code again. */
   otpRest: {
+    ...LIGHT_KEYBOARD,
     keyboardType: 'number-pad',
     autoComplete: 'off',
     textContentType: 'none',
@@ -114,6 +140,7 @@ export const inputTraits = {
   },
 
   search: {
+    ...LIGHT_KEYBOARD,
     keyboardType: 'default',
     autoComplete: 'off',
     textContentType: 'none',

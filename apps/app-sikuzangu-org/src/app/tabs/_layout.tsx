@@ -1,5 +1,53 @@
+import { Platform } from 'react-native';
 import { Icon, Label, NativeTabs } from 'expo-router/unstable-native-tabs';
 import { colors, useTranslate } from '@siku-zangu/expo';
+
+/**
+ * Android tab bar colours, stated rather than inherited.
+ *
+ * The bar is the one control in the app that the light pinning does NOT reach.
+ * `react-native-screens` builds it inside its own
+ * `ContextThemeWrapper(Theme_Material3_DayNight_NoActionBar)`
+ * (`TabsHost.kt`), so it resolves `-night` resources straight from the
+ * configuration's `uiMode` and never consults our `AppTheme` — which is why it
+ * still came up dark on a phone in dark mode even with
+ * `Theme.AppCompat.Light.NoActionBar`, `forceDarkAllowed=false` and
+ * `setDefaultNightMode(MODE_NIGHT_NO)` all in place. There is no prop to force
+ * its theme; `TabsHost.applyDayNightUiModeIfNeeded` switches on `uiMode` alone.
+ *
+ * What there IS, is precedence: `TabsHostAppearanceApplicator` reads
+ * `tabBarBackgroundColor ?: resolveColorAttr(colorSurfaceContainer)` and the
+ * same for every other slot. Supplying a colour means the Material attribute is
+ * never consulted, so each value below displaces one dark-mode fallback:
+ *
+ *   backgroundColor  -> colorSurfaceContainer
+ *   labelStyle       -> colorOnSurfaceVariant / colorSecondary
+ *   iconColor        -> colorOnSurfaceVariant / colorOnSecondaryContainer
+ *   indicatorColor   -> colorSecondaryContainer
+ *   rippleColor      -> itemRippleColor
+ *
+ * iOS is deliberately excluded: the bar there is a real UITabBar whose material
+ * the system draws correctly under `UIUserInterfaceStyle = Light`, and an
+ * explicit `backgroundColor` is what made it flip between that colour and the
+ * screen showing through (see the note on `disableTransparentOnScrollEdge`).
+ */
+const ANDROID_TAB_BAR = Platform.select({
+  android: {
+    backgroundColor: colors.surface.card,
+    iconColor: {
+      default: colors.nav.inactive,
+      selected: colors.nav.active,
+    },
+    labelStyle: {
+      default: { color: colors.nav.inactive },
+      selected: { color: colors.nav.active },
+    },
+    /** The pill behind the selected icon. nav.active on it is 5.84:1. */
+    indicatorColor: colors.surface.tint,
+    rippleColor: 'rgba(168, 30, 64, 0.12)',
+  },
+  default: {},
+});
 
 /**
  * Platform-native bottom tabs.
@@ -39,6 +87,7 @@ export default function TabsLayout() {
       // edge appearance keeps one consistent bar, and leaving the background
       // to the system keeps the native material rather than a flat fill.
       disableTransparentOnScrollEdge
+      {...ANDROID_TAB_BAR}
     >
       <NativeTabs.Trigger name="home">
         <Icon sf={{ default: 'house', selected: 'house.fill' }} drawable="ic_menu_home" />

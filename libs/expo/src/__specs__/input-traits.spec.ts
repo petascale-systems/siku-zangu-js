@@ -13,6 +13,15 @@ describe('inputTraits', () => {
     expect(trait.autoCorrect).toBe(false);
   });
 
+  // The app ships one palette. `keyboardAppearance` defaults to 'default',
+  // which means "follow the iOS trait collection" — so a field that omits it
+  // would raise a dark keyboard under a light app the moment the native pin in
+  // ios/Sikuzangu/Info.plist is relaxed. Asserting it per kind is what stops a
+  // newly added trait from being the one that forgets.
+  it.each(ALL)('%s pins the keyboard to the light appearance', (_k, trait) => {
+    expect(trait.keyboardAppearance).toBe('light');
+  });
+
   describe('phone', () => {
     // `tel-national` has no iOS mapping, so textContentType cannot be derived.
     it('states textContentType explicitly', () => {

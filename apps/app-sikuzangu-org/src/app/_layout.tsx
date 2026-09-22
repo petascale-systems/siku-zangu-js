@@ -1,4 +1,5 @@
 import {Stack, useRouter} from 'expo-router';
+import {StatusBar} from 'expo-status-bar';
 import {useCallback, useEffect, useRef, useState} from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {Animated, ImageBackground, StyleSheet, View} from 'react-native';
@@ -242,6 +243,21 @@ export default function RootLayout() {
         <NUILanguage.Provider userId={userId}>
         <NUIToast.Provider>
         <View style={{flex: 1}}>
+            {/* Pins the status bar to dark icons, for the light UI beneath.
+
+                expo-router renders its own <StatusBar> in ExpoRoot whose bar
+                style is `useColorScheme() === 'light' ? 'dark-content' :
+                'light-content'` — the one place the app's chrome is derived
+                from the OS appearance rather than from a constant. It resolves
+                correctly today only because the native pins force
+                useColorScheme() to report light on both platforms, so a phone
+                in dark mode would otherwise get white icons on the app's white
+                surfaces.
+
+                `style="dark"` is resolved without consulting the appearance at
+                all (unlike "auto"/"inverted"), and this element mounts after
+                expo-router's, so it wins the StatusBar stack. */}
+            <StatusBar style="dark" />
             <Stack screenOptions={{headerShown: false}}>
                 <Stack.Screen name="index" options={{headerShown: false}}/>
                 <Stack.Screen name="language"/>

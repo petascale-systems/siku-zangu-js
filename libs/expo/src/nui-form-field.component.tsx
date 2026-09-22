@@ -107,6 +107,11 @@ export const NUIFormField = forwardRef<TextInput, NUIFormFieldProps>(
             ref={ref}
             style={[styles.input, inputStyle]}
             placeholderTextColor={colors.text.placeholder}
+            // The app ships one palette, so the keyboard is pinned to match it
+            // rather than following the OS. Every call site also carries this
+            // via `inputTraits`; it is defaulted here so a field that spreads
+            // no trait cannot be the one that comes up dark.
+            keyboardAppearance="light"
             accessibilityLabel={label}
             // Announces the field as invalid, so the message below is not the
             // only signal that something is wrong.
