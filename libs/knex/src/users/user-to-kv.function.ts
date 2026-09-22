@@ -54,6 +54,15 @@ export function userToKv(user: User) {
         kvs.push({k: 'selected_medications', v: JSON.stringify(user.kv.selected_medications),});
     }
 
+    // kv holds the LATEST SUBMISSION for each key — not a mirror of history.
+    // History accumulates in `s_user_log` via `insertUserLogs`; this is the
+    // "current" half.
+    //
+    // That distinction is what retires the overflow bug: kv used to grow with
+    // every save until it passed the varchar(4096) ceiling, at which point the
+    // value truncated, failed to parse, read back as `[]`, and the next save
+    // persisted the emptied array. Holding only the most recent submission, it
+    // cannot grow.
     if (user.kv.symptom_logs !== undefined) {
         kvs.push({k: 'symptom_logs', v: JSON.stringify(user.kv.symptom_logs),});
     }

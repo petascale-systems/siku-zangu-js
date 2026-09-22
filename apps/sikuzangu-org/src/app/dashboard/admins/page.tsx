@@ -1,233 +1,282 @@
 'use client';
 
+import { useEffect, useMemo, useRef, useState } from 'react';
+import {Pagination, Switch, WUIAdminForm, WUIDataTable, createDataTableColumns, useAdminsPage, useConfirm, useCurrentSessionAdmin, useToast} from '@siku-zangu/react';
+import { Badge, Button, Drawer, DrawerHeader, DrawerItems, Spinner } from 'flowbite-react';
+import { PencilSquareIcon, TrashIcon } from '@heroicons/react/24/outline';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { KeyboardEvent, useEffect, useState } from 'react';
-import {
-  Admin,
-  AdminsFetchParams,
-  apiErrorToZodError,
-  UserStatus,
-} from '@siku-zangu/core';
-import {
-  AdminForm,
-  Switch,
-  Table,
-  Tbody,
-  Td,
-  Tfoot,
-  Th,
-  Thead,
-  Tr,
-  useAdminsPage,
-} from '@siku-zangu/react';
-import {
-  MagnifyingGlassIcon,
-  PencilSquareIcon,
-  PlusIcon,
-  TrashIcon,
-  UserIcon,
-} from '@heroicons/react/24/outline';
-import { Input } from '@headlessui/react';
-import { Button, Drawer, DrawerHeader } from 'flowbite-react';
-import { ZodError } from 'zod';
+import {Admin, AdminsFetchParams, UserStatus} from '@siku-zangu/core';
+
+const columnHelper = createDataTableColumns<Admin>();
+
+const fullName = (admin: Admin) =>
+  `${admin?.kv?.first_name ?? ''} ${admin?.kv?.last_name ?? ''}`.trim();
 
 export default function AdminsPage() {
-  const _router = useRouter();
-  const _searchParams = useSearchParams();
-  const [_showModal, _setShowModal] = useState<boolean>();
-  const [_search, _setSearch] = useState('');
-  const [_admin, _setAdmin] = useState<Admin>();
-  const [_formError, _setFormError] = useState<ZodError>();
-  const [_adminsFetchParams, _setAdminsFetchParams] =
-    useState<AdminsFetchParams>({
-      page: parseInt(`${_searchParams.get('page')}`) || 1,
-      size: parseInt(`${_searchParams.get('size')}`) || 20,
-      q: _searchParams.get('q') || '',
-    });
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const toast = useToast();
+  const confirm = useConfirm();
+  const { admin: currentAdmin } = useCurrentSessionAdmin();
+
+  const [showDrawer, setShowDrawer] = useState(false);
+  const [editing, setEditing] = useState<Admin | undefined>();
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  // The hook's pending flag is page-wide, so it cannot say which row is being
+  // deleted. This keeps the spinner on the button that was clicked.
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  const [fetchParams, setFetchParams] = useState<AdminsFetchParams>({
+    page: parseInt(`${searchParams.get('page')}`) || 1,
+    size: parseInt(`${searchParams.get('size')}`) || 20,
+    q: searchParams.get('q') || '',
+  });
+
   const {
     adminsPage,
+    isFetchingAdminsPage,
     updateAdmin,
     createAdmin,
     deleteAdmin,
     isUpdatingAdmin,
     isCreatingAdmin,
-  } = useAdminsPage(_adminsFetchParams);
+    isDeletingAdmin,
+  } = useAdminsPage(fetchParams);
 
-  const _handlePageChange = async (page: number) => {
-    _updateSearchParams({ ..._adminsFetchParams, page });
-  };
+  useEffect(() => {
+    setFetchParams({
+      page: parseInt(`${searchParams.get('page')}`) || 1,
+      size: parseInt(`${searchParams.get('size')}`) || 20,
+      q: searchParams.get('q') || '',
+    });
+  }, [searchParams]);
 
-  const _handleStatusToggleClick = (userId: string, status: UserStatus) => {
-    updateAdmin(userId, { status: status } as Admin).catch(console.error);
-  };
-
-  const _handleQInputEnter = (q: KeyboardEvent<HTMLInputElement>) => {
-    if (q.key !== 'Enter') return;
-    _updateSearchParams({ ..._adminsFetchParams, page: 1, q: _search });
-  };
-
-  const _updateSearchParams = (params: { [key: string]: string | number }) => {
-    const queryParams = Object.entries(params)
-      .filter((e) => e[1])
-      .map((e) => `${e[0]}=${e[1]}`)
+  const goToPage = (page: number) => {
+    const next = { ...fetchParams, page };
+    const query = Object.entries(next)
+      .filter(([, v]) => v)
+      .map(([k, v]) => `${k}=${v}`)
       .join('&');
-    _router.push(`/dashboard/admins?${queryParams}`);
+    router.push(`/dashboard/admins?${query}`);
   };
 
-  const _handleAddAdminBtnClick = () => {
-    _setShowModal(true);
+  const closeDrawer = () => {
+    setShowDrawer(false);
+    setEditing(undefined);
+    setSubmitError(null);
   };
 
-  const _handleCloseModalBtnClick = () => {
-    _setAdmin(undefined);
-    _setShowModal(false);
-    _setFormError(undefined);
-  };
+  const handleStatusToggle = async (admin: Admin, nextActive: boolean) => {
+    const status: UserStatus = nextActive ? 'active' : 'inactive';
+    const label = fullName(admin) || 'this admin';
 
-  const _handleEditAdminBtnClick = (userId?: string) => {
-    if (!userId) return;
-
-    const item = adminsPage?.items?.find((i) => i.user_id === userId);
-    if (!item) return;
-
-    _setAdmin(item);
-    _setShowModal(true);
-  };
-
-  const _handleDeleteAdminBtnClick = (userId?: string) => {
-    if (!userId) return;
-
-    const admin = adminsPage?.items?.find((a) => a.user_id === userId);
-    if (!admin) return;
-
-    const confirmMag = `Are you sure you want to delete "${admin?.kv?.first_name} ${admin?.kv?.last_name}". This change cannot be undone.`;
-    if (confirm(confirmMag))
-      deleteAdmin(userId).catch((e) => {
-        if (e.message) alert(`Delete failed: ${e.message}`);
+    if (!nextActive) {
+      const ok = await confirm({
+        title: 'Deactivate admin?',
+        message: `${label} will immediately lose access to the admin portal.`,
+        confirmLabel: 'Deactivate',
+        tone: 'danger',
       });
+      if (!ok) return;
+    }
+
+    try {
+      await updateAdmin(admin.user_id as string, { status } as Admin);
+      toast.showToast(
+        nextActive ? `${label} activated.` : `${label} deactivated.`,
+        { tone: 'success' }
+      );
+    } catch (e: any) {
+      toast.showToast(e?.message ?? 'Could not update this admin.', {
+        tone: 'error',
+      });
+    }
   };
 
-  const _handleSubmitBtnClick = (admin: Admin) => {
-    if (_admin && _admin.user_id) {
-      updateAdmin(_admin.user_id, admin)
-        .then(_handleCloseModalBtnClick)
-        .catch((e) => _setFormError(apiErrorToZodError(e)));
+  const handleDelete = async (admin: Admin) => {
+    const label = fullName(admin) || admin?.kv?.email || 'this admin';
+
+    // Deleting yourself would lock you out of the portal mid-session.
+    if (admin.user_id && admin.user_id === currentAdmin?.user_id) {
+      toast.showToast('You cannot delete your own admin account.', {
+        tone: 'warning',
+      });
       return;
     }
 
-    createAdmin(admin)
-      .then(_handleCloseModalBtnClick)
-      .catch((e) => _setFormError(apiErrorToZodError(e)));
+    const ok = await confirm({
+      title: 'Delete admin?',
+      message: `${label} will lose access immediately. This cannot be undone.`,
+      confirmLabel: 'Delete permanently',
+      tone: 'danger',
+      requireTypedConfirmation: 'DELETE',
+    });
+    if (!ok) return;
+
+    setDeletingId(admin.user_id as string);
+    try {
+      await deleteAdmin(admin.user_id as string);
+      toast.showToast(`${label} deleted.`, { tone: 'success' });
+    } catch (e: any) {
+      toast.showToast(e?.message ?? 'Could not delete this admin.', {
+        tone: 'error',
+      });
+    } finally {
+      setDeletingId(null);
+    }
   };
 
-  useEffect(() => {
-    _setSearch(_searchParams.get('q') || '');
-    _setAdminsFetchParams({
-      page: parseInt(`${_searchParams.get('page')}`) || 1,
-      size: parseInt(`${_searchParams.get('size')}`) || 20,
-      q: _searchParams.get('q') || '',
-    });
-  }, [_searchParams]);
+  const handleSubmit = async (values: Admin) => {
+    setSubmitError(null);
+    try {
+      if (editing?.user_id) {
+        await updateAdmin(editing.user_id, values);
+        toast.showToast('Admin updated.', { tone: 'success' });
+      } else {
+        await createAdmin(values);
+        toast.showToast('Admin invited — they have been emailed a link.', {
+          tone: 'success',
+        });
+      }
+      closeDrawer();
+    } catch (e: any) {
+      // Kept in the drawer next to the fields rather than as a toast, so the
+      // user can correct and resubmit without losing what they typed.
+      setSubmitError(e?.message ?? 'Could not save this admin.');
+    }
+  };
+
+  // See users page: a ref keeps the column defs stable while guaranteeing the
+  // cells never call into a stale render's closures.
+  const handlers = useRef({ handleStatusToggle, handleDelete, currentAdmin, deletingId });
+  handlers.current = { handleStatusToggle, handleDelete, currentAdmin, deletingId };
+
+  const columns = useMemo(
+    () =>
+      columnHelper.columns([
+        columnHelper.accessor((row) => fullName(row) || '—', {
+          id: 'name',
+          header: 'Name',
+        }),
+        columnHelper.accessor((row) => row?.kv?.email ?? '—', {
+          id: 'email',
+          header: 'Email',
+        }),
+        columnHelper.accessor((row) => row?.role ?? 'member', {
+          id: 'role',
+          header: 'Role',
+          cell: ({ getValue }) => (
+            <Badge color={getValue() === 'admin' ? 'info' : 'gray'}>
+              {String(getValue())}
+            </Badge>
+          ),
+        }),
+        columnHelper.accessor((row) => row?.status ?? 'inactive', {
+          id: 'status',
+          header: 'Status',
+          cell: ({ row }) => (
+            <div className="flex items-center gap-2">
+              <Switch
+                checked={row.original?.status === 'active'}
+                onChange={(active: boolean) =>
+                  handlers.current.handleStatusToggle(row.original, active)
+                }
+              />
+              <span className="text-xs text-gray-500">
+                {row.original?.status === 'active' ? 'Active' : 'Inactive'}
+              </span>
+            </div>
+          ),
+        }),
+        columnHelper.display({
+          id: 'actions',
+          header: 'Actions',
+          cell: ({ row }) => (
+            <div className="flex gap-2">
+              <Button
+                size="xs"
+                color="light"
+                aria-label={`Edit ${fullName(row.original) || 'admin'}`}
+                onClick={() => {
+                  setEditing(row.original);
+                  setSubmitError(null);
+                  setShowDrawer(true);
+                }}
+              >
+                <PencilSquareIcon className="size-4" />
+              </Button>
+              <Button
+                size="xs"
+                color="light"
+                aria-label={`Delete ${fullName(row.original) || 'admin'}`}
+                disabled={!!handlers.current.deletingId}
+                onClick={() => handlers.current.handleDelete(row.original)}
+              >
+                {handlers.current.deletingId === row.original.user_id ? (
+                  <Spinner size="sm" />
+                ) : (
+                  <TrashIcon className="size-4 text-red-600" />
+                )}
+              </Button>
+            </div>
+          ),
+        }),
+      ]),
+    []
+  );
 
   return (
-    <>
-      <div className="w-full flex flex-col gap-6 p-5">
-        <div className="flex justify-between items-center">
-          <span className="text-xl font-bold">Admin Management</span>
-          <Button
-            color="secondary"
-            size="md"
-            className="flex items-center gap-2"
-            onClick={_handleAddAdminBtnClick}
-          >
-            <PlusIcon className="size-4" />
-            <span>Add admin</span>
-          </Button>
-        </div>
-        <div className="w-full bg-white rounded-lg border border-gray-200 divide-y divide-gray-200 shadow-xs">
-          <div className="flex justify-between items-center p-4">
-            <span className="font-medium text-lg text-gray-900">Admins</span>
-            <div className="flex rounded-lg items-center py-2 px-2 border border-gray-200 gap-2">
-              <MagnifyingGlassIcon className="size-4.5 text-gray-400 stroke-2" />
-              <Input
-                type="text"
-                placeholder="Search admins ..."
-                value={_search}
-                onChange={(e) => _setSearch(e.target.value)}
-                onKeyUp={_handleQInputEnter}
-                className="appearance-none focus:outline-none placeholder:text-gray-300 text-gray-500 md:w-72"
-              />
-            </div>
-          </div>
-          <Table>
-            <Thead>
-              <Th>Name</Th>
-              <Th>Email</Th>
-              <Th>Role</Th>
-              <Th>Actions</Th>
-            </Thead>
-
-            <Tbody>
-              {adminsPage?.items?.map((item, index) => (
-                <Tr key={index}>
-                  <Td className="font-medium text-gray-900 capitalize">
-                    {`${item?.kv?.first_name} ${item?.kv?.last_name}`}
-                  </Td>
-                  <Td>{item?.kv?.email || '-'}</Td>
-                  <Td>{item.role == 'admin' ? 'Admin' : 'Member'}</Td>
-                  <Td className="flex gap-4 items-center">
-                    <button
-                      onClick={() => _handleEditAdminBtnClick(item.user_id)}
-                    >
-                      <PencilSquareIcon className="size-5 text-blue-700 stroke-2" />
-                    </button>
-                    <button
-                      onClick={() => _handleDeleteAdminBtnClick(item.user_id)}
-                    >
-                      <TrashIcon className="size-5 text-red-700 stroke-2" />
-                    </button>
-                    <Switch
-                      checked={item?.status == 'active'}
-                      onChange={(active) =>
-                        _handleStatusToggleClick(
-                          item.user_id!,
-                          active ? 'active' : 'inactive'
-                        )
-                      }
-                    />
-                  </Td>
-                </Tr>
-              ))}
-            </Tbody>
-
-            <Tfoot
-              colSpan={4}
-              pageSize={_adminsFetchParams.size}
-              page={adminsPage?.page ?? 1}
-              totalPages={adminsPage?.totalPages ?? 0}
-              onChange={_handlePageChange}
-            />
-          </Table>
-        </div>
+    <div className="flex w-full flex-col gap-6 p-5">
+      <div className="flex items-center justify-between">
+        <span className="text-xl font-bold">Admin Management</span>
+        <Button
+          onClick={() => {
+            setEditing(undefined);
+            setSubmitError(null);
+            setShowDrawer(true);
+          }}
+        >
+          Add admin
+        </Button>
       </div>
 
-      <Drawer
-        open={_showModal}
-        onClose={_handleCloseModalBtnClick}
-        position="right"
-        className="w-full max-w-lg"
-      >
+      <div className="w-full rounded-lg border border-gray-200 bg-white p-4 shadow-xs">
+        <WUIDataTable
+          data={adminsPage?.items ?? []}
+          columns={columns}
+          isLoading={isFetchingAdminsPage}
+          searchPlaceholder="Search this page…"
+          emptyMessage="No admins match your search."
+          pageSize={fetchParams.size ?? 20}
+        />
+
+        {(adminsPage?.totalPages ?? 0) > 1 && (
+          <div className="mt-4 flex justify-end">
+            <Pagination
+              page={adminsPage?.page ?? 1}
+              pageSize={adminsPage?.size ?? 20}
+              totalPages={adminsPage?.totalPages ?? 1}
+              onChange={goToPage}
+            />
+          </div>
+        )}
+      </div>
+
+      <Drawer open={showDrawer} onClose={closeDrawer} position="right">
         <DrawerHeader
-          title={_admin ? 'Edit admin' : 'Add admin'}
-          titleIcon={() => <UserIcon className="size-6 stroke-2" />}
+          title={editing ? 'Edit admin' : 'Add admin'}
+          titleIcon={() => <></>}
         />
-        <AdminForm
-          admin={_admin}
-          isLoading={isCreatingAdmin || isUpdatingAdmin}
-          error={_formError}
-          onSubmit={_handleSubmitBtnClick}
-        />
+        <DrawerItems>
+          <WUIAdminForm
+            admin={editing}
+            isLoading={isCreatingAdmin || isUpdatingAdmin}
+            submitError={submitError}
+            onSubmit={handleSubmit}
+            onCancel={closeDrawer}
+          />
+        </DrawerItems>
       </Drawer>
-    </>
+    </div>
   );
 }

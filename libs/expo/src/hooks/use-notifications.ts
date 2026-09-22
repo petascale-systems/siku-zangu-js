@@ -2,11 +2,13 @@ import {useEffect, useRef, useState} from 'react';
 import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
 import {Platform} from 'react-native';
-import {postJSON} from '../../../react/src/post-json.function';
+import {postJSON} from '@siku-zangu/react-native';
 
 Notifications.setNotificationHandler({
     handleNotification: async () => ({
-        shouldShowAlert: true,
+        // SDK 54 split the old `shouldShowAlert` into banner and list.
+        shouldShowBanner: true,
+        shouldShowList: true,
         shouldPlaySound: true,
         shouldSetBadge: true,
     }),
@@ -16,8 +18,8 @@ export function useNotifications(userId?: string) {
     const [devicePushToken, setDevicePushToken] = useState<string>();
     const [notification, setNotification] = useState<Notifications.Notification>();
     const [notificationResponse, setNotificationResponse] = useState<Notifications.NotificationResponse>();
-    const notificationListener = useRef<Notifications.Subscription>();
-    const responseListener = useRef<Notifications.Subscription>();
+    const notificationListener = useRef<Notifications.Subscription | undefined>(undefined);
+    const responseListener = useRef<Notifications.Subscription | undefined>(undefined);
 
     useEffect(() => {
         if (!userId) {
@@ -93,7 +95,6 @@ async function registerForPushNotificationsAsync() {
         } catch (error) {
             console.error('[Notifications] getDevicePushTokenAsync error:', error);
         }
-    } else {
     }
 
     return token;

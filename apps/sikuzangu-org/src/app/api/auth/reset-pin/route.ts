@@ -1,10 +1,6 @@
 import { NextRequest } from 'next/server';
-import { APIError, handleAPIError } from '@siku-zangu/core';
-import {
-    selectOneUserByPhone,
-    selectOneUserByUserIdWithPin,
-    updateUserPin,
-} from '@siku-zangu/knex';
+import {APIError, handleAPIError} from '@siku-zangu/core';
+import {selectOneUserByPhone, selectOneUserByUserIdWithPin, updateUserPin} from '@siku-zangu/knex';
 import { consumeResetToken } from '../verify-otp/route';
 import bcrypt from 'bcryptjs';
 

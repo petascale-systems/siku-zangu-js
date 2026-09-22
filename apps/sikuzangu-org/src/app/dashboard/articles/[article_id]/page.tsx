@@ -10,15 +10,9 @@ import {
   TextInput,
   Textarea,
 } from 'flowbite-react';
-import {
-  ARTICLE_COVER_IMAGE_API_PATH,
-  Editor,
-  ImageInput,
-  ImageView,
-  useArticle,
-} from '@siku-zangu/react';
+import {ARTICLE_COVER_IMAGE_API_PATH, Editor, ImageInput, ImageView, useArticle} from '@siku-zangu/react';
 import { ChangeEvent, useEffect, useState } from 'react';
-import { Article, ArticleStatus, Language } from '@siku-zangu/core';
+import {Article, ArticleStatus, Language} from '@siku-zangu/core';
 import { useParams, useRouter } from 'next/navigation';
 import { CheckCircleIcon, Trash2 } from 'lucide-react';
 

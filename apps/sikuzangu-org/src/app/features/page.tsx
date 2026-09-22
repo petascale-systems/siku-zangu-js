@@ -7,7 +7,7 @@ import languageImage from '../../../public/images/language.png';
 import notificationImage from '../../../public/images/notifications.png';
 import africanImage from '../../../public/images/african.jpg';
 import logo from '../../../public/images/logo.png';
-import { WebsiteNav, WebsiteFooter } from '@siku-zangu/react';
+import {WebsiteNav, WebsiteFooter} from '@siku-zangu/react';
 
 export default function FeaturesPage() {
   return (

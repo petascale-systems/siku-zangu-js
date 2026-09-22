@@ -1,10 +1,10 @@
 'use client';
 
-import { apiErrorToZodError, Email, EMAIL_ZOD_SCHEMA } from '@siku-zangu/core';
+import {apiErrorToZodError, Email, EMAIL_ZOD_SCHEMA} from '@siku-zangu/core';
 import { FormEvent, useState } from 'react';
 import logoPNG from '../../../public/images/logo.png';
 import { ZodError } from 'zod';
-import { useUserPasswordChange, WebsiteNav } from '@siku-zangu/react';
+import {useUserPasswordChange, WebsiteNav} from '@siku-zangu/react';
 import { Button, Label, Spinner, TextInput } from 'flowbite-react';
 import Link from 'next/link';
 

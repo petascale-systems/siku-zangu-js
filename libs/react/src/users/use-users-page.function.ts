@@ -1,52 +1,71 @@
-"use client"
+'use client';
 
-import {Page, User, UsersFetchParams} from "@siku-zangu/core";
-import {useEffect, useState} from "react";
-import {getJSON} from "../get-json.function";
-import {deleteUserById as _deleteUser, updateUser as _updateUser, USERS_API_PATH} from './use-user.shared'
+import { useCallback, useState } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import {APIError, Page, User, UsersFetchParams} from '@siku-zangu/core';
+import { getJSON } from '../get-json.function';
+import { queryKeys } from '../query-keys.function';
+import {
+  deleteUserById as _deleteUser,
+  updateUser as _updateUser,
+  USERS_API_PATH,
+} from './use-user.shared';
 
-async function _fetchUsers(params?: UsersFetchParams) {
-    return getJSON<Page<User>>(USERS_API_PATH, params || {});
-}
+export const fetchUsersPage = (params?: UsersFetchParams) =>
+  getJSON<Page<User>>(USERS_API_PATH, params || {});
 
+const toMessage = (e: unknown, fallback: string) =>
+  (e as APIError)?.message || fallback;
+
+/**
+ * A page of users.
+ *
+ * Previously hand-rolled: it spliced mutation results into the local `items`
+ * array, which left `totalItems`/`totalPages` stale, and it refetched from a
+ * `useEffect` keyed on primitive params with no way to force a refresh. Query
+ * invalidates the list after a mutation instead, so the counts stay honest.
+ */
 export function useUsersPage(params?: UsersFetchParams) {
-    const [usersPage, setUsersPage] = useState<Page<User>>();
-    const [isFetchingUsersPage, setIsFetchingUsersPage] = useState(false);
-    const [isDeletingUser, setIsDeletingUser] = useState(false);
-    const [isUpdatingUser, setIsUpdatingUser] = useState(false);
+  const queryClient = useQueryClient();
+  const [error, setError] = useState<string | null>(null);
 
-    async function updateUser(userId: string, user: User) {
-        setIsUpdatingUser(true);
-        return _updateUser(userId, user)
-            .then((updated) => {
-                if (!updated) return
+  const query = useQuery({
+    queryKey: queryKeys.users.list(params),
+    queryFn: () => fetchUsersPage(params),
+    // Keep the previous page on screen while the next one loads rather than
+    // flashing an empty table.
+    placeholderData: (previous) => previous,
+  });
 
-                setUsersPage({
-                    ...usersPage,
-                    items: usersPage?.items?.map(u => u.user_id == userId ? updated : u)
-                })
+  const invalidate = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: queryKeys.users.all() });
+  }, [queryClient]);
 
-                return updated;
-            })
-            .finally(() => setIsUpdatingUser(false));
-    }
+  const updateMutation = useMutation({
+    mutationFn: ({ userId, user }: { userId: string; user: User }) =>
+      _updateUser(userId, user),
+    onMutate: () => setError(null),
+    onSuccess: invalidate,
+    onError: (e) => setError(toMessage(e, 'Failed to update user')),
+  });
 
-    async function deleteUser(userId: string) {
-        setIsDeletingUser(true)
-        return _deleteUser(userId)
-            .then(() => setUsersPage({
-                ...usersPage,
-                items: usersPage?.items?.filter(u => u.user_id != userId)
-            }))
-            .finally(() => setIsDeletingUser(false));
-    }
+  const deleteMutation = useMutation({
+    mutationFn: (userId: string) => _deleteUser(userId),
+    onMutate: () => setError(null),
+    onSuccess: invalidate,
+    onError: (e) => setError(toMessage(e, 'Failed to delete user')),
+  });
 
-    useEffect(() => {
-        setIsFetchingUsersPage(true);
-        _fetchUsers(params)
-            .then(page => setUsersPage(page))
-            .finally(() => setIsFetchingUsersPage(false));
-    }, [params?.q, params?.page, params?.size]);
-
-    return {usersPage, isFetchingUsersPage, isDeletingUser, isUpdatingUser, updateUser, deleteUser};
+  return {
+    usersPage: query.data,
+    isFetchingUsersPage: query.isLoading,
+    isRefetchingUsersPage: query.isFetching && !query.isLoading,
+    isUpdatingUser: updateMutation.isPending,
+    isDeletingUser: deleteMutation.isPending,
+    error: error ?? (query.error ? toMessage(query.error, 'Failed to load users') : null),
+    updateUser: (userId: string, user: User) =>
+      updateMutation.mutateAsync({ userId, user }),
+    deleteUser: (userId: string) => deleteMutation.mutateAsync(userId),
+    refetchUsersPage: () => query.refetch(),
+  };
 }

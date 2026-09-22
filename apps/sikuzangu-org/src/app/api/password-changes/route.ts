@@ -1,14 +1,7 @@
 import { NextRequest } from 'next/server';
-import {
-  EMAIL_ZOD_SCHEMA,
-  handleAPIError,
-  zodErrorToApiError,
-} from '@siku-zangu/core';
-import {
-  insertOneUserPasswordChange,
-  selectUserIdByEmail,
-} from '@siku-zangu/knex';
-import { sendAdminPasswordResetLink } from '@siku-zangu/brevo';
+import {EMAIL_ZOD_SCHEMA, handleAPIError, zodErrorToApiError} from '@siku-zangu/core';
+import {insertOneUserPasswordChange, selectUserIdByEmail} from '@siku-zangu/knex';
+import {sendAdminPasswordResetLink} from '@siku-zangu/brevo';
 
 export async function POST(req: NextRequest) {
   return handleAPIError(async () => {

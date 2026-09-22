@@ -1,122 +1,203 @@
 'use client';
 
-import { KeyboardEvent, useEffect, useState } from 'react';
-import {
-  Switch,
-  Table,
-  Tbody,
-  Td,
-  Tfoot,
-  Th,
-  Thead,
-  Tr,
-  useUsersPage,
-} from '@siku-zangu/react';
-import { Input } from '@headlessui/react';
-import { MagnifyingGlassIcon } from '@heroicons/react/24/outline';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import {Pagination, Switch, WUIDataTable, createDataTableColumns, useConfirm, useToast, useUsersPage} from '@siku-zangu/react';
+import { Button, Spinner } from 'flowbite-react';
+import { TrashIcon } from '@heroicons/react/24/outline';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { User, UsersFetchParams, UserStatus } from '@siku-zangu/core';
+import {User, UsersFetchParams, UserStatus} from '@siku-zangu/core';
+
+const columnHelper = createDataTableColumns<User>();
+
+const fullName = (user: User) =>
+  `${user?.kv?.first_name ?? ''} ${user?.kv?.last_name ?? ''}`.trim();
 
 export default function UsersPage() {
-  const _router = useRouter();
-  const _searchParams = useSearchParams();
-  const [_search, _setSearch] = useState('');
-  const [_usersFetchParams, _setUsersFetchParams] = useState<UsersFetchParams>({
-    page: parseInt(`${_searchParams.get('page')}`) || 1,
-    size: parseInt(`${_searchParams.get('size')}`) || 20,
-    q: _searchParams.get('q') || '',
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const toast = useToast();
+  const confirm = useConfirm();
+
+  const [fetchParams, setFetchParams] = useState<UsersFetchParams>({
+    page: parseInt(`${searchParams.get('page')}`) || 1,
+    size: parseInt(`${searchParams.get('size')}`) || 20,
+    q: searchParams.get('q') || '',
   });
-  const { usersPage, updateUser } = useUsersPage(_usersFetchParams);
 
-  const _handlePageChange = async (page: number) => {
-    _updateSearchParams({ ..._usersFetchParams, page });
-  };
+  const {
+    usersPage,
+    isFetchingUsersPage,
+    updateUser,
+    deleteUser,
+  } = useUsersPage(fetchParams);
 
-  const _handleStatusToggleClick = (userId: string, status: UserStatus) => {
-    updateUser(userId, { kv: { status: status } } as User).catch(console.error);
-  };
-
-  const _handleQInputEnter = (q: KeyboardEvent<HTMLInputElement>) => {
-    if (q.key !== 'Enter') return;
-    _updateSearchParams({ ..._usersFetchParams, page: 1, q: _search });
-  };
-
-  const _updateSearchParams = (params: { [key: string]: string | number }) => {
-    const queryParams = Object.entries(params)
-      .filter((e) => e[1])
-      .map((e) => `${e[0]}=${e[1]}`)
-      .join('&');
-    _router.push(`/dashboard/users?${queryParams}`);
-  };
+  // The hook's pending flag is page-wide, so it cannot say which row is being
+  // deleted. This does, which keeps the spinner on the button that was clicked.
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   useEffect(() => {
-    _setSearch(_searchParams.get('q') || '');
-    _setUsersFetchParams({
-      page: parseInt(`${_searchParams.get('page')}`) || 1,
-      size: parseInt(`${_searchParams.get('size')}`) || 20,
-      q: _searchParams.get('q') || '',
+    setFetchParams({
+      page: parseInt(`${searchParams.get('page')}`) || 1,
+      size: parseInt(`${searchParams.get('size')}`) || 20,
+      q: searchParams.get('q') || '',
     });
-  }, [_searchParams]);
+  }, [searchParams]);
+
+  const goToPage = (page: number) => {
+    const next = { ...fetchParams, page };
+    const query = Object.entries(next)
+      .filter(([, v]) => v)
+      .map(([k, v]) => `${k}=${v}`)
+      .join('&');
+    router.push(`/dashboard/users?${query}`);
+  };
+
+  const handleStatusToggle = async (user: User, nextActive: boolean) => {
+    const status: UserStatus = nextActive ? 'active' : 'inactive';
+    const label = fullName(user) || 'this user';
+
+    // Deactivating cuts off access, so make it deliberate. Re-activating is
+    // harmless and stays a single click.
+    if (!nextActive) {
+      const ok = await confirm({
+        title: 'Deactivate user?',
+        message: `${label} will no longer be able to sign in. You can re-activate them at any time.`,
+        confirmLabel: 'Deactivate',
+        tone: 'danger',
+      });
+      if (!ok) return;
+    }
+
+    try {
+      await updateUser(user.user_id as string, { kv: { status } } as User);
+      toast.showToast(
+        nextActive ? `${label} activated.` : `${label} deactivated.`,
+        { tone: 'success' }
+      );
+    } catch (e: any) {
+      // Previously this went to console.error and the toggle silently snapped
+      // back with no explanation.
+      toast.showToast(e?.message ?? 'Could not update this user.', {
+        tone: 'error',
+      });
+    }
+  };
+
+  const handleDelete = async (user: User) => {
+    const label = fullName(user) || user?.kv?.email || 'this user';
+    const ok = await confirm({
+      title: 'Delete user?',
+      message: `This permanently deletes ${label} and all of their cycle data. This cannot be undone.`,
+      confirmLabel: 'Delete permanently',
+      tone: 'danger',
+      requireTypedConfirmation: 'DELETE',
+    });
+    if (!ok) return;
+
+    // Marks the row so its own button shows the spinner, while every other
+    // delete is blocked until this one settles.
+    setDeletingId(user.user_id as string);
+    try {
+      await deleteUser(user.user_id as string);
+      toast.showToast(`${label} deleted.`, { tone: 'success' });
+    } catch (e: any) {
+      toast.showToast(e?.message ?? 'Could not delete this user.', {
+        tone: 'error',
+      });
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
+  // Cells reach handlers through a ref, so the column defs can stay referentially
+  // stable (TanStack v9 reprocesses when `columns` changes identity) without the
+  // cells ever closing over a stale render's state.
+  const handlers = useRef({ handleStatusToggle, handleDelete, deletingId });
+  handlers.current = { handleStatusToggle, handleDelete, deletingId };
+
+  const columns = useMemo(
+    () =>
+      columnHelper.columns([
+        columnHelper.accessor((row) => fullName(row) || '—', {
+          id: 'name',
+          header: 'Name',
+        }),
+        columnHelper.accessor((row) => row?.kv?.email ?? '—', {
+          id: 'email',
+          header: 'Email',
+        }),
+        columnHelper.accessor((row) => row?.created_at ?? '', {
+          id: 'created_at',
+          header: 'Registered',
+          cell: ({ getValue }) => {
+            const value = getValue() as string;
+            return value ? new Date(value).toLocaleDateString() : '—';
+          },
+        }),
+        columnHelper.accessor((row) => row?.kv?.status ?? 'inactive', {
+          id: 'status',
+          header: 'Status',
+          cell: ({ row }) => (
+            <div className="flex items-center gap-2">
+              <Switch
+                checked={row.original?.kv?.status === 'active'}
+                onChange={(active: boolean) =>
+                  handlers.current.handleStatusToggle(row.original, active)
+                }
+              />
+              <span className="text-xs text-gray-500">
+                {row.original?.kv?.status === 'active' ? 'Active' : 'Inactive'}
+              </span>
+            </div>
+          ),
+        }),
+        columnHelper.display({
+          id: 'actions',
+          header: 'Actions',
+          cell: ({ row }) => (
+            <Button
+              size="xs"
+              color="light"
+              aria-label={`Delete ${fullName(row.original) || 'user'}`}
+              disabled={!!handlers.current.deletingId}
+              onClick={() => handlers.current.handleDelete(row.original)}
+            >
+              {handlers.current.deletingId === row.original.user_id ? (
+                <Spinner size="sm" />
+              ) : (
+                <TrashIcon className="size-4 text-red-600" />
+              )}
+            </Button>
+          ),
+        }),
+      ]),
+    []
+  );
 
   return (
-    <div className="w-full flex flex-col gap-6 p-5">
+    <div className="flex w-full flex-col gap-6 p-5">
       <span className="text-xl font-bold">User Management</span>
-      <div className="w-full bg-white rounded-lg border border-gray-200 divide-y divide-gray-200 shadow-xs">
-        <div className="flex justify-between items-center p-4">
-          <span className="font-medium text-lg text-gray-900">Users</span>
-          <div className="flex rounded-lg items-center py-2 px-2 border border-gray-200 gap-2">
-            <MagnifyingGlassIcon className="size-4.5 text-gray-400 stroke-2" />
-            <Input
-              type="text"
-              placeholder="Search users ..."
-              value={_search}
-              onChange={(e) => _setSearch(e.target.value)}
-              onKeyUp={_handleQInputEnter}
-              className="appearance-none focus:outline-none placeholder:text-gray-300 text-gray-500 md:w-72"
+
+      <div className="w-full rounded-lg border border-gray-200 bg-white p-4 shadow-xs">
+        <WUIDataTable
+          data={usersPage?.items ?? []}
+          columns={columns}
+          isLoading={isFetchingUsersPage}
+          searchPlaceholder="Search this page…"
+          emptyMessage="No users match your search."
+          pageSize={fetchParams.size ?? 20}
+        />
+
+        {(usersPage?.totalPages ?? 0) > 1 && (
+          <div className="mt-4 flex justify-end">
+            <Pagination
+              page={usersPage?.page ?? 1}
+              pageSize={usersPage?.size ?? 20}
+              totalPages={usersPage?.totalPages ?? 1}
+              onChange={goToPage}
             />
           </div>
-        </div>
-        <Table>
-          <Thead>
-            <Th>Name</Th>
-            <Th>Email</Th>
-            <Th>Registration Date</Th>
-            <Th>Status</Th>
-          </Thead>
-
-          <Tbody>
-            {usersPage?.items?.map((item, index) => (
-              <Tr key={index}>
-                <Td className="font-medium text-gray-900 capitalize">{`${item?.kv?.first_name} ${item?.kv?.last_name}`}</Td>
-                <Td>{item?.kv?.email || '-'}</Td>
-                <Td>
-                  {item?.created_at
-                    ? new Date(item?.created_at).toLocaleString()
-                    : '-'}
-                </Td>
-                <Td>
-                  <Switch
-                    checked={item?.kv?.status == 'active'}
-                    onChange={(active) =>
-                      _handleStatusToggleClick(
-                        item.user_id!,
-                        active ? 'active' : 'inactive'
-                      )
-                    }
-                  />
-                </Td>
-              </Tr>
-            ))}
-          </Tbody>
-
-          <Tfoot
-            colSpan={4}
-            pageSize={_usersFetchParams.size}
-            page={usersPage?.page ?? 1}
-            totalPages={usersPage?.totalPages ?? 0}
-            onChange={_handlePageChange}
-          />
-        </Table>
+        )}
       </div>
     </div>
   );

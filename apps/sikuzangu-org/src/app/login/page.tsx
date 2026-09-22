@@ -1,13 +1,13 @@
 'use client';
 
-import { EMAIL_AND_PASSWORD_SCHEMA, EmailAndPassword } from '@siku-zangu/core';
+import {EMAIL_AND_PASSWORD_SCHEMA, EmailAndPassword} from '@siku-zangu/core';
 import { Field, Input, Label } from '@headlessui/react';
 import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
 import { FormEvent, useState } from 'react';
 import logoPNG from '../../../public/images/logo.png';
 import Image from 'next/image';
 import { ZodError } from 'zod';
-import { useCurrentSessionAdmin, WebsiteNav } from '@siku-zangu/react';
+import {useCurrentSessionAdmin, WebsiteNav} from '@siku-zangu/react';
 
 export default function LoginPage() {
   const [_isPassword, _setIsPassword] = useState(true);
@@ -106,7 +106,11 @@ export default function LoginPage() {
 
             <button
               type="submit"
-              className="bg-primary text-white rounded-full w-full text-center py-2.5 text-sm font-medium"
+              // The label changed while in flight but the button stayed live,
+              // so a second click submitted the form again.
+              disabled={isLoggingIn}
+              aria-busy={isLoggingIn}
+              className="bg-primary text-white rounded-full w-full text-center py-2.5 text-sm font-medium disabled:opacity-60"
             >
               {isLoggingIn ? 'Logging in...' : 'Login'}
             </button>

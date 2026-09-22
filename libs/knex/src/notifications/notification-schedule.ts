@@ -1,5 +1,5 @@
-import { selectUsersPage, selectArticlesPage } from '@siku-zangu/knex';
-import { sendPushNotification } from '@siku-zangu/knex';
+import {selectUsersPage, selectArticlesPage} from '@siku-zangu/knex';
+import {sendPushNotification} from '@siku-zangu/knex';
 
 function isDisabled(value: any): boolean {
     return value === false || value === 'false';

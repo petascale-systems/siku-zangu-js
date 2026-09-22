@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo} from 'react';
 import { Card, Spinner } from 'flowbite-react';
 import {
   UsersIcon,
@@ -20,8 +20,8 @@ import {
   Legend,
   ResponsiveContainer,
 } from 'recharts';
-import { useUsersPage } from '@siku-zangu/react';
-import { useArticlesPage } from '@siku-zangu/react';
+import {useSymptomAnalytics, useUsersPage} from '@siku-zangu/react';
+import {useArticlesPage} from '@siku-zangu/react';
 
 interface DashboardStats {
   totalUsers: number;
@@ -54,21 +54,44 @@ interface RecentActivity {
 
 interface SymptomStat {
   symptom: string;
+  /** How many times it was logged. */
   count: number;
   percentage: number;
+  /** How many distinct people logged it — a different question from `count`. */
+  users: number;
 }
 
 export default function DashboardPage() {
   const [userFetchParams] = useState({ page: 1, size: 500 });
   const [articleFetchParams] = useState({ page: 1, size: 100 });
   const { usersPage, isFetchingUsersPage } = useUsersPage(userFetchParams);
+  // Counted by the database across every user. This used to be a loop over the
+  // first 500 users that also added `selected_symptoms` — a preference, one per
+  // user — into the same total as the logged events.
+  const { symptomCounts } = useSymptomAnalytics();
   const { articlesPage, isFetchingArticlesPage } =
     useArticlesPage(articleFetchParams);
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [userActivity, setUserActivity] = useState<ActivityData[]>([]);
   const [symptomData, setSymptomData] = useState<SymptomData[]>([]);
   const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
-  const [topSymptoms, setTopSymptoms] = useState<SymptomStat[]>([]);
+  const topSymptoms: SymptomStat[] = useMemo(() => {
+    const totalOccurrences = symptomCounts.reduce(
+      (sum, row) => sum + row.occurrences,
+      0
+    );
+    return symptomCounts.slice(0, 5).map((row) => ({
+      symptom: row.value
+        .replace(/_/g, ' ')
+        .replace(/\b\w/g, (l) => l.toUpperCase()),
+      count: row.occurrences,
+      // Share of occurrences, not of a total that mixed occurrences with the
+      // number of users who track each symptom.
+      percentage:
+        totalOccurrences > 0 ? (row.occurrences / totalOccurrences) * 100 : 0,
+      users: row.users,
+    }));
+  }, [symptomCounts]);
   const [timeRange, setTimeRange] = useState('7days');
 
   useEffect(() => {
@@ -264,80 +287,6 @@ export default function DashboardPage() {
 
       setRecentActivity(activities.slice(0, 5));
 
-      const symptomCounts: { [key: string]: number } = {};
-      let totalSymptomInstances = 0;
-
-      usersPage.items.forEach((user, userIndex) => {
-        if (userIndex === 0) {
-        }
-        if (user.kv?.selected_symptoms) {
-          try {
-            let selectedSymptoms = user.kv.selected_symptoms;
-            if (typeof selectedSymptoms === 'string') {
-              selectedSymptoms = JSON.parse(selectedSymptoms);
-            }
-
-            if (
-              Array.isArray(selectedSymptoms) &&
-              selectedSymptoms.length > 0
-            ) {
-              selectedSymptoms.forEach((symptom: string) => {
-                if (symptom && typeof symptom === 'string') {
-                  symptomCounts[symptom] = (symptomCounts[symptom] || 0) + 1;
-                  totalSymptomInstances++;
-                }
-              });
-            }
-          } catch (e) {
-            console.error(
-              'Error parsing selected_symptoms:',
-              e,
-              user.kv?.selected_symptoms
-            );
-          }
-        }
-        if (user.kv?.symptom_logs) {
-          try {
-            let symptomLogs = user.kv.symptom_logs;
-
-            if (typeof symptomLogs === 'string') {
-              symptomLogs = JSON.parse(symptomLogs);
-            }
-            if (Array.isArray(symptomLogs) && symptomLogs.length > 0) {
-              symptomLogs.forEach((log: any) => {
-                if (log && log.symptom && typeof log.symptom === 'string') {
-                  symptomCounts[log.symptom] =
-                    (symptomCounts[log.symptom] || 0) + 1;
-                  totalSymptomInstances++;
-                }
-              });
-            }
-          } catch (e) {
-            console.error(
-              'Error parsing symptom_logs:',
-              e,
-              user.kv?.symptom_logs
-            );
-          }
-        }
-      });
-
-      // Convert to array and sort by count
-      const sortedSymptoms = Object.entries(symptomCounts)
-        .map(([symptom, count]) => ({
-          symptom: symptom
-            .replace(/_/g, ' ')
-            .replace(/\b\w/g, (l) => l.toUpperCase()),
-          count,
-          percentage:
-            totalSymptomInstances > 0
-              ? (count / totalSymptomInstances) * 100
-              : 0,
-        }))
-        .sort((a, b) => b.count - a.count)
-        .slice(0, 5);
-
-      setTopSymptoms(sortedSymptoms);
     }
   }, [usersPage, articlesPage]);
 

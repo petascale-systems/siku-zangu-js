@@ -1,15 +1,14 @@
 import { NextRequest } from 'next/server';
-import { APIError, handleAPIError } from '@siku-zangu/core';
-import {
-  selectOneArticleCoverImage,
-  updateOneArticleCoverImage,
-} from '@siku-zangu/knex';
+import {APIError, handleAPIError} from '@siku-zangu/core';
+import {selectOneArticleCoverImage, updateOneArticleCoverImage} from '@siku-zangu/knex';
+import { requireAdmin } from '../../../require-auth.function';
 
 export async function PUT(
   req: NextRequest,
   { params }: { params: Promise<{ article_id: string }> }
 ) {
   return handleAPIError(async () => {
+    await requireAdmin();
     const { article_id } = await params;
     const formData = await req.formData();
     if (!formData.has('cover_image')) {

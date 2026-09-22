@@ -1,9 +1,6 @@
 import { jwtVerify } from 'jose';
-
-const _sessionSecretKey = new TextEncoder().encode(
-  process.env.S_JWT_SIGNING_KEY || 'IcAchOsEVerSewAChMarKoHI'
-);
+import { getSigningKeyBytes } from '../../require-auth.function';
 
 export function verifyJWT(ausCookie: string) {
-  return jwtVerify(ausCookie, _sessionSecretKey, { algorithms: ['HS256'] });
+  return jwtVerify(ausCookie, getSigningKeyBytes(), { algorithms: ['HS256'] });
 }

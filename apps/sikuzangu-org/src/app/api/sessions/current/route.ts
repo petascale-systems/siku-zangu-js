@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 import { cookies } from 'next/headers';
-import { APIError, handleAPIError } from '@siku-zangu/core';
-import { selectOneAdminByUserId } from '@siku-zangu/knex';
+import {APIError, handleAPIError} from '@siku-zangu/core';
+import {selectOneAdminByUserId} from '@siku-zangu/knex';
 import { verifyJWT } from './verify-jwt.function';
 
 export async function GET(req: NextRequest) {

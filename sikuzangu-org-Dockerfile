@@ -4,11 +4,14 @@ WORKDIR /var/lib/sikuzangu-org
 COPY dist/apps/sikuzangu-org/.next/standalone .
 COPY dist/apps/sikuzangu-org/public ./dist/apps/sikuzangu-org/public
 COPY dist/apps/sikuzangu-org/.next/static ./dist/apps/sikuzangu-org/.next/static
+# Carries both the declarative schema (hcl/) and the data migrations (sql/),
+# which the entrypoint applies in that order.
 COPY atlasgo ./atlasgo
 COPY sikuzangu-org-docker-entrypoint.sh /usr/bin/
 
 # RUN npm install
-RUN apk add --no-cache curl
+# mysql-client runs the data migrations; curl installs the atlas CLI below.
+RUN apk add --no-cache curl mysql-client
 RUN curl -sSf https://atlasgo.sh | sh
 RUN chmod 550 /usr/bin/sikuzangu-org-docker-entrypoint.sh
 

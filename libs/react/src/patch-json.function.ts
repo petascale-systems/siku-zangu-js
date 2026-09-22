@@ -1,4 +1,5 @@
 import {FETCH_CONFIG} from './create-fetch-config.function';
+import {authHeaders} from './auth-token.function';
 import {APIError} from "@siku-zangu/core";
 
 export async function patchJSON<T, U>(
@@ -11,6 +12,7 @@ export async function patchJSON<T, U>(
             credentials: 'include',
             method: 'PATCH',
             headers: {
+                ...authHeaders(),
                 ...headers,
                 'Content-Type': 'application/json',
                 'Accept': 'application/json'

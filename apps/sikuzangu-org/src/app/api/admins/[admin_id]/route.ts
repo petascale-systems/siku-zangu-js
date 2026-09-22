@@ -1,16 +1,14 @@
 import { NextRequest } from 'next/server';
-import { Admin, handleAPIError } from '@siku-zangu/core';
-import {
-  deleteOneAdminByUserId,
-  selectOneAdminByUserId,
-  updateOneAdmin,
-} from '@siku-zangu/knex';
+import {Admin, handleAPIError} from '@siku-zangu/core';
+import {deleteOneAdminByUserId, selectOneAdminByUserId, updateOneAdmin} from '@siku-zangu/knex';
+import { requireAdmin } from '../../require-auth.function';
 
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ admin_id: string }> }
 ) {
   return handleAPIError(async () => {
+    await requireAdmin();
     const { admin_id } = await params;
     const admin = await selectOneAdminByUserId(admin_id);
     return Response.json(admin);
@@ -22,6 +20,7 @@ export async function PATCH(
   { params }: { params: Promise<{ admin_id: string }> }
 ) {
   return handleAPIError(async () => {
+    await requireAdmin();
     const { admin_id } = await params;
     const body = (await req.json()) as Admin;
     const admin = await updateOneAdmin(admin_id, body);
@@ -34,6 +33,7 @@ export async function DELETE(
   { params }: { params: Promise<{ admin_id: string }> }
 ) {
   return handleAPIError(async () => {
+    await requireAdmin();
     const { admin_id } = await params;
     return deleteOneAdminByUserId(admin_id);
   });

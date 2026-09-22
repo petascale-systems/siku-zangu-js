@@ -2,8 +2,8 @@
 
 import { Button, Spinner, TextInput } from 'flowbite-react';
 import { PlusIcon } from '@heroicons/react/24/outline';
-import { ArticleCard, Pagination, useArticlesPage } from '@siku-zangu/react';
-import { Article, ArticlesFetchParams, ArticleStatus } from '@siku-zangu/core';
+import {ArticleCard, Pagination, useArticlesPage} from '@siku-zangu/react';
+import {Article, ArticlesFetchParams, ArticleStatus} from '@siku-zangu/core';
 import { KeyboardEvent, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 

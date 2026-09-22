@@ -1,11 +1,10 @@
 'use client';
 
 import React, { Suspense } from 'react';
-import { NavLink, useCurrentSessionAdmin } from '@siku-zangu/react';
+import {NavLink, useCurrentSessionAdmin, WUIConfirmDialog, WUIToast} from '@siku-zangu/react';
 import {
   ArrowRightStartOnRectangleIcon,
   ArrowTrendingUpIcon,
-  BellIcon,
   ChartBarIcon,
   DocumentTextIcon,
   HomeIcon,
@@ -18,6 +17,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const { admin, logout } = useCurrentSessionAdmin();
 
   return (
+    // Toasts and confirmations are dashboard-wide so any page can reach them.
+    <WUIToast.Provider>
+    <WUIConfirmDialog.Provider>
     <div className="bg-inherit h-full flex divide-x divide-gray-200">
       <nav className="min-w-64 h-full flex flex-col divide-y divide-gray-200">
         <div className="h-15 w-full px-4 flex justify-start items-center">
@@ -49,11 +51,6 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             icon={<DocumentTextIcon className="size-4.5 stroke-2" />}
           />
           <NavLink
-            href="/dashboard/notifications"
-            text="Notifications"
-            icon={<BellIcon className="size-5 stroke-2" />}
-          />
-          <NavLink
             href="/dashboard/trends"
             text="Trends"
             icon={<ArrowTrendingUpIcon className="size-4.5 stroke-2" />}
@@ -82,5 +79,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         </div>
       </main>
     </div>
+    </WUIConfirmDialog.Provider>
+    </WUIToast.Provider>
   );
 }

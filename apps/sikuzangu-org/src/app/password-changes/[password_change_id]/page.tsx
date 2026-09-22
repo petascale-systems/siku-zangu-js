@@ -1,16 +1,12 @@
 'use client';
 
-import {
-  apiErrorToZodError,
-  Password,
-  PASSWORD_ZOD_SCHEMA,
-} from '@siku-zangu/core';
+import {apiErrorToZodError, Password, PASSWORD_ZOD_SCHEMA} from '@siku-zangu/core';
 import { Field, Input, Label } from '@headlessui/react';
 import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
 import { FormEvent, useState } from 'react';
 import logoPNG from '../../../../public/images/logo.png';
 import { ZodError } from 'zod';
-import { useUserPasswordChange, WebsiteNav } from '@siku-zangu/react';
+import {useUserPasswordChange, WebsiteNav} from '@siku-zangu/react';
 import { useParams } from 'next/navigation';
 
 export default function PasswordChangeByLinkPage() {
@@ -143,10 +139,13 @@ export default function PasswordChangeByLinkPage() {
 
             <button
               disabled={isFetchingPasswordChange || isChangingPassword}
+              aria-busy={isChangingPassword}
               type="submit"
-              className="bg-primary text-white rounded-full w-full text-center py-2.5 text-sm font-medium"
+              className="bg-primary text-white rounded-full w-full text-center py-2.5 text-sm font-medium disabled:opacity-60"
             >
-              {'Submit'}
+              {/* It was disabled but still read "Submit", so a slow request
+                  looked like a dead button. */}
+              {isChangingPassword ? 'Saving…' : 'Submit'}
             </button>
           </form>
         </div>

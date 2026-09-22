@@ -18,7 +18,7 @@ import cycleLengthImage from '../../../public/images/user-manual/cycle lenght.jp
 import symptomsImage from '../../../public/images/user-manual/symptoms.jpeg';
 import medicationImage from '../../../public/images/user-manual/med.jpeg';
 import logo from '../../../public/images/logo.png';
-import { WebsiteNav, WebsiteFooter } from '@siku-zangu/react';
+import {WebsiteNav, WebsiteFooter} from '@siku-zangu/react';
 
 export default function UserManualPage() {
   return (
@@ -454,7 +454,7 @@ export default function UserManualPage() {
                       2.
                     </span>
                     <span>
-                      Choose from 3 to 7+ days (most common is 4-5 days)
+                      Choose from 1 to 15 days (most common is 4-5 days)
                     </span>
                   </li>
                   <li className="flex gap-3">
@@ -509,7 +509,7 @@ export default function UserManualPage() {
                     <span className="font-semibold text-primary flex-shrink-0">
                       3.
                     </span>
-                    <span>Select from 26-30+ days (28 is average)</span>
+                    <span>Select from 21-35 days (28 is average)</span>
                   </li>
                   <li className="flex gap-3">
                     <span className="font-semibold text-primary flex-shrink-0">

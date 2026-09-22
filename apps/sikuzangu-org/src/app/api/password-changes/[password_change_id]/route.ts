@@ -1,14 +1,6 @@
 import { NextRequest } from 'next/server';
-import {
-  deleteOneUserPasswordChange,
-  selectOneUserPasswordChange,
-  updateOneUser,
-} from '@siku-zangu/knex';
-import {
-  handleAPIError,
-  PASSWORD_ZOD_SCHEMA,
-  zodErrorToApiError,
-} from '@siku-zangu/core';
+import {deleteOneUserPasswordChange, selectOneUserPasswordChange, updateOneUser} from '@siku-zangu/knex';
+import {handleAPIError, PASSWORD_ZOD_SCHEMA, zodErrorToApiError} from '@siku-zangu/core';
 
 export async function GET(
   req: NextRequest,

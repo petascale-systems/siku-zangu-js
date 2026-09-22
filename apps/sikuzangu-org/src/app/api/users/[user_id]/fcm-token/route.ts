@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
-import { handleAPIError } from '@siku-zangu/core';
-import { updateOneUser } from '@siku-zangu/knex';
+import {handleAPIError} from '@siku-zangu/core';
+import {updateOneUser} from '@siku-zangu/knex';
+import { requireSelfOrAdmin } from '../../../require-auth.function';
 
 export async function POST(
     req: NextRequest,
@@ -8,6 +9,7 @@ export async function POST(
 ) {
     return handleAPIError(async () => {
         const { user_id } = await params;
+    await requireSelfOrAdmin(req, user_id);
         const body = await req.json();
         const { fcm_token } = body;
 
@@ -34,6 +36,7 @@ export async function DELETE(
 ) {
     return handleAPIError(async () => {
         const { user_id } = await params;
+    await requireSelfOrAdmin(req, user_id);
 
         // Remove FCM token
         await updateOneUser(user_id, {
