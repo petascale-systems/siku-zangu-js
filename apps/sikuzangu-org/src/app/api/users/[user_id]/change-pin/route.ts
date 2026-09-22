@@ -1,8 +1,9 @@
 import { NextRequest } from 'next/server';
-import { APIError } from '@siku-zangu/core';
-import { selectOneUserByUserIdWithPin, updateUserPin } from '@siku-zangu/knex';
-import { handleAPIError } from '@siku-zangu/core';
+import {APIError} from '@siku-zangu/core';
+import {selectOneUserByUserIdWithPin, updateUserPin} from '@siku-zangu/knex';
+import {handleAPIError} from '@siku-zangu/core';
 import bcrypt from 'bcryptjs';
+import { requireSelfOrAdmin } from '../../../require-auth.function';
 
 const WEAK_PINS = [
   '0000',
@@ -27,6 +28,7 @@ export async function PATCH(
 ) {
   return handleAPIError(async () => {
     const { user_id } = await params;
+    await requireSelfOrAdmin(req, user_id);
     const { currentPin, newPin } = await req.json();
     if (!currentPin || !newPin) {
       throw {

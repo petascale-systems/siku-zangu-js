@@ -1,4 +1,5 @@
 import {FETCH_CONFIG} from './create-fetch-config.function';
+import {authHeaders} from './auth-token.function';
 import {APIError} from "@siku-zangu/core";
 
 export async function deleteJSON<U = void>(
@@ -10,6 +11,7 @@ export async function deleteJSON<U = void>(
             credentials: 'include',
             method: 'DELETE',
             headers: {
+                ...authHeaders(),
                 ...headers,
                 Accept: 'application/json',
             },

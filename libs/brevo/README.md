@@ -1,11 +1,20 @@
 # brevo
 
-This library was generated with [Nx](https://nx.dev).
+`@siku-zangu/brevo`: transactional email through [Brevo](https://www.brevo.com). Server-only.
 
-## Building
+- `sendAdminInvite`: invites a new dashboard admin
+- `sendAdminPasswordResetLink`: sends an admin password reset link
+- `BREVO_TX_EMAIL_API` and `BREVO_CONFIG`: the client and its config
 
-Run `nx build brevo` to build the library.
+## Environment
 
-## Running unit tests
+| Variable | Default |
+| --- | --- |
+| `S_BREVO_API_KEY` | none (required) |
+| `S_BREVO_SENDER_EMAIL` | `support@m.sikuzangu.org` |
+| `S_BREVO_SENDER_FULL_NAME` | `Siku Zangu` |
 
-Run `nx test brevo` to execute the unit tests via [Vitest](https://vitest.dev/).
+```bash
+npx nx build brevo
+npx nx test brevo   # Vitest
+```

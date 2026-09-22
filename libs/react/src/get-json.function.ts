@@ -1,4 +1,5 @@
 import {FETCH_CONFIG} from './create-fetch-config.function';
+import {authHeaders} from './auth-token.function';
 import {APIError} from "@siku-zangu/core";
 
 export async function getJSON<U>(
@@ -28,6 +29,7 @@ export async function getJSON<U>(
             credentials: 'include',
             method: 'GET',
             headers: {
+                ...authHeaders(),
                 ...headers,
                 Accept: 'application/json',
                 'Cache-Control': 'no-cache',

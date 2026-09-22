@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import homepageImage from '../../public/images/homepage.png';
-import { WebsiteNav, WebsiteFooter } from '@siku-zangu/react';
+import {WebsiteNav, WebsiteFooter} from '@siku-zangu/react';
 import logo from '../../public/images/logo.png';
 
 export default function HomePage() {

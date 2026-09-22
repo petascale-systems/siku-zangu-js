@@ -4,7 +4,7 @@ import {DATABASE} from "../create-database.function";
 import {APIError} from "@siku-zangu/core";
 
 export async function selectOneArticle(articleId: string) {
-    const articleIdBin = Buffer.from(articleId.replace('-', ''), 'hex');
+    const articleIdBin = Buffer.from(articleId.replace(/-/g, ''), 'hex');
     return buildArticleTableJoins(DATABASE)
         .where('_a.id_article', articleIdBin)
         .first(ARTICLE_TABLE_COLUMN_ALIASES_WITH_CONTENT)

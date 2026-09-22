@@ -1,5 +1,5 @@
 import { getMessaging } from '../firebase/admin';
-import { selectOneUserByUserId } from '@siku-zangu/knex';
+import {selectOneUserByUserId} from '@siku-zangu/knex';
 
 export type NotificationType =
     | 'period_reminder'

@@ -1,13 +1,8 @@
 import { NextRequest } from 'next/server';
-import { APIError, handleAPIError, toE164 } from '@siku-zangu/core';
-import { selectOneUserByPhone } from '@siku-zangu/knex';
-import twilio from 'twilio';
+import {APIError, handleAPIError, toE164} from '@siku-zangu/core';
+import {selectOneUserByPhone} from '@siku-zangu/knex';
 import crypto from 'crypto';
-
-const client = twilio(
-    process.env.TWILIO_ACCOUNT_SID!,
-    process.env.TWILIO_AUTH_TOKEN!
-);
+import { getTwilioClient, getVerifyServiceSid } from '../../twilio-client.function';
 const resetTokenStore = new Map<string, { token: string; expiresAt: number }>();
 const RESET_TOKEN_TTL_MS = 10 * 60 * 1000;
 
@@ -54,8 +49,8 @@ export async function POST(req: NextRequest) {
         try {
             const e164 = toE164(phone_number);
 
-            check = await client.verify.v2
-                .services(process.env.TWILIO_VERIFY_SERVICE_SID!)
+            check = await getTwilioClient().verify.v2
+                .services(getVerifyServiceSid())
                 .verificationChecks
                 .create({
                     to: e164,

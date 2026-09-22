@@ -1,56 +1,83 @@
-"use client"
+'use client';
 
-import {getJSON} from "../get-json.function";
-import {Admin, EmailAndPassword} from "@siku-zangu/core";
-import {useEffect, useState} from "react";
-import {postJSON} from "../post-json.function";
-import {useRouter} from "next/navigation";
-import {deleteJSON} from "../delete-json.function";
+import { useEffect, useState } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useRouter } from 'next/navigation';
+import {Admin, APIError, EmailAndPassword} from '@siku-zangu/core';
+import { getJSON } from '../get-json.function';
+import { postJSON } from '../post-json.function';
+import { deleteJSON } from '../delete-json.function';
+import { queryKeys } from '../query-keys.function';
 
-const _SESSIONS_API_PATH = '/api/sessions';
-const _CURRENT_SESSION_API_PATH = '/api/sessions/current';
+export const SESSIONS_API_PATH = '/api/sessions';
+export const CURRENT_SESSION_API_PATH = '/api/sessions/current';
 
-async function _fetchCurrentSessionAdmin() {
-    return getJSON<Admin>(_CURRENT_SESSION_API_PATH)
-}
+export const fetchCurrentSessionAdmin = () =>
+  getJSON<Admin>(CURRENT_SESSION_API_PATH);
 
-async function _createSession(formData: EmailAndPassword) {
-    return postJSON<EmailAndPassword, Admin>(_SESSIONS_API_PATH, formData)
-}
+export const createSession = (formData: EmailAndPassword) =>
+  postJSON<EmailAndPassword, Admin>(SESSIONS_API_PATH, formData);
 
-async function _deleteCurrentSession() {
-    return deleteJSON(_CURRENT_SESSION_API_PATH)
-}
+export const deleteCurrentSession = () => deleteJSON(CURRENT_SESSION_API_PATH);
 
+const toMessage = (e: unknown, fallback: string) =>
+  (e as APIError)?.message || fallback;
+
+/**
+ * The signed-in admin behind the session cookie. Web only — it navigates with
+ * the Next router.
+ *
+ * `error` is new: login failures used to be swallowed by the caller's
+ * `.catch(console.log)`, so a wrong password looked like nothing happened.
+ */
 export function useCurrentSessionAdmin() {
-    const _router = useRouter();
-    const [admin, setAdmin] = useState<Admin>();
-    const [isFetchingAdmin, setIsFetchingAdmin] = useState<boolean>(true);
-    const [isLoggingIn, setIsLoggingIn] = useState<boolean>(false);
+  const router = useRouter();
+  const queryClient = useQueryClient();
+  const [error, setError] = useState<string | null>(null);
 
-    async function login(formData: EmailAndPassword) {
-        setIsLoggingIn(true);
-        return _createSession(formData)
-            .then(data => {
-                setAdmin(data)
-                _router.push('/dashboard')
-            })
-            .finally(() => setIsLoggingIn(false));
-    }
+  const query = useQuery({
+    queryKey: queryKeys.session.current(),
+    queryFn: fetchCurrentSessionAdmin,
+    // An expired session is an expected state, not a transient failure.
+    retry: false,
+  });
 
-    async function logout() {
-        return _deleteCurrentSession().then(() => _router.push('/login'));
-    }
+  // A 401 means the cookie is gone or stale; send them to sign in. This has to
+  // happen in an effect — navigating during render is a side effect React will
+  // warn about and can loop.
+  const status = (query.error as APIError | null)?.status;
+  useEffect(() => {
+    if (status === 401) router.push('/login');
+  }, [status, router]);
 
-    useEffect(() => {
-        setIsFetchingAdmin(true);
-        _fetchCurrentSessionAdmin()
-            .then(data => setAdmin(data))
-            .catch(err => {
-                if (err.status == 401) _router.push('/login');
-            })
-            .finally(() => setIsFetchingAdmin(false));
-    }, [])
+  const loginMutation = useMutation({
+    mutationFn: createSession,
+    onMutate: () => setError(null),
+    onSuccess: (admin) => {
+      queryClient.setQueryData(queryKeys.session.current(), admin);
+      router.push('/dashboard');
+    },
+    onError: (e) => setError(toMessage(e, 'Could not sign in')),
+  });
 
-    return {admin, isFetchingAdmin, isLoggingIn, login, logout};
+  const logoutMutation = useMutation({
+    mutationFn: deleteCurrentSession,
+    onSuccess: () => {
+      // Drop every cached query, not just the session: the next admin to sign
+      // in on this browser must not see the previous one's data.
+      queryClient.clear();
+      router.push('/login');
+    },
+    onError: (e) => setError(toMessage(e, 'Could not sign out')),
+  });
+
+  return {
+    admin: query.data,
+    isFetchingAdmin: query.isLoading,
+    isLoggingIn: loginMutation.isPending,
+    isLoggingOut: logoutMutation.isPending,
+    error,
+    login: (formData: EmailAndPassword) => loginMutation.mutateAsync(formData),
+    logout: () => logoutMutation.mutateAsync(),
+  };
 }

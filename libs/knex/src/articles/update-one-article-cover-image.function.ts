@@ -3,7 +3,7 @@ import {DATABASE} from "../create-database.function";
 export async function updateOneArticleCoverImage(articleId: string, file: File) {
     await DATABASE
         .insert({
-            id_article: Buffer.from(articleId.replace('-', ''), 'hex'),
+            id_article: Buffer.from(articleId.replace(/-/g, ''), 'hex'),
             cover_image: Buffer.from(await file.arrayBuffer())
         })
         .into('s_article_cover_image')

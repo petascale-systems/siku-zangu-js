@@ -37,7 +37,7 @@ export async function updateOneAdmin(hexUserId: string, admin: Admin) {
     }
 
     const tx = await DATABASE.transaction();
-    const binUserId = Buffer.from(hexUserId.replace('-', ''), 'hex');
+    const binUserId = Buffer.from(hexUserId.replace(/-/g, ''), 'hex');
 
     try {
         const insertAdmin = {} as Admin;

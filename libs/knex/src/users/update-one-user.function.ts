@@ -6,6 +6,8 @@ import {isTakenEmail} from "./is-taken-email.function";
 import {isTakenPhoneNumber} from "./is-taken-phone-number.function";
 import {DATABASE} from "../create-database.function";
 import {TABLE_NAME_S_USER, TABLE_NAME_S_USER_KV} from "../table-names";
+import {insertUserLogs} from "./insert-user-logs.function";
+import {selectedFromLogs, userLogsToRows} from "./user-log.function";
 import {Knex} from 'knex';
 
 
@@ -61,12 +63,35 @@ export async function updateOneUser(userIdHex: string, user: User): Promise<User
                 .onConflict(['id_user', 'k'])
                 .merge(['v']);
         }
+
+        // `*_logs` in the body are entries to APPEND, not an array that
+        // replaces what is stored. The request and response shapes are
+        // unchanged; only the meaning is. This is what makes a shipped v1.1.0
+        // client — which still sends its whole history every save — unable to
+        // clobber anything: the unique index ignores what is already there.
+        await insertUserLogs(tx, userIdBin, userLogsToRows(data.kv));
+
+        // "Current is updated": the set just submitted becomes the current
+        // selection, so unticking an item is how you drop it. Only kinds
+        // present in the body are touched, and an empty array never clears —
+        // see selectedFromLogs.
+        const selected = userToKv({ kv: selectedFromLogs(data.kv) } as User);
+        if (selected.length > 0) {
+            await tx
+                .insert(selected.map(kv => ({...kv, id_user: userIdBin})))
+                .into(TABLE_NAME_S_USER_KV)
+                .onConflict(['id_user', 'k'])
+                .merge(['v']);
+        }
+
         const updatedRow = await buildUserTableJoins(tx).where('_u.id_user', userIdBin).first(USER_TABLE_COLUMN_ALIASES);
         if (!updatedRow) {
             return Promise.reject({status: 500, message: 'User updated but SELECT returns zero records'} as APIError);
         }
 
         await tx.commit();
+        // kv already holds what was just submitted, so the response carries it
+        // without a second read.
         return rowToUser(updatedRow);
     } catch (e: any) {
         await tx.rollback();

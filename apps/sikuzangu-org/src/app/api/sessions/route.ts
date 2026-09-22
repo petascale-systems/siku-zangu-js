@@ -1,17 +1,12 @@
 import { NextRequest } from 'next/server';
-import { Admin, APIError, EMAIL_AND_PASSWORD_SCHEMA } from '@siku-zangu/core';
-import {
-  selectOneAdminByUserId,
-  selectUserIdAndPasswordByEmail,
-} from '@siku-zangu/knex';
+import {Admin, APIError, EMAIL_AND_PASSWORD_SCHEMA} from '@siku-zangu/core';
+import {selectOneAdminByUserId, selectUserIdAndPasswordByEmail} from '@siku-zangu/knex';
 import { compareSync } from 'bcrypt-ts';
 import { SignJWT } from 'jose';
 import { cookies } from 'next/headers';
-import { handleAPIError } from '@siku-zangu/core';
+import {handleAPIError} from '@siku-zangu/core';
 
-const _sessionSecretKey = new TextEncoder().encode(
-  process.env.S_JWT_SIGNING_KEY || 'IcAchOsEVerSewAChMarKoHI'
-);
+import { getSigningKeyBytes } from '../require-auth.function';
 
 function _resolveCookieAuthority(req: NextRequest) {
   return req?.headers?.get('host')?.startsWith('localhost')
@@ -26,7 +21,7 @@ function _encryptSessionData(admin: Admin) {
     .setAudience(admin.user_id || '')
     .setSubject(admin.user_id || '')
     .setExpirationTime('30d')
-    .sign(_sessionSecretKey);
+    .sign(getSigningKeyBytes());
 }
 
 export async function POST(req: NextRequest) {

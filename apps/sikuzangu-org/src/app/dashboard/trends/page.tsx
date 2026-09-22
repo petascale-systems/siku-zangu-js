@@ -28,7 +28,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from 'recharts';
-import { useUsersPage } from '@siku-zangu/react';
+import {useUsersPage} from '@siku-zangu/react';
 
 const calculateAge = (dateOfBirth: string): number => {
   try {

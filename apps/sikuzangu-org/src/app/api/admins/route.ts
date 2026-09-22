@@ -1,14 +1,13 @@
-import {
-  insertOneAdmin,
-  insertOneUserPasswordChange,
-  selectAdminsPage,
-} from '@siku-zangu/knex';
+import {insertOneAdmin, insertOneUserPasswordChange, selectAdminsPage} from '@siku-zangu/knex';
 import { NextRequest } from 'next/server';
-import { Admin, AdminRole, handleAPIError } from '@siku-zangu/core';
-import { sendAdminInvite } from '@siku-zangu/brevo';
+import {Admin, AdminRole, handleAPIError} from '@siku-zangu/core';
+import {sendAdminInvite} from '@siku-zangu/brevo';
+import { requireAdmin } from '../require-auth.function';
 
 export async function GET(req: NextRequest) {
   return handleAPIError(async () => {
+    // The admin list exposes every admin's email; not public.
+    await requireAdmin();
     const page = await selectAdminsPage({
       page: parseInt(req.nextUrl.searchParams.get('page') || '1'),
       size: parseInt(req.nextUrl.searchParams.get('size') || '20'),
@@ -22,6 +21,8 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   return handleAPIError(async () => {
+    // Creating an admin grants portal access and sends an invite email.
+    await requireAdmin();
     const body = (await req.json()) as Admin;
     const admin = await insertOneAdmin(body);
     const pwdChange = await insertOneUserPasswordChange(admin.user_id!);

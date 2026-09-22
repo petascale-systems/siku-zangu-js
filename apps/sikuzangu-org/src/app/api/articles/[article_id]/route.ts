@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
-import { selectOneArticle, updateOneArticle, deleteOneArticle, scheduleNewArticleNotifications } from '@siku-zangu/knex';
-import { handleAPIError } from '@siku-zangu/core';
+import {selectOneArticle, updateOneArticle, deleteOneArticle, scheduleNewArticleNotifications} from '@siku-zangu/knex';
+import {APIError, handleAPIError} from '@siku-zangu/core';
+import { getSessionAdmin, requireAdmin } from '../../require-auth.function';
 
 export async function GET(
   req: NextRequest,
@@ -8,8 +9,15 @@ export async function GET(
 ) {
   return handleAPIError(async () => {
     const { article_id } = await params;
-    const user = await selectOneArticle(article_id);
-    return Response.json(user, { status: 200 });
+    const article = await selectOneArticle(article_id);
+
+    // Don't confirm that an unpublished article exists to a non-admin.
+    if (article?.kv?.status !== 'published') {
+      const admin = await getSessionAdmin();
+      if (!admin) throw { status: 404, message: 'Not found' } as APIError;
+    }
+
+    return Response.json(article, { status: 200 });
   });
 }
 
@@ -18,6 +26,8 @@ export async function PATCH(
   { params }: { params: Promise<{ article_id: string }> }
 ) {
   return handleAPIError(async () => {
+    // Publishing an article notifies every subscribed user.
+    await requireAdmin();
     const { article_id } = await params;
     const body = await req.json();
 
@@ -43,6 +53,7 @@ export async function DELETE(
   { params }: { params: Promise<{ article_id: string }> }
 ) {
   return handleAPIError(async () => {
+    await requireAdmin();
     const { article_id } = await params;
     await deleteOneArticle(article_id);
     return new Response(null, { status: 204 });

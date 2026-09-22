@@ -24,7 +24,7 @@ export async function updateOneArticle(articleId: string, article: Article) {
         } as APIError);
     }
 
-    const articleIdBin = Buffer.from(articleId.replace('-', ''), 'hex');
+    const articleIdBin = Buffer.from(articleId.replace(/-/g, ''), 'hex');
     await DATABASE
         .insert(kvList.map(kv => ({...kv, id_article: articleIdBin})))
         .into('s_article_kv')

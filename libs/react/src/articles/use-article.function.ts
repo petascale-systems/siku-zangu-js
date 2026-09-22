@@ -1,109 +1,169 @@
-"use client"
+'use client';
 
-import {ARTICLES_API_PATH} from './use-articles-page.function'
-import {useEffect, useState} from "react";
-import {APIError, Article} from "@siku-zangu/core";
-import {getJSON} from "../get-json.function";
-import {patchJSON} from "../patch-json.function";
-import {postJSON} from "../post-json.function";
-import {deleteJSON} from "../delete-json.function";
+import { useCallback, useState } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import {APIError, Article} from '@siku-zangu/core';
+import { getJSON } from '../get-json.function';
+import { postJSON } from '../post-json.function';
+import { patchJSON } from '../patch-json.function';
+import { deleteJSON } from '../delete-json.function';
+import { FETCH_CONFIG } from '../create-fetch-config.function';
+import { authHeaders } from '../auth-token.function';
+import { queryKeys } from '../query-keys.function';
+import { ARTICLES_API_PATH } from './use-articles-page.function';
 
-export const ARTICLE_BY_ID_API_PATH = (id?: string) => `${ARTICLES_API_PATH}/${id}`;
-export const ARTICLE_COVER_IMAGE_API_PATH = (id?: string) => `${ARTICLES_API_PATH}/${id}/cover-image`;
+export const ARTICLE_BY_ID_API_PATH = (id?: string) =>
+  `${ARTICLES_API_PATH}/${id}`;
+export const ARTICLE_COVER_IMAGE_API_PATH = (id?: string) =>
+  `${ARTICLES_API_PATH}/${id}/cover-image`;
 
-async function _createArticle(article: Article) {
-    return postJSON<Article, Article>(ARTICLES_API_PATH, article);
+/** `new` is the sentinel the editor route uses before an article exists. */
+const NEW = 'new';
+const isSaved = (id?: string): id is string => !!id && id !== NEW;
+
+export const fetchArticle = (articleId: string) =>
+  getJSON<Article>(ARTICLE_BY_ID_API_PATH(articleId));
+
+export const createArticle = (article: Article) =>
+  postJSON<Article, Article>(ARTICLES_API_PATH, article);
+
+export const updateArticle = (articleId: string, article: Article) =>
+  patchJSON<Article, Article>(ARTICLE_BY_ID_API_PATH(articleId), article);
+
+export const deleteArticle = (articleId: string) =>
+  deleteJSON(ARTICLE_BY_ID_API_PATH(articleId));
+
+export async function updateArticleCoverImage(articleId: string, img: File) {
+  const data = new FormData();
+  data.append('cover_image', img);
+
+  // Goes through FETCH_CONFIG.host like every other call — this previously used
+  // a bare relative path, which only worked same-origin.
+  const path = `${FETCH_CONFIG.host}${ARTICLE_COVER_IMAGE_API_PATH(articleId)}`;
+  const res = await fetch(path, {
+    method: 'PUT',
+    credentials: 'include',
+    headers: { ...authHeaders() },
+    body: data,
+  });
+  if (res.ok) return;
+
+  let err: APIError;
+  try {
+    err = await res.json();
+  } catch {
+    err = { status: res.status as APIError['status'], message: res.statusText };
+  }
+  return Promise.reject(err);
 }
 
-async function _fetchArticle(articleId: string) {
-    return getJSON<Article>(ARTICLE_BY_ID_API_PATH(articleId))
-}
+const toMessage = (e: unknown, fallback: string) =>
+  (e as APIError)?.message || fallback;
 
-async function _updateArticle(articleId: string, article: Article) {
-    return patchJSON<Article, Article>(ARTICLE_BY_ID_API_PATH(articleId), article);
-}
-
-async function _deleteArticle(articleId: string) {
-    return deleteJSON(ARTICLE_BY_ID_API_PATH(articleId));
-}
-
-async function _updateArticleCoverImage(articleId: string, img: File) {
-    const data = new FormData();
-    data.append("cover_image", img);
-
-    const path = ARTICLE_COVER_IMAGE_API_PATH(articleId);
-    return fetch(path, {method: "PUT", body: data,})
-        .then(async (res) => {
-            if (res.ok) return;
-
-            const err = await res.json()
-            return Promise.reject((err ?? {message: 'Failed'}) as APIError);
-        })
-        .catch(e => Promise.reject((e ?? {message: `Could not POST ${path}`}) as APIError));
-}
-
+/**
+ * A single article, with create/update/delete.
+ *
+ * Mutations invalidate both this article and every article list, so the
+ * dashboard grid reflects a publish or delete without a manual refresh.
+ */
 export function useArticle(articleId?: string) {
-    const [article, setArticle] = useState<Article>();
-    const [isFetchingArticle, setIsFetchingArticle] = useState<boolean>();
-    const [isCreatingArticle, setIsCreatingArticle] = useState<boolean>();
-    const [isUpdatingArticle, setIsUpdatingArticle] = useState<boolean>();
-    const [isDeletingArticle, setIsDeletingArticle] = useState<boolean>();
+  const queryClient = useQueryClient();
+  const [error, setError] = useState<string | null>(null);
 
-    async function createArticle(newArticle: Article, coverImage?: File) {
-        setIsCreatingArticle(true);
-        return _createArticle(newArticle)
-            .then(async (a) => {
-                if (coverImage && a.article_id) await _updateArticleCoverImage(a.article_id, coverImage);
-                setArticle(a);
-                return a
-            })
-            .finally(() => setIsCreatingArticle(false));
-    }
+  const query = useQuery({
+    queryKey: queryKeys.articles.detail(articleId),
+    queryFn: () => fetchArticle(articleId as string),
+    enabled: isSaved(articleId),
+  });
 
-    async function updateArticle(newArticle: Article, coverImage?: File) {
-        if (!articleId || articleId === 'new') {
-            return Promise.reject('ID is not set. Use createArticle instead.');
-        }
+  const invalidate = useCallback(
+    (id?: string) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.articles.lists() });
+      if (id) {
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.articles.detail(id),
+        });
+      }
+    },
+    [queryClient]
+  );
 
-        setIsUpdatingArticle(true);
-        return _updateArticle(articleId, newArticle)
-            .then(async (a) => {
-                if (coverImage && articleId) await _updateArticleCoverImage(articleId, coverImage);
-                if (a) setArticle(a);
-                return a
-            })
-            .finally(() => setIsUpdatingArticle(false));
-    }
+  const createMutation = useMutation({
+    mutationFn: async ({
+      article,
+      coverImage,
+    }: {
+      article: Article;
+      coverImage?: File;
+    }) => {
+      const created = await createArticle(article);
+      if (coverImage && created?.article_id) {
+        await updateArticleCoverImage(created.article_id, coverImage);
+      }
+      return created;
+    },
+    onMutate: () => setError(null),
+    onSuccess: (created) => {
+      if (created?.article_id) {
+        queryClient.setQueryData(
+          queryKeys.articles.detail(created.article_id),
+          created
+        );
+      }
+      invalidate(created?.article_id);
+    },
+    onError: (e) => setError(toMessage(e, 'Failed to create article')),
+  });
 
-    async function deleteArticle() {
-        if (!articleId || articleId === 'new') {
-            return Promise.reject('ID is not set.');
-        }
-        setIsDeletingArticle(true);
-        return _deleteArticle(articleId)
-            .then(() => {
-                setArticle(undefined);
-            })
-            .finally(() => setIsDeletingArticle(false));
-    }
+  const updateMutation = useMutation({
+    mutationFn: async ({
+      article,
+      coverImage,
+    }: {
+      article: Article;
+      coverImage?: File;
+    }) => {
+      if (!isSaved(articleId)) {
+        throw { status: 400, message: 'No article id. Use createArticle.' } as APIError;
+      }
+      const updated = await updateArticle(articleId, article);
+      if (coverImage) await updateArticleCoverImage(articleId, coverImage);
+      return updated;
+    },
+    onMutate: () => setError(null),
+    onSuccess: () => invalidate(articleId),
+    onError: (e) => setError(toMessage(e, 'Failed to update article')),
+  });
 
-    useEffect(() => {
-        if (!articleId || articleId === 'new') return;
+  const deleteMutation = useMutation({
+    mutationFn: async () => {
+      if (!isSaved(articleId)) {
+        throw { status: 400, message: 'No article id.' } as APIError;
+      }
+      return deleteArticle(articleId);
+    },
+    onMutate: () => setError(null),
+    onSuccess: () => {
+      queryClient.removeQueries({
+        queryKey: queryKeys.articles.detail(articleId),
+      });
+      invalidate();
+    },
+    onError: (e) => setError(toMessage(e, 'Failed to delete article')),
+  });
 
-        setIsFetchingArticle(true);
-        _fetchArticle(articleId)
-            .then(setArticle)
-            .finally(() => setIsFetchingArticle(false));
-    }, [articleId])
-
-    return {
-        article,
-        isFetchingArticle,
-        isCreatingArticle,
-        isUpdatingArticle,
-        isDeletingArticle,
-        createArticle,
-        updateArticle,
-        deleteArticle,
-    };
+  return {
+    article: query.data,
+    isFetchingArticle: query.isLoading,
+    isCreatingArticle: createMutation.isPending,
+    isUpdatingArticle: updateMutation.isPending,
+    isDeletingArticle: deleteMutation.isPending,
+    error: error ?? (query.error ? toMessage(query.error, 'Failed to load article') : null),
+    createArticle: (article: Article, coverImage?: File) =>
+      createMutation.mutateAsync({ article, coverImage }),
+    updateArticle: (article: Article, coverImage?: File) =>
+      updateMutation.mutateAsync({ article, coverImage }),
+    deleteArticle: () => deleteMutation.mutateAsync(),
+    refetchArticle: () => query.refetch(),
+  };
 }

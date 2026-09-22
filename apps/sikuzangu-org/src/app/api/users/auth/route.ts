@@ -1,12 +1,12 @@
 import { NextRequest } from 'next/server';
-import { APIError, USER_ZOD_SCHEMA, AccessToken } from '@siku-zangu/core';
-import { selectOneUserByPhoneWithPin } from '@siku-zangu/knex';
-import { handleAPIError } from '@siku-zangu/core';
+import {APIError, USER_ZOD_SCHEMA, AccessToken} from '@siku-zangu/core';
+import {selectOneUserByPhoneWithPin} from '@siku-zangu/knex';
+import {handleAPIError} from '@siku-zangu/core';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
-const JWT_SECRET =
-  process.env.JWT_SECRET || 'your-super-secret-key-change-this-in-production';
+import { getSigningSecret } from '../../require-auth.function';
+
 const JWT_EXPIRES_IN = '7d';
 
 export async function POST(req: NextRequest) {
@@ -60,7 +60,7 @@ export async function POST(req: NextRequest) {
       phone_number: user.kv.phone_number,
       iat: Math.floor(Date.now() / 1000),
     };
-    const token = jwt.sign(tokenPayload, JWT_SECRET, {
+    const token = jwt.sign(tokenPayload, getSigningSecret(), {
       expiresIn: JWT_EXPIRES_IN,
     });
     const expiresIn = Math.floor(Date.now() / 1000) + 7 * 24 * 60 * 60;

@@ -1,64 +1,84 @@
-"use client"
+'use client';
 
-import {useEffect, useState} from "react";
-import {Email, Password, UserPasswordChange} from "@siku-zangu/core";
-import {getJSON} from "../get-json.function";
-import {patchJSON} from "../patch-json.function";
-import {useRouter} from "next/navigation";
-import {postJSON} from "../post-json.function";
+import { useEffect, useState } from 'react';
+import { useMutation, useQuery } from '@tanstack/react-query';
+import { useRouter } from 'next/navigation';
+import {APIError, Email, Password, UserPasswordChange} from '@siku-zangu/core';
+import { getJSON } from '../get-json.function';
+import { postJSON } from '../post-json.function';
+import { patchJSON } from '../patch-json.function';
+import { queryKeys } from '../query-keys.function';
 
-export const USER_PASSWORD_CHANGES_API_PATH = "/api/password-changes";
-export const USER_PASSWORD_CHANGE_BY_ID_API_PATH = (id: string) => `/api/password-changes/${id}`
+export const USER_PASSWORD_CHANGES_API_PATH = '/api/password-changes';
+export const USER_PASSWORD_CHANGE_BY_ID_API_PATH = (id: string) =>
+  `/api/password-changes/${id}`;
 
-async function _fetchUserPasswordChange(passwordChangeId: string) {
-    return getJSON<UserPasswordChange>(USER_PASSWORD_CHANGE_BY_ID_API_PATH(passwordChangeId));
-}
+export const fetchPasswordChange = (passwordChangeId: string) =>
+  getJSON<UserPasswordChange>(
+    USER_PASSWORD_CHANGE_BY_ID_API_PATH(passwordChangeId)
+  );
 
-async function _changePassword(passwordChangeId: string, password: Password) {
-    return patchJSON<Password, void>(USER_PASSWORD_CHANGE_BY_ID_API_PATH(passwordChangeId), password);
-}
+export const submitPasswordChange = (
+  passwordChangeId: string,
+  password: Password
+) =>
+  patchJSON<Password, void>(
+    USER_PASSWORD_CHANGE_BY_ID_API_PATH(passwordChangeId),
+    password
+  );
 
-async function _createPasswordChange(email: Email) {
-    return postJSON<Email, Email>(USER_PASSWORD_CHANGES_API_PATH, email)
-}
+export const requestPasswordChange = (email: Email) =>
+  postJSON<Email, Email>(USER_PASSWORD_CHANGES_API_PATH, email);
 
+const toMessage = (e: unknown, fallback: string) =>
+  (e as APIError)?.message || fallback;
+
+/**
+ * The password-reset token flow. Web only — it navigates with the Next router.
+ *
+ * A reset link is single use: the PATCH consumes the token server-side, so
+ * there is nothing to refetch afterwards and the user is sent to sign in.
+ */
 export function useUserPasswordChange(passwordChangeId?: string) {
-    const _router = useRouter();
-    const [passwordChange, setPasswordChange] = useState<UserPasswordChange>();
-    const [isFetchingPasswordChange, setIsFetchingPasswordChange] = useState<boolean>();
-    const [isChangingPassword, setIsChangingPassword] = useState<boolean>();
-    const [isCreatingPasswordChange, setIsCreatingPasswordChange] = useState<boolean>();
+  const router = useRouter();
+  const [error, setError] = useState<string | null>(null);
 
-    async function createPasswordChange(email: Email) {
-        setIsCreatingPasswordChange(true);
-        return _createPasswordChange(email).finally(() => setIsCreatingPasswordChange(false));
-    }
+  const query = useQuery({
+    queryKey: queryKeys.passwordChanges.detail(passwordChangeId),
+    queryFn: () => fetchPasswordChange(passwordChangeId as string),
+    enabled: !!passwordChangeId,
+    // An expired or already-used link is a definite answer, not a blip.
+    retry: false,
+  });
 
-    async function changePassword(password: Password) {
-        if (!passwordChangeId) return Promise.reject('passwordChangeId is required');
+  // A link that no longer resolves cannot be completed; send them to sign in.
+  const failed = !!query.error;
+  useEffect(() => {
+    if (failed) router.push('/login');
+  }, [failed, router]);
 
-        setIsChangingPassword(true);
-        return _changePassword(passwordChangeId, password)
-            .then(() => _router.push('/login'))
-            .finally(() => setIsChangingPassword(false));
-    }
+  const changeMutation = useMutation({
+    mutationFn: (password: Password) =>
+      submitPasswordChange(passwordChangeId as string, password),
+    onMutate: () => setError(null),
+    onSuccess: () => router.push('/login'),
+    onError: (e) => setError(toMessage(e, 'Could not set your password')),
+  });
 
-    useEffect(() => {
-        if (!passwordChangeId) return;
+  const createMutation = useMutation({
+    mutationFn: requestPasswordChange,
+    onMutate: () => setError(null),
+    onError: (e) => setError(toMessage(e, 'Could not send the reset email')),
+  });
 
-        setIsFetchingPasswordChange(true);
-        _fetchUserPasswordChange(passwordChangeId)
-            .then(setPasswordChange)
-            .catch(() => _router.push('/login'))
-            .finally(() => setIsFetchingPasswordChange(false));
-    }, [passwordChangeId]);
-
-    return {
-        passwordChange,
-        isFetchingPasswordChange,
-        isChangingPassword,
-        isCreatingPasswordChange,
-        changePassword,
-        createPasswordChange
-    };
+  return {
+    passwordChange: query.data,
+    isFetchingPasswordChange: query.isLoading,
+    isChangingPassword: changeMutation.isPending,
+    isCreatingPasswordChange: createMutation.isPending,
+    error,
+    changePassword: (password: Password) =>
+      changeMutation.mutateAsync(password),
+    createPasswordChange: (email: Email) => createMutation.mutateAsync(email),
+  };
 }

@@ -16,7 +16,7 @@ export const USER_TABLE_COLUMN_ALIASES = {
     status: DATABASE.raw('coalesce(_status.v,"active")'),
     phone_number: '_phone_number.v',
     date_of_birth: '_date_of_birth.v',
-    language: DATABASE.raw('coalesce(_language.v,"sw")'),
+    language: '_language.v',
     email: '_email.v',
     avg_cycle_length_days: DATABASE.raw('convert(_avg_cycle_length_days.v,unsigned)'),
     avg_period_length_days: DATABASE.raw('convert(_avg_period_length_days.v,unsigned)'),
@@ -73,6 +73,22 @@ export function buildUserTableJoinsWithPin(db: Knex | Knex.Transaction) {
         .leftJoin('s_user_kv as _pin', DATABASE.raw('_pin.id_user=_u.id_user and _pin.k="pin"'));
 }
 
+/**
+ * kv values are JSON in a `varchar(4096)` column. A value that was truncated on
+ * write is not recoverable, but it must not take the whole account down with
+ * it: a bare `JSON.parse` here threw inside `rowToUser`, which every read and
+ * every update funnels through, so one oversized log column turned into a 500
+ * on fetching the user at all.
+ */
+function parseKvJSON<T>(raw: unknown, fallback: T): T {
+    if (raw == null || raw === '') return fallback;
+    try {
+        return JSON.parse(raw as string) as T;
+    } catch {
+        return fallback;
+    }
+}
+
 export function rowToUser(row: any) {
     return {
         user_id: row.user_id || undefined,
@@ -85,7 +101,9 @@ export function rowToUser(row: any) {
             phone_number: row.phone_number || undefined,
             pin: row.pin || undefined,
             date_of_birth: row.date_of_birth ?? undefined,
-            language: row.language || 'sw',
+            // Left undefined when unset, so callers apply their own default
+            // rather than inheriting one the query invented.
+            language: row.language ?? undefined,
             email: row.email ?? undefined,
             avg_cycle_length_days: row.avg_cycle_length_days != null ? Number(row.avg_cycle_length_days) : undefined,
             avg_period_length_days: row.avg_period_length_days != null ? Number(row.avg_period_length_days) : undefined,
@@ -95,12 +113,12 @@ export function rowToUser(row: any) {
             receive_medication_tips: row.receive_medication_tips === 'true' ? true : row.receive_medication_tips === 'false' ? false : undefined,
             receive_insights_tips: row.receive_insights_tips === 'true' ? true : row.receive_insights_tips === 'false' ? false : undefined,
             receive_new_articles: row.receive_new_articles === 'true' ? true : row.receive_new_articles === 'false' ? false : undefined,
-            selected_symptoms: row.selected_symptoms ? JSON.parse(row.selected_symptoms) : undefined,
-            selected_moods: row.selected_moods ? JSON.parse(row.selected_moods) : undefined,
-            selected_medications: row.selected_medications ? JSON.parse(row.selected_medications) : undefined,
-            symptom_logs: row.symptom_logs ? JSON.parse(row.symptom_logs) : [],
-            mood_logs: row.mood_logs ? JSON.parse(row.mood_logs) : [],
-            medication_logs: row.medication_logs ? JSON.parse(row.medication_logs) : [],
+            selected_symptoms: parseKvJSON(row.selected_symptoms, undefined),
+            selected_moods: parseKvJSON(row.selected_moods, undefined),
+            selected_medications: parseKvJSON(row.selected_medications, undefined),
+            symptom_logs: parseKvJSON(row.symptom_logs, []),
+            mood_logs: parseKvJSON(row.mood_logs, []),
+            medication_logs: parseKvJSON(row.medication_logs, []),
             fcm_token: row.fcm_token ?? undefined,
             onboarding_complete: row.onboarding_complete === 'true' ? true : row.onboarding_complete === 'false' ? false : undefined,
         },

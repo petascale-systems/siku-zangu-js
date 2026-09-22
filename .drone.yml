@@ -21,6 +21,11 @@ steps:
         from_secret: _TWILIO_VERIFY_SERVICE_SID
       CRON_SECRET:
         from_secret: _CRON_SECRET
+      # Signs BOTH the admin session cookie and the mobile access token.
+      # Without it the app falls back to a secret that is public in this repo,
+      # which makes every token forgeable.
+      S_JWT_SIGNING_KEY:
+        from_secret: _S_JWT_SIGNING_KEY
       S_DATABASE_HOST:
         from_secret: _S_DATABASE_HOST
       S_DATABASE_USER:
@@ -35,6 +40,16 @@ steps:
         from_secret: _ATLASGO_URL
       S_BREVO_API_KEY:
         from_secret: _S_BREVO_API_KEY
+      # Enforce auth on the mobile-facing /api/users/:id routes.
+      # Deliberately still "false": installs older than 1.1.0 (the first build
+      # that sends its token) would lose the ability to save entirely.
+      #
+      # Note what this means now that logs append to a table instead of a
+      # 4096-byte cell: the column width used to be an accidental ceiling on
+      # what an unauthenticated writer could do, and it is gone. The bound is
+      # now the 200-entry cap and the 64-character value limit in
+      # USER_ZOD_SCHEMA — those are load-bearing while this stays "false".
+      REQUIRE_USER_AUTH: "false"
     depends_on:
       - docker-build
     commands:
@@ -58,6 +73,8 @@ steps:
         --env=TWILIO_AUTH_TOKEN=$TWILIO_AUTH_TOKEN
         --env=TWILIO_VERIFY_SERVICE_SID=$TWILIO_VERIFY_SERVICE_SID
         --env=CRON_SECRET=$CRON_SECRET
+        --env=S_JWT_SIGNING_KEY=$S_JWT_SIGNING_KEY
+        --env=REQUIRE_USER_AUTH=$REQUIRE_USER_AUTH
         sikuzangu-org:${DRONE_TAG}
 trigger:
   event:

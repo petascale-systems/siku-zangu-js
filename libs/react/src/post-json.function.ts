@@ -1,4 +1,5 @@
 import {FETCH_CONFIG} from './create-fetch-config.function';
+import {authHeaders} from './auth-token.function';
 import {APIError} from "@siku-zangu/core";
 
 export async function postJSON<T, U>(path: string, json: T, headers?: HeadersInit): Promise<U> {
@@ -7,6 +8,7 @@ export async function postJSON<T, U>(path: string, json: T, headers?: HeadersIni
             credentials: 'include',
             method: 'POST',
             headers: {
+                ...authHeaders(),
                 ...headers,
                 'Content-Type': 'application/json',
                 'Accept': 'application/json'
