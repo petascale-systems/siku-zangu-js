@@ -14,6 +14,8 @@ export function userToKv(user: User) {
     if (userKv?.language) kvs.push({k: 'language', v: userKv?.language.toLowerCase()});
     if (userKv?.email) kvs.push({k: 'email', v: userKv?.email.toLowerCase()});
     if (userKv?.prev_cycle_start_date) kvs.push({k: 'prev_cycle_start_date', v: userKv?.prev_cycle_start_date});
+    // `!== undefined`, not truthiness: an empty string is a deliberate clear.
+    if (userKv?.prev_period_end_date !== undefined) kvs.push({k: 'prev_period_end_date', v: userKv.prev_period_end_date});
     if (userKv?.avg_cycle_length_days) {
         kvs.push({k: 'avg_cycle_length_days', v: userKv?.avg_cycle_length_days.toString(),});
     }

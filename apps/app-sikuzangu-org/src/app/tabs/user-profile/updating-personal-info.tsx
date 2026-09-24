@@ -33,7 +33,8 @@ import {
   layout,
   spacing,
   radius,
-  NUICard
+  NUICard,
+  useScrollToSelected,
 } from '@siku-zangu/expo';
 import {useLocalSearchParams} from 'expo-router';
 import { useForm, useStore, revalidateLogic } from '@tanstack/react-form';
@@ -333,9 +334,21 @@ export default function UpdatePersonalInfoScreen() {
         </View>
     );
 
+    // One list shows day, month or year in turn; keying the selection by list
+    // makes switching lists re-centre on that list's value.
+    const pickerSelected =
+        activePicker === 'day'
+            ? `day:${selectedDay}`
+            : activePicker === 'month'
+                ? `month:${selectedMonth}`
+                : `year:${selectedYear}`;
+    const picker = useScrollToSelected(pickerSelected);
+
     const renderPicker = () => (
         <View style={styles.pickerContainer}>
             <ScrollView
+                ref={picker.scrollRef}
+                onLayout={picker.onScrollLayout}
                 style={{ maxHeight: 150 }}
                 showsVerticalScrollIndicator={false}
                 nestedScrollEnabled={true}
@@ -344,11 +357,15 @@ export default function UpdatePersonalInfoScreen() {
                     days.map((day) => (
                         <TouchableOpacity
                             key={day}
+                            onLayout={picker.onItemLayout(`day:${day}`)}
                             style={[
                                 styles.pickerItem,
                                 selectedDay === day && styles.selectedPickerItem,
                             ]}
-                            onPress={() => setSelectedDay(day)}
+                            onPress={() => {
+                              picker.markTapped(`day:${day}`);
+                              setSelectedDay(day);
+                            }}
                         >
                             <Text
                                 style={[
@@ -365,11 +382,15 @@ export default function UpdatePersonalInfoScreen() {
                     months.map((month) => (
                         <TouchableOpacity
                             key={month.value}
+                            onLayout={picker.onItemLayout(`month:${month.value}`)}
                             style={[
                                 styles.pickerItem,
                                 selectedMonth === month.value && styles.selectedPickerItem,
                             ]}
-                            onPress={() => setSelectedMonth(month.value)}
+                            onPress={() => {
+                              picker.markTapped(`month:${month.value}`);
+                              setSelectedMonth(month.value);
+                            }}
                         >
                             <Text
                                 style={[
@@ -387,11 +408,15 @@ export default function UpdatePersonalInfoScreen() {
                     years.map((year) => (
                         <TouchableOpacity
                             key={year}
+                            onLayout={picker.onItemLayout(`year:${year}`)}
                             style={[
                                 styles.pickerItem,
                                 selectedYear === year && styles.selectedPickerItem,
                             ]}
-                            onPress={() => setSelectedYear(year)}
+                            onPress={() => {
+                              picker.markTapped(`year:${year}`);
+                              setSelectedYear(year);
+                            }}
                         >
                             <Text
                                 style={[

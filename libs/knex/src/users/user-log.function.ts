@@ -1,6 +1,6 @@
 import { UserKv } from '@siku-zangu/core';
 
-export type UserLogKind = 'symptom' | 'mood' | 'medication';
+export type UserLogKind = 'symptom' | 'mood' | 'medication' | 'period_start' | 'period_end';
 
 /** A row as it is written to, and read back from, `s_user_log`. */
 export type UserLogRow = {
@@ -17,10 +17,14 @@ export type UserLogRow = {
   cleared: boolean;
 };
 
-/** The three arrays the `User.kv` shape has always exposed. */
+/** The log arrays a `User.kv` body can carry. */
 export type UserLogs = Pick<
   UserKv,
-  'symptom_logs' | 'mood_logs' | 'medication_logs'
+  | 'symptom_logs'
+  | 'mood_logs'
+  | 'medication_logs'
+  | 'period_start_logs'
+  | 'period_end_logs'
 >;
 
 /** kv key ↔ kind ↔ the property name each entry uses for its value. */
@@ -28,6 +32,11 @@ export const USER_LOG_KINDS = [
   { kind: 'symptom', kvKey: 'symptom_logs', valueKey: 'symptom' },
   { kind: 'mood', kvKey: 'mood_logs', valueKey: 'mood' },
   { kind: 'medication', kvKey: 'medication_logs', valueKey: 'medication' },
+  // The value is the day marked (YYYY-MM-DD); logged_at is when it was marked.
+  // Never stored in kv — the current dates live in prev_cycle_start_date and
+  // prev_period_end_date — so the kv backfill finds nothing for these.
+  { kind: 'period_start', kvKey: 'period_start_logs', valueKey: 'date' },
+  { kind: 'period_end', kvKey: 'period_end_logs', valueKey: 'date' },
 ] as const;
 
 /** The furthest ahead of the server clock a client timestamp may be. */

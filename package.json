@@ -1,6 +1,6 @@
 {
   "name": "sikuzangu.com",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "dependencies": {
     "@expo/metro-runtime": "6.1.2",
     "@getbrevo/brevo": "^3.0.1",

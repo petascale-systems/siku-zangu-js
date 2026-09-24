@@ -4,8 +4,13 @@ export interface CycleData {
   fertilityDays: number[];
   ovulationDays: number[];
   predictedDays: number[];
+  /** Day of the month → which day of its period it is (1 = first day). */
+  dayOfPeriod: Record<number, number>;
   nextPeriodDate: Date;
+  /** The next ovulation not yet passed: today's, or a later cycle's. */
   ovulationDate: Date;
+  /** The fertile window still to come or under way. */
+  fertilityWindow: { start: Date; end: Date };
   daysUntilPeriod: number;
   daysInMonth: number;
 }
@@ -39,20 +44,44 @@ export interface SymptomConfig {
 export const getDaysInMonth = (month: number, year: number): number =>
   new Date(year, month + 1, 0).getDate();
 
+const MS_PER_DAY = 1000 * 60 * 60 * 24;
+
+/**
+ * A stored `YYYY-MM-DD` as local midnight on that day.
+ *
+ * `new Date('2026-09-10')` is UTC midnight, which west of UTC is still the 9th
+ * locally — every date then drew a day early.
+ */
+export const parseISODate = (iso: string): Date => {
+  if (/^\d{4}-\d{2}-\d{2}$/.test(iso)) {
+    const [y, m, d] = iso.split('-').map(Number);
+    return new Date(y, m - 1, d);
+  }
+  const date = new Date(iso);
+  date.setHours(0, 0, 0, 0);
+  return date;
+};
+
+/**
+ * Whole days from one local midnight to another. Rounded, not floored: a
+ * daylight-saving change makes a day 23 or 25 hours long, and flooring
+ * 27.96 days to 27 put the cycle a whole cycle behind for that day.
+ */
+export const daysBetween = (from: Date, to: Date): number => {
+  const a = new Date(from);
+  a.setHours(0, 0, 0, 0);
+  const b = new Date(to);
+  b.setHours(0, 0, 0, 0);
+  return Math.round((b.getTime() - a.getTime()) / MS_PER_DAY);
+};
+
 export const getMostRecentCycleStart = (
   prevCycleStartDate: string,
   avgCycleLength: number,
   referenceDate: Date = new Date()
 ): Date => {
-  const prevStart = new Date(prevCycleStartDate);
-  prevStart.setHours(0, 0, 0, 0);
-
-  const refDate = new Date(referenceDate);
-  refDate.setHours(0, 0, 0, 0);
-
-  const daysSincePrev = Math.floor(
-    (refDate.getTime() - prevStart.getTime()) / (1000 * 60 * 60 * 24)
-  );
+  const prevStart = parseISODate(prevCycleStartDate);
+  const daysSincePrev = daysBetween(prevStart, referenceDate);
   const completeCycles = Math.floor(daysSincePrev / avgCycleLength);
 
   const mostRecent = new Date(prevStart);
@@ -116,12 +145,7 @@ export const getDaysUntilPeriod = (
   nextPeriodDate: Date,
   referenceDate: Date = new Date()
 ): number => {
-  const today = new Date(referenceDate);
-  today.setHours(0, 0, 0, 0);
-  const diff = Math.ceil(
-    (nextPeriodDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
-  );
-  return Math.max(0, diff);
+  return Math.max(0, daysBetween(referenceDate, nextPeriodDate));
 };
 
 export const getMoodConfig = (language = 'en'): Record<string, MoodConfig> => ({
@@ -320,24 +344,12 @@ export const calculateCycleMetrics = (
   const { end: fertilityEnd } = getFertilityWindow(ovulationDate);
   const daysUntilPeriod = getDaysUntilPeriod(nextPeriodDate, today);
 
-  const daysSinceCycleStart = Math.floor(
-    (today.getTime() - mostRecentStart.getTime()) / (1000 * 60 * 60 * 24)
-  );
+  const daysSinceCycleStart = daysBetween(mostRecentStart, today);
   const progress = Math.min(daysSinceCycleStart / avgCycleLength, 1);
 
-  const daysUntilOvulation = Math.max(
-    0,
-    Math.ceil(
-      (ovulationDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
-    )
-  );
+  const daysUntilOvulation = Math.max(0, daysBetween(today, ovulationDate));
 
-  const fertileDaysRemaining = Math.max(
-    0,
-    Math.ceil(
-      (fertilityEnd.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
-    )
-  );
+  const fertileDaysRemaining = Math.max(0, daysBetween(today, fertilityEnd));
 
   const dayInCycle = (daysSinceCycleStart % avgCycleLength) + 1;
 
@@ -408,67 +420,105 @@ export const getCyclePhaseInsight = (
   };
 };
 
+/**
+ * What the calendar ring draws for one month, which can be any month — past
+ * ones to correct a date, future ones to see what is coming.
+ *
+ * Only the cycle that began on `prevCycleStartDate` was actually logged, so
+ * only its days are period days. Every other cycle is a projection and is
+ * predicted, past or future. Fertility and ovulation are shown from the
+ * current cycle on; for earlier cycles they were never more than a guess.
+ * Nothing is drawn before the stored start, since there is no data for it.
+ *
+ * `nextPeriodDate`, `ovulationDate`, `fertilityWindow` and `daysUntilPeriod`
+ * are relative to today, whichever month is displayed.
+ */
 export const calculateCycleData = (
   prevCycleStartDate: string,
   avgCycleLength: number,
   avgPeriodLength: number,
   currentMonth: number,
-  currentYear: number
+  currentYear: number,
+  referenceDate: Date = new Date()
 ): CycleData => {
-  const today = new Date();
+  const today = new Date(referenceDate);
   today.setHours(0, 0, 0, 0);
 
   const daysInMonth = getDaysInMonth(currentMonth, currentYear);
+  const monthStart = new Date(currentYear, currentMonth, 1);
+  const monthEnd = new Date(currentYear, currentMonth, daysInMonth);
+
   const mostRecentStart = getMostRecentCycleStart(
     prevCycleStartDate,
     avgCycleLength,
     today
   );
-
   const nextPeriod = getNextCycleStart(mostRecentStart, avgCycleLength);
-  const ovulation = getOvulationDate(nextPeriod);
-  const { start: fertStart, end: fertEnd } = getFertilityWindow(ovulation);
 
-  const currentPeriodEnd = new Date(mostRecentStart);
-  currentPeriodEnd.setDate(currentPeriodEnd.getDate() + avgPeriodLength - 1);
-
-  const periodDays = getDaysInRange(
-    mostRecentStart,
-    currentPeriodEnd,
-    currentMonth,
-    currentYear
-  );
-
-  const predictedDays: number[] = [];
-  const nextPeriodEnd = new Date(nextPeriod);
-  nextPeriodEnd.setDate(nextPeriodEnd.getDate() + avgPeriodLength - 1);
-
-  if (nextPeriod > today) {
-    predictedDays.push(
-      ...getDaysInRange(nextPeriod, nextPeriodEnd, currentMonth, currentYear)
+  // The card shows what is ahead, so once this cycle's ovulation or fertile
+  // window is over, move to the next cycle's rather than "expecting" a date
+  // that has passed.
+  let ovulation = getOvulationDate(nextPeriod);
+  if (ovulation < today) {
+    ovulation = getOvulationDate(getNextCycleStart(nextPeriod, avgCycleLength));
+  }
+  let fertilityWindow = getFertilityWindow(getOvulationDate(nextPeriod));
+  if (fertilityWindow.end < today) {
+    fertilityWindow = getFertilityWindow(
+      getOvulationDate(getNextCycleStart(nextPeriod, avgCycleLength))
     );
   }
-  const followingCycle = getNextCycleStart(nextPeriod, avgCycleLength);
-  if (followingCycle.getFullYear() === currentYear && followingCycle.getMonth() === currentMonth) {
-    const followingEnd = new Date(followingCycle);
-    followingEnd.setDate(followingEnd.getDate() + avgPeriodLength - 1);
-    const extra = getDaysInRange(followingCycle, followingEnd, currentMonth, currentYear);
-    extra.forEach(d => !predictedDays.includes(d) && predictedDays.push(d));
+
+  const firstStart = parseISODate(prevCycleStartDate);
+
+  const periodDays: number[] = [];
+  const predictedDays: number[] = [];
+  const fertilityDays: number[] = [];
+  const ovulationDays: number[] = [];
+  const dayOfPeriod: Record<number, number> = {};
+  const addAll = (into: number[], days: number[]) =>
+    days.forEach((d) => !into.includes(d) && into.push(d));
+
+  // Start one cycle before the month so a period or fertile window that began
+  // in the previous month and runs into this one is still drawn.
+  const cyclesBefore = Math.floor(daysBetween(firstStart, monthStart) / avgCycleLength);
+  for (let k = Math.max(0, cyclesBefore - 1); ; k++) {
+    const cycleStart = new Date(firstStart);
+    cycleStart.setDate(cycleStart.getDate() + k * avgCycleLength);
+    if (cycleStart > monthEnd) break;
+
+    const periodEnd = new Date(cycleStart);
+    periodEnd.setDate(periodEnd.getDate() + avgPeriodLength - 1);
+    const days = getDaysInRange(cycleStart, periodEnd, currentMonth, currentYear);
+    addAll(k === 0 ? periodDays : predictedDays, days);
+    // Counted from the period's own first day, which may be last month.
+    for (const d of days) {
+      dayOfPeriod[d] = daysBetween(cycleStart, new Date(currentYear, currentMonth, d)) + 1;
+    }
+
+    if (cycleStart >= mostRecentStart) {
+      const cycleOvulation = getOvulationDate(
+        getNextCycleStart(cycleStart, avgCycleLength)
+      );
+      const { start: fertStart, end: fertEnd } = getFertilityWindow(cycleOvulation);
+      addAll(fertilityDays, getDaysInRange(fertStart, fertEnd, currentMonth, currentYear));
+      addAll(
+        ovulationDays,
+        getDaysInRange(cycleOvulation, cycleOvulation, currentMonth, currentYear)
+      );
+    }
   }
-
-  const fertilityDays = getDaysInRange(fertStart, fertEnd, currentMonth, currentYear);
-  const ovulationDays = getDaysInRange(ovulation, ovulation, currentMonth, currentYear);
-
-  const daysUntilPeriod = getDaysUntilPeriod(nextPeriod, today);
 
   return {
     periodDays,
     fertilityDays,
     ovulationDays,
     predictedDays,
+    dayOfPeriod,
     nextPeriodDate: nextPeriod,
     ovulationDate: ovulation,
-    daysUntilPeriod,
+    fertilityWindow,
+    daysUntilPeriod: getDaysUntilPeriod(nextPeriod, today),
     daysInMonth,
   };
 };
@@ -554,6 +604,122 @@ export const getCircularCoordinates = (
     angle,
   };
 };
+
+/**
+ * The inverse of `getCircularCoordinates`: which day a tap at (x, y) lands on.
+ * Any point in the ring band counts, not just the day's dot, so the whole ring
+ * is a tap target. Returns null for taps in the centre or outside the ring.
+ */
+export const getDayFromPoint = (
+  x: number,
+  y: number,
+  totalDays: number,
+  centerX: number,
+  centerY: number,
+  minRadius: number,
+  maxRadius: number
+): number | null => {
+  const dx = x - centerX;
+  const dy = y - centerY;
+  const distance = Math.hypot(dx, dy);
+  if (distance < minRadius || distance > maxRadius) return null;
+
+  // Shift so 12 o'clock is 0 and normalise to [0, 2π).
+  const TWO_PI = 2 * Math.PI;
+  const angle = (((Math.atan2(dy, dx) + Math.PI / 2) % TWO_PI) + TWO_PI) % TWO_PI;
+  // Rounding past the last day wraps back to day 1 rather than totalDays + 1.
+  return (Math.round((angle / TWO_PI) * totalDays) % totalDays) + 1;
+};
+
+/** Local `YYYY-MM-DD`, the format `prev_cycle_start_date` is stored in. */
+export const toISODateString = (date: Date): string =>
+  `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(
+    date.getDate()
+  ).padStart(2, '0')}`;
+
+/**
+ * Period length, in days, from a first day to a last day inclusive: marking
+ * the start day itself as the end is a one-day period.
+ */
+export const getPeriodLengthDays = (startISO: string, endISO: string): number =>
+  daysBetween(parseISODate(startISO), parseISODate(endISO)) + 1;
+
+export type PeriodDatesUpdate = {
+  prev_cycle_start_date?: string;
+  prev_period_end_date?: string;
+  avg_period_length_days?: number;
+  period_start_logs?: Array<{ date: string; timestamp: string }>;
+  period_end_logs?: Array<{ date: string; timestamp: string }>;
+};
+
+/**
+ * The kv update for marking `startISO` as the first day of the last period,
+ * keeping the stored last day and the period length in step:
+ * - an end still after the new start stays, and the length is re-measured;
+ * - an end on or before the new start, or too far after it to be the same
+ *   period, no longer belongs to this period and is cleared.
+ */
+export const buildPeriodStartUpdate = (
+  startISO: string,
+  currentEndISO: string | undefined,
+  now: Date = new Date()
+): PeriodDatesUpdate => {
+  const update: PeriodDatesUpdate = {
+    prev_cycle_start_date: startISO,
+    period_start_logs: [{ date: startISO, timestamp: now.toISOString() }],
+  };
+  if (!currentEndISO) return update;
+
+  const length = getPeriodLengthDays(startISO, currentEndISO);
+  if (length >= 2 && length <= MAX_PERIOD_LENGTH_DAYS) {
+    update.avg_period_length_days = length;
+  } else {
+    update.prev_period_end_date = '';
+  }
+  return update;
+};
+
+/**
+ * The kv update for a period length chosen directly ("Last period lasted
+ * for"), with the last day moved to match. An end that would fall after
+ * today means the period is still under way, so the end is cleared rather
+ * than set to a day that has not happened. The end is only logged when it
+ * actually moves.
+ */
+export const buildPeriodLengthUpdate = (
+  startISO: string,
+  lengthDays: number,
+  currentEndISO: string | undefined,
+  now: Date = new Date()
+): PeriodDatesUpdate => {
+  const end = parseISODate(startISO);
+  end.setDate(end.getDate() + lengthDays - 1);
+  const endISO = toISODateString(end);
+
+  const update: PeriodDatesUpdate = { avg_period_length_days: lengthDays };
+  if (endISO > toISODateString(now)) {
+    if (currentEndISO) update.prev_period_end_date = '';
+  } else if (endISO !== currentEndISO) {
+    update.prev_period_end_date = endISO;
+    update.period_end_logs = [{ date: endISO, timestamp: now.toISOString() }];
+  }
+  return update;
+};
+
+/**
+ * The kv update for marking `endISO` as the last day of the period that began
+ * on `startISO`. The length is written too — it is what the calendar draws
+ * and what Log Entry shows as "Last period lasted for".
+ */
+export const buildPeriodEndUpdate = (
+  startISO: string,
+  endISO: string,
+  now: Date = new Date()
+): PeriodDatesUpdate => ({
+  prev_period_end_date: endISO,
+  avg_period_length_days: getPeriodLengthDays(startISO, endISO),
+  period_end_logs: [{ date: endISO, timestamp: now.toISOString() }],
+});
 
 export const MONTH_NAMES_EN = [
   'January', 'February', 'March', 'April', 'May', 'June',

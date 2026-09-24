@@ -286,6 +286,23 @@ export function NUICountryCodePicker({ selectedCountry, onSelect, language }: Pr
         );
     }, [searchQuery]);
 
+    // The list opens on the country already chosen rather than at the top of
+    // the alphabet. Only for the full list: a search result is short, and its
+    // top match is what the user is looking for.
+    const listRef = React.useRef<FlatList<Country>>(null);
+    const selectedIndex = searchQuery.trim()
+        ? -1
+        : COUNTRIES.findIndex((c) => c.code === selectedCountry.code);
+
+    const scrollToSelected = React.useCallback(() => {
+        if (selectedIndex < 0) return;
+        listRef.current?.scrollToIndex({
+            index: selectedIndex,
+            viewPosition: 0.5,
+            animated: false,
+        });
+    }, [selectedIndex]);
+
     const handleSelect = (country: Country) => {
         onSelect(country);
         setModalVisible(false);
@@ -354,7 +371,28 @@ export function NUICountryCodePicker({ selectedCountry, onSelect, language }: Pr
                             </View>
 
                             <FlatList
+                                ref={listRef}
                                 data={filteredCountries}
+                                onLayout={scrollToSelected}
+                                // Rows are not measured until rendered, so a
+                                // country far down the list cannot be reached
+                                // in one jump. Scroll near it, then try again
+                                // once those rows exist.
+                                onScrollToIndexFailed={({ index, averageItemLength }) => {
+                                    listRef.current?.scrollToOffset({
+                                        offset: index * averageItemLength,
+                                        animated: false,
+                                    });
+                                    setTimeout(() => {
+                                        if (index < filteredCountries.length) {
+                                            listRef.current?.scrollToIndex({
+                                                index,
+                                                viewPosition: 0.5,
+                                                animated: false,
+                                            });
+                                        }
+                                    }, 50);
+                                }}
                                 keyExtractor={(item) => item.code}
                                 keyboardShouldPersistTaps="handled"
                                 renderItem={({ item }) => (

@@ -1,5 +1,8 @@
 import React, { useMemo, useState, useCallback } from 'react';
 import {
+  Alert,
+  GestureResponderEvent,
+  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -20,15 +23,24 @@ import {
   useTabContentInset,
   useTranslate,
   PAGE_BOTTOM_PADDING,
-  NUICard
+  NUICard,
+  MAX_PERIOD_LENGTH_DAYS,
+  useToast,
 } from '@siku-zangu/expo';
 import {useUser} from '@siku-zangu/react-native';
-import {calculateCycleData, formatDate, formatDateRange, getCircularCoordinates, getDaysInMonth, MONTH_NAMES_EN, MONTH_NAMES_SW} from '@siku-zangu/expo';
+import {calculateCycleData, formatDate, formatDateRange, getCircularCoordinates, buildPeriodEndUpdate, buildPeriodStartUpdate, getDayFromPoint, getDaysInMonth, parseISODate, getPeriodLengthDays, toISODateString, PeriodDatesUpdate, MONTH_NAMES_EN, MONTH_NAMES_SW} from '@siku-zangu/expo';
 import {useRouter, useFocusEffect} from 'expo-router';
 
 const RADIUS = 120;
 const CENTER_X = 180;
 const CENTER_Y = 180;
+// The band that counts as a tap on the ring: clear of the month label in the
+// centre, and just past the sequence badges on the outside.
+const TAP_MIN_RADIUS = 50;
+const TAP_MAX_RADIUS = RADIUS + 36;
+// How far either side of the current month the ring can be browsed.
+const MAX_MONTHS_AWAY = 12;
+
 
 export default function Calendar() {
   const router = useRouter();
@@ -43,13 +55,34 @@ export default function Calendar() {
   // except the one that was navigated to directly.
   const { userId } = useSession();
   const tabInset = useTabContentInset();
-  const { user, userUpdatedAt, refetchUser, isFetchingUser } = useUser(userId);
-  const [selectedDay] = useState<number | null>(null);
+  const { user, userUpdatedAt, refetchUser, isFetchingUser, updateCurrentUser, isUpsertingUser } =
+      useUser(userId);
+  const { showError, showSuccess } = useToast();
+  const [selectedDay, setSelectedDay] = useState<number | null>(null);
   const STALE_TIME = 3 * 60 * 1000;
   const currentDate = new Date();
-  const currentMonth = currentDate.getMonth();
-  const currentYear = currentDate.getFullYear();
+  const todayMonth = currentDate.getMonth();
+  const todayYear = currentDate.getFullYear();
+  const todayDay = currentDate.getDate();
+  // Months away from the current one; the ring shows whichever is chosen.
+  const [monthOffset, setMonthOffset] = useState(0);
+  const viewedMonthStart = new Date(todayYear, todayMonth + monthOffset, 1);
+  const currentMonth = viewedMonthStart.getMonth();
+  const currentYear = viewedMonthStart.getFullYear();
+  const isViewingThisMonth = monthOffset === 0;
   const monthNames = language === 'en' ? MONTH_NAMES_EN : MONTH_NAMES_SW;
+
+  const startISO = user?.kv?.prev_cycle_start_date;
+  const endISO = user?.kv?.prev_period_end_date;
+
+  const showMonthOf = useCallback(
+      (date: Date) => {
+        const offset =
+            (date.getFullYear() - todayYear) * 12 + date.getMonth() - todayMonth;
+        setMonthOffset(Math.max(-MAX_MONTHS_AWAY, Math.min(MAX_MONTHS_AWAY, offset)));
+      },
+      [todayYear, todayMonth]
+  );
 
   useFocusEffect(
       useCallback(() => {
@@ -72,6 +105,11 @@ export default function Calendar() {
         predictedDays: [],
         nextPeriodDate: new Date(currentYear, currentMonth + 1, 1),
         ovulationDate: new Date(currentYear, currentMonth, 15),
+        fertilityWindow: {
+          start: new Date(currentYear, currentMonth, 10),
+          end: new Date(currentYear, currentMonth, 16),
+        },
+        dayOfPeriod: {} as Record<number, number>,
         daysUntilPeriod: 0,
         daysInMonth: getDaysInMonth(currentMonth, currentYear),
       };
@@ -96,7 +134,9 @@ export default function Calendar() {
     fertilityDays,
     ovulationDays,
     predictedDays,
+    dayOfPeriod,
     ovulationDate,
+    fertilityWindow,
     daysUntilPeriod,
     daysInMonth,
   } = cycleData;
@@ -106,10 +146,113 @@ export default function Calendar() {
       await refetchUser(true);
     }
   }, [refetchUser]);
-  const fertilityStart = new Date(
-      ovulationDate.getTime() - 5 * 24 * 60 * 60 * 1000
+  const saveCycleUpdate = useCallback(
+      async (kv: PeriodDatesUpdate, message: string) => {
+        try {
+          await updateCurrentUser({ kv });
+          showSuccess(message);
+        } catch (e: any) {
+          showError(e?.message || 'Failed to save');
+        }
+      },
+      [updateCurrentUser, showError, showSuccess]
   );
-  const fertilityEnd = new Date(ovulationDate.getTime() + 24 * 60 * 60 * 1000);
+
+  const setPeriodStart = useCallback(
+      (date: Date) => {
+        saveCycleUpdate(
+            buildPeriodStartUpdate(toISODateString(date), user?.kv?.prev_period_end_date),
+            t('calendar.periodStartSaved')
+        );
+      },
+      [user?.kv?.prev_period_end_date, saveCycleUpdate, t]
+  );
+
+  const setPeriodEnd = useCallback(
+      (date: Date) => {
+        if (!startISO) return;
+        const newEndISO = toISODateString(date);
+        if (newEndISO < startISO) {
+          showError(t('calendar.periodEndBeforeStart'));
+          return;
+        }
+        if (getPeriodLengthDays(startISO, newEndISO) > MAX_PERIOD_LENGTH_DAYS) {
+          showError(t('calendar.periodTooLong'));
+          return;
+        }
+        saveCycleUpdate(buildPeriodEndUpdate(startISO, newEndISO), t('calendar.periodEndSaved'));
+      },
+      [startISO, saveCycleUpdate, showError, t]
+  );
+
+  const handleDayPress = useCallback(
+      (day: number) => {
+        if (isUpsertingUser) return;
+        const date = new Date(currentYear, currentMonth, day);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        if (date > today) {
+          showError(t('log_entry.periodDateCannotBeIn'));
+          return;
+        }
+
+        setSelectedDay(day);
+        const close = () => setSelectedDay(null);
+        const buttons: Parameters<typeof Alert.alert>[2] = [
+          { text: t('common.cancel'), style: 'cancel', onPress: close },
+          {
+            text: t('calendar.firstDayOfPeriod'),
+            onPress: () => {
+              close();
+              setPeriodStart(date);
+            },
+          },
+        ];
+        // An end only means something relative to a known start.
+        if (startISO) {
+          buttons.push({
+            text: t('calendar.lastDayOfPeriod'),
+            onPress: () => {
+              close();
+              setPeriodEnd(date);
+            },
+          });
+        }
+        Alert.alert(formatDate(date, monthNames, true), undefined, buttons, {
+          cancelable: true,
+          onDismiss: close,
+        });
+      },
+      [
+        isUpsertingUser,
+        currentYear,
+        currentMonth,
+        monthNames,
+        startISO,
+        setPeriodStart,
+        setPeriodEnd,
+        showError,
+        t,
+      ]
+  );
+
+  const handleRingPress = useCallback(
+      (event: GestureResponderEvent) => {
+        const { locationX, locationY } = event.nativeEvent;
+        const day = getDayFromPoint(
+            locationX,
+            locationY,
+            daysInMonth,
+            CENTER_X,
+            CENTER_Y,
+            TAP_MIN_RADIUS,
+            TAP_MAX_RADIUS
+        );
+        if (day) handleDayPress(day);
+      },
+      [daysInMonth, handleDayPress]
+  );
+
   return (
       <View style={styles.container}>
         <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
@@ -134,11 +277,71 @@ export default function Calendar() {
             }
         >
           <NUICard style={styles.card}>
-            <Text style={styles.month}>
-              {`${monthNames[currentMonth]} ${currentYear}`}
-            </Text>
-            <View style={styles.calendarContainer}>
-              <Svg height="360" width="360">
+            <View style={styles.monthNav}>
+              <TouchableOpacity
+                  onPress={() => setMonthOffset((n) => n - 1)}
+                  disabled={monthOffset <= -MAX_MONTHS_AWAY}
+                  style={styles.monthNavButton}
+                  accessibilityRole="button"
+                  accessibilityLabel={t('calendar.previousMonth')}
+                  hitSlop={8}
+              >
+                <Ionicons
+                    name="chevron-back"
+                    size={22}
+                    color={monthOffset <= -MAX_MONTHS_AWAY ? colors.text.muted : colors.text.primary}
+                />
+              </TouchableOpacity>
+              <Text style={styles.month}>
+                {`${monthNames[currentMonth]} ${currentYear}`}
+              </Text>
+              <TouchableOpacity
+                  onPress={() => setMonthOffset((n) => n + 1)}
+                  disabled={monthOffset >= MAX_MONTHS_AWAY}
+                  style={styles.monthNavButton}
+                  accessibilityRole="button"
+                  accessibilityLabel={t('calendar.nextMonth')}
+                  hitSlop={8}
+              >
+                <Ionicons
+                    name="chevron-forward"
+                    size={22}
+                    color={monthOffset >= MAX_MONTHS_AWAY ? colors.text.muted : colors.text.primary}
+                />
+              </TouchableOpacity>
+            </View>
+            {!isViewingThisMonth && (
+                <TouchableOpacity
+                    onPress={() => setMonthOffset(0)}
+                    style={styles.todayPill}
+                    accessibilityRole="button"
+                >
+                  <Ionicons name="return-down-back" size={14} color={colors.brand.base} />
+                  <Text style={styles.todayPillText}>{t('calendar.backToToday')}</Text>
+                </TouchableOpacity>
+            )}
+
+            {startISO && (
+                <Text style={styles.lastPeriod}>
+                  {`${t('calendar.lastPeriod')}: `}
+                  <Text style={styles.lastPeriodDates}>
+                    {endISO
+                        ? formatDateRange(parseISODate(startISO), parseISODate(endISO), monthNames)
+                        : `${t('calendar.startedOn')} ${formatDate(parseISODate(startISO), monthNames)}`}
+                  </Text>
+                </Text>
+            )}
+
+            <Pressable
+                style={styles.calendarContainer}
+                onPress={handleRingPress}
+                disabled={isUpsertingUser}
+                accessibilityRole="button"
+                accessibilityHint={t('calendar.tapADayToSetPeriod')}
+            >
+              {/* The Svg ignores touches so locationX/Y are always relative to
+                  the Pressable, not whichever shape happened to be hit. */}
+              <Svg height="360" width="360" pointerEvents="none">
                 <SvgText
                     x={CENTER_X}
                     y={CENTER_Y}
@@ -148,6 +351,15 @@ export default function Calendar() {
                     fill="#999"
                 >
                   {monthNames[currentMonth].slice(0, 3)}
+                </SvgText>
+                <SvgText
+                    x={CENTER_X}
+                    y={CENTER_Y + 22}
+                    textAnchor="middle"
+                    fontSize="14"
+                    fill="#bbb"
+                >
+                  {currentYear}
                 </SvgText>
 
                 {Array.from({ length: daysInMonth }, (_, i) => {
@@ -167,12 +379,12 @@ export default function Calendar() {
                   if (periodDays.includes(day)) {
                     fill = '#FF5E87';
                     stroke = '#FF5E87';
-                    sequenceNum = periodDays.indexOf(day) + 1;
+                    sequenceNum = dayOfPeriod[day] ?? null;
                   } else if (predictedDays.includes(day)) {
                     fill = '#fff';
                     stroke = '#FF5E87';
                     strokeDasharray = '4 4';
-                    sequenceNum = predictedDays.indexOf(day) + 1;
+                    sequenceNum = dayOfPeriod[day] ?? null;
                   } else if (ovulationDays.includes(day)) {
                     fill = '#D245D2';
                     stroke = '#D245D2';
@@ -181,15 +393,44 @@ export default function Calendar() {
                     stroke = '#27B3B3';
                   }
 
+                  const isToday = isViewingThisMonth && day === todayDay;
+                  // Future days cannot be marked, so they read as unavailable.
+                  const isFuture =
+                      new Date(currentYear, currentMonth, day) >
+                      new Date(todayYear, todayMonth, todayDay);
+
+                  // A short cycle can put fertile days inside a period. The day
+                  // shows as a period, so a dot marks that it is fertile too.
+                  const fertileDotColor =
+                      periodDays.includes(day) || predictedDays.includes(day)
+                          ? ovulationDays.includes(day)
+                              ? '#D245D2'
+                              : fertilityDays.includes(day)
+                                  ? '#27B3B3'
+                                  : null
+                          : null;
+                  const dotRadius = RADIUS - 24;
+
                   const badgeRadius = RADIUS + 20;
                   const badgeX = CENTER_X + badgeRadius * Math.cos(angle);
                   const badgeY = CENTER_Y + badgeRadius * Math.sin(angle);
 
                   return (
                       <React.Fragment key={day}>
+                        {isToday && (
+                            <Circle
+                                cx={x}
+                                cy={y}
+                                r={20.5}
+                                fill="none"
+                                stroke={colors.text.primary}
+                                strokeWidth={2}
+                            />
+                        )}
                         <Circle
                             cx={x}
                             cy={y}
+                            opacity={isFuture && !strokeDasharray ? 0.55 : 1}
                             r={selectedDay === day ? 19 : 16}
                             fill={fill}
                             stroke={stroke}
@@ -201,11 +442,20 @@ export default function Calendar() {
                             y={y + 5}
                             textAnchor="middle"
                             fontSize="13"
-                            fontWeight="500"
-                            fill={fill === '#fff' ? '#333' : '#fff'}
+                            fontWeight={isToday ? '700' : '500'}
+                            fill={fill === '#fff' ? (isFuture ? '#aaa' : '#333') : '#fff'}
                         >
                           {day}
                         </SvgText>
+                        {fertileDotColor && (
+                            <Circle
+                                cx={CENTER_X + dotRadius * Math.cos(angle)}
+                                cy={CENTER_Y + dotRadius * Math.sin(angle)}
+                                r={4}
+                                fill={fertileDotColor}
+                                opacity={isFuture ? 0.55 : 1}
+                            />
+                        )}
                         {sequenceNum && (
                             <>
                               <Circle
@@ -233,6 +483,10 @@ export default function Calendar() {
                   );
                 })}
               </Svg>
+            </Pressable>
+            <View style={styles.tapHintRow}>
+              <Ionicons name="hand-left-outline" size={14} color={colors.text.muted} />
+              <Text style={styles.tapHint}>{t('calendar.tapADayToSetPeriod')}</Text>
             </View>
             <View style={styles.legend}>
               <LegendItem
@@ -251,6 +505,11 @@ export default function Calendar() {
                   color="#FF5E87"
                   label={t('calendar.predicted')}
                   dotted
+              />
+              <LegendItem
+                  color={colors.text.primary}
+                  label={t('calendar.today')}
+                  ring
               />
             </View>
           </NUICard>
@@ -278,6 +537,10 @@ export default function Calendar() {
                 }
                 icon="water-outline"
                 iconColor="#1ABC9C"
+                // Near the end of a month the next period is off this ring;
+                // this is the shortcut to where it is.
+                onPress={startISO ? () => showMonthOf(cycleData.nextPeriodDate) : undefined}
+                actionHint={startISO ? t('calendar.showOnCalendar') : undefined}
             />
           </View>
           {user?.kv?.prev_cycle_start_date && (
@@ -301,7 +564,7 @@ export default function Calendar() {
                     title={
                       t('calendar.fertilityWindow')
                     }
-                    date={formatDateRange(fertilityStart, fertilityEnd, monthNames)}
+                    date={formatDateRange(fertilityWindow.start, fertilityWindow.end, monthNames)}
                     description={
                       t('calendar.bestChanceOfGettingPregnant')
                     }
@@ -361,9 +624,11 @@ interface LegendItemProps {
   color: string;
   label: string;
   dotted?: boolean;
+  /** An outline only, as the today marker is drawn. */
+  ring?: boolean;
 }
 
-const LegendItem: React.FC<LegendItemProps> = ({ color, label, dotted }) => (
+const LegendItem: React.FC<LegendItemProps> = ({ color, label, dotted, ring }) => (
     <View style={styles.legendItem}>
       <View
           style={[
@@ -371,7 +636,7 @@ const LegendItem: React.FC<LegendItemProps> = ({ color, label, dotted }) => (
             {
               borderColor: color,
               borderStyle: dotted ? 'dashed' : 'solid',
-              backgroundColor: dotted ? '#fff' : color,
+              backgroundColor: dotted || ring ? '#fff' : color,
             },
           ]}
       />
@@ -386,6 +651,9 @@ interface InfoCardProps {
   icon?: keyof typeof Ionicons.glyphMap;
   iconColor?: string;
   graph?: boolean;
+  onPress?: () => void;
+  /** Shown under the value when the card can be tapped. */
+  actionHint?: string;
 }
 const InfoCard: React.FC<InfoCardProps> = ({
                                              title,
@@ -394,8 +662,11 @@ const InfoCard: React.FC<InfoCardProps> = ({
                                              icon,
                                              iconColor,
                                              graph,
-                                           }) => (
-    <NUICard style={styles.infoCard}>
+                                             onPress,
+                                             actionHint,
+                                           }) => {
+  const card = (
+    <NUICard style={[styles.infoCard, onPress && styles.infoCardFill]}>
       {icon && (
           <View style={[styles.iconCircle, { backgroundColor: `${iconColor}15` }]}>
             <Ionicons name={icon} size={28} color={iconColor} />
@@ -420,8 +691,27 @@ const InfoCard: React.FC<InfoCardProps> = ({
             )}
           </>
       )}
+      {onPress && actionHint && (
+          <View style={styles.infoCardAction}>
+            <Text style={[styles.infoCardActionText, { color: iconColor }]}>{actionHint}</Text>
+            <Ionicons name="chevron-forward" size={12} color={iconColor} />
+          </View>
+      )}
     </NUICard>
-);
+  );
+  if (!onPress) return card;
+  return (
+      <TouchableOpacity
+          style={styles.infoCardTouchable}
+          onPress={onPress}
+          activeOpacity={0.8}
+          accessibilityRole="button"
+          accessibilityHint={actionHint}
+      >
+        {card}
+      </TouchableOpacity>
+  );
+};
 interface PhaseCardProps {
   title: string;
   date: string;
@@ -489,9 +779,61 @@ const styles = StyleSheet.create({
   month: {
     ...typography.heading,
     fontWeight: '700',
-    marginBottom: 12,
     color: colors.text.primary,
     letterSpacing: 0.5,
+    textAlign: 'center',
+    flex: 1,
+  },
+  monthNav: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'stretch',
+  },
+  monthNavButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  todayPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+    backgroundColor: `${colors.brand.base}15`,
+    marginTop: 4,
+    marginBottom: 4,
+  },
+  todayPillText: {
+    ...typography.caption,
+    color: colors.brand.base,
+    fontWeight: '600',
+  },
+  lastPeriod: {
+    ...typography.label,
+    color: colors.text.muted,
+    textAlign: 'center',
+    marginBottom: 4,
+  },
+  lastPeriodDates: {
+    color: colors.text.primary,
+    fontWeight: '700',
+  },
+  tapHintRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingTop: 4,
+  },
+  tapHint: {
+    ...typography.caption,
+    color: colors.text.muted,
+    textAlign: 'center',
+    flexShrink: 1,
   },
   legend: {
     flexDirection: 'row',
@@ -525,6 +867,22 @@ const styles = StyleSheet.create({
   infoCard: {
     flex: 1,
     alignItems: 'center',
+  },
+  infoCardTouchable: {
+    flex: 1,
+  },
+  infoCardFill: {
+    flex: 1,
+  },
+  infoCardAction: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 2,
+    marginTop: 8,
+  },
+  infoCardActionText: {
+    ...typography.caption,
+    fontWeight: '600',
   },
   iconCircle: {
     width: 48,

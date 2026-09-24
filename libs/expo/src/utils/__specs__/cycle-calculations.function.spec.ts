@@ -2,6 +2,16 @@ import {
   CYCLE_LENGTH_OPTIONS,
   PERIOD_LENGTH_OPTIONS,
   formatRelativeLogDate,
+  getCircularCoordinates,
+  getDayFromPoint,
+  buildPeriodEndUpdate,
+  buildPeriodLengthUpdate,
+  buildPeriodStartUpdate,
+  calculateCycleData,
+  getDaysUntilPeriod,
+  getMostRecentCycleStart,
+  getPeriodLengthDays,
+  toISODateString,
   getLastLoggedValues,
   getMostRecentLogTimestamp,
   getMostRecentMoodLog,
@@ -234,3 +244,241 @@ describe('getLastLoggedValues across a UTC day boundary', () => {
     });
   });
 });
+
+describe('getDayFromPoint', () => {
+  const R = 120;
+  const C = 180;
+  const hit = (x: number, y: number, days = 30) =>
+    getDayFromPoint(x, y, days, C, C, 50, R + 36);
+
+  it('maps 12 o\'clock to day 1', () => {
+    expect(hit(C, C - R)).toBe(1);
+  });
+
+  it('maps 3 o\'clock to a quarter of the way round', () => {
+    expect(hit(C + R, C, 28)).toBe(8);
+  });
+
+  it('round-trips every day drawn on the ring', () => {
+    for (const days of [28, 29, 30, 31]) {
+      for (let day = 1; day <= days; day++) {
+        const { x, y } = getCircularCoordinates(day, days, R, C, C);
+        expect(hit(x, y, days)).toBe(day);
+      }
+    }
+  });
+
+  it('wraps a tap just left of 12 o\'clock to day 1, not day 31', () => {
+    expect(hit(C - 2, C - R, 30)).toBe(1);
+  });
+
+  it('ignores taps in the centre or outside the ring', () => {
+    expect(hit(C, C)).toBeNull();
+    expect(hit(C + 20, C - 20)).toBeNull();
+    expect(hit(C, C - R - 60)).toBeNull();
+  });
+});
+
+describe('toISODateString', () => {
+  it('formats a local date as YYYY-MM-DD', () => {
+    expect(toISODateString(new Date(2026, 0, 5))).toBe('2026-01-05');
+  });
+});
+
+describe('getPeriodLengthDays', () => {
+  it('counts both the first and last day', () => {
+    expect(getPeriodLengthDays('2026-09-10', '2026-09-10')).toBe(1);
+    expect(getPeriodLengthDays('2026-09-10', '2026-09-14')).toBe(5);
+  });
+
+  it('counts across a month boundary', () => {
+    expect(getPeriodLengthDays('2026-08-29', '2026-09-03')).toBe(6);
+  });
+});
+
+describe('buildPeriodStartUpdate', () => {
+  const NOW_ISO = NOW.toISOString();
+
+  it('sets the start and logs it', () => {
+    expect(buildPeriodStartUpdate('2026-09-10', undefined, NOW)).toEqual({
+      prev_cycle_start_date: '2026-09-10',
+      period_start_logs: [{ date: '2026-09-10', timestamp: NOW_ISO }],
+    });
+  });
+
+  it('keeps an end still after the new start and re-measures the length', () => {
+    const update = buildPeriodStartUpdate('2026-09-10', '2026-09-14', NOW);
+    expect(update).not.toHaveProperty('prev_period_end_date');
+    expect(update.avg_period_length_days).toBe(5);
+  });
+
+  it('clears an end on or before the new start', () => {
+    expect(buildPeriodStartUpdate('2026-09-14', '2026-09-14', NOW).prev_period_end_date).toBe('');
+    expect(buildPeriodStartUpdate('2026-09-20', '2026-09-14', NOW).prev_period_end_date).toBe('');
+  });
+
+  it('clears an end too far after the new start to be the same period', () => {
+    const update = buildPeriodStartUpdate('2026-08-01', '2026-09-14', NOW);
+    expect(update.prev_period_end_date).toBe('');
+    expect(update).not.toHaveProperty('avg_period_length_days');
+  });
+});
+
+describe('buildPeriodLengthUpdate', () => {
+  // NOW is 2026-09-21.
+  it('moves the last day to match the length and logs it', () => {
+    expect(buildPeriodLengthUpdate('2026-09-10', 5, '2026-09-12', NOW)).toEqual({
+      avg_period_length_days: 5,
+      prev_period_end_date: '2026-09-14',
+      period_end_logs: [{ date: '2026-09-14', timestamp: NOW.toISOString() }],
+    });
+  });
+
+  it('does not re-log an end that has not moved', () => {
+    expect(buildPeriodLengthUpdate('2026-09-10', 5, '2026-09-14', NOW)).toEqual({
+      avg_period_length_days: 5,
+    });
+  });
+
+  it('allows an end of today', () => {
+    expect(buildPeriodLengthUpdate('2026-09-17', 5, undefined, NOW).prev_period_end_date).toBe(
+      '2026-09-21'
+    );
+  });
+
+  it('never sets a future end: clears a stored one instead', () => {
+    expect(buildPeriodLengthUpdate('2026-09-18', 7, '2026-09-19', NOW)).toEqual({
+      avg_period_length_days: 7,
+      prev_period_end_date: '',
+    });
+    expect(buildPeriodLengthUpdate('2026-09-18', 7, undefined, NOW)).toEqual({
+      avg_period_length_days: 7,
+    });
+  });
+});
+
+describe('buildPeriodEndUpdate', () => {
+  it('sets the end, the period length, and logs it', () => {
+    expect(buildPeriodEndUpdate('2026-09-10', '2026-09-14', NOW)).toEqual({
+      prev_period_end_date: '2026-09-14',
+      avg_period_length_days: 5,
+      period_end_logs: [{ date: '2026-09-14', timestamp: NOW.toISOString() }],
+    });
+  });
+});
+
+describe('calculateCycleData', () => {
+  // NOW is 2026-09-21. Period began 2026-09-10, 28-day cycles, 5-day periods,
+  // so later starts fall on Oct 8, Nov 5, Dec 3.
+  const data = (month: number, year = 2026) =>
+    calculateCycleData('2026-09-10', 28, 5, month, year, NOW);
+
+  it('draws the current period as period days', () => {
+    expect(data(8).periodDays).toEqual([10, 11, 12, 13, 14]);
+    expect(data(8).predictedDays).toEqual([]);
+  });
+
+  it('predicts next month, which the ring could not show before', () => {
+    expect(data(9).predictedDays).toEqual([8, 9, 10, 11, 12]);
+    expect(data(9).periodDays).toEqual([]);
+  });
+
+  it('predicts months further ahead too', () => {
+    expect(data(11).predictedDays).toEqual([3, 4, 5, 6, 7, 31]);
+  });
+
+  it('shows fertility and ovulation for future cycles', () => {
+    // The cycle starting Oct 8 ovulates Nov 5 − 14 = Oct 22.
+    expect(data(9).ovulationDays).toContain(22);
+    expect(data(9).fertilityDays).toEqual(expect.arrayContaining([17, 18, 19, 20, 21, 23]));
+  });
+
+  it('draws nothing before the stored start', () => {
+    const aug = data(7);
+    expect(aug.periodDays).toEqual([]);
+    expect(aug.predictedDays).toEqual([]);
+  });
+
+  it('keeps the next-period summary relative to today, whatever month is shown', () => {
+    expect(data(11).daysUntilPeriod).toBe(data(8).daysUntilPeriod);
+    expect(data(11).nextPeriodDate).toEqual(new Date(2026, 9, 8));
+  });
+});
+
+describe('calculateCycleData accuracy', () => {
+  const now = new Date(2026, 8, 21, 9);
+
+  it('numbers each day from its own period start, even one begun last month', () => {
+    const sep = calculateCycleData('2026-08-30', 28, 5, 8, 2026, now);
+    expect(sep.periodDays).toEqual([1, 2, 3]);
+    expect([1, 2, 3].map((d) => sep.dayOfPeriod[d])).toEqual([3, 4, 5]);
+  });
+
+  it('restarts the numbering for a second period in the same month', () => {
+    const dec = calculateCycleData('2026-09-10', 28, 5, 11, 2026, now);
+    expect(dec.dayOfPeriod[3]).toBe(1);
+    expect(dec.dayOfPeriod[7]).toBe(5);
+    expect(dec.dayOfPeriod[31]).toBe(1);
+  });
+
+  it('draws only the logged cycle as period days; projected past cycles are predicted', () => {
+    // Logged 2026-07-16; Aug 13 and Sep 10 are projections.
+    const sep = calculateCycleData('2026-07-16', 28, 5, 8, 2026, now);
+    expect(sep.periodDays).toEqual([]);
+    expect(sep.predictedDays).toEqual([10, 11, 12, 13, 14]);
+    const jul = calculateCycleData('2026-07-16', 28, 5, 6, 2026, now);
+    expect(jul.periodDays).toEqual([16, 17, 18, 19, 20]);
+  });
+
+  it('shows the next ovulation and fertile window once this cycle’s have passed', () => {
+    // Cycle began Sep 10: ovulation Sep 24, window Sep 19–25. On Sep 21 the
+    // window is under way; on Sep 27 both are over and move to the next cycle.
+    const during = calculateCycleData('2026-09-10', 28, 5, 8, 2026, now);
+    expect(during.ovulationDate).toEqual(new Date(2026, 8, 24));
+    expect(during.fertilityWindow).toEqual({
+      start: new Date(2026, 8, 19),
+      end: new Date(2026, 8, 25),
+    });
+    const after = calculateCycleData('2026-09-10', 28, 5, 8, 2026, new Date(2026, 8, 27, 9));
+    expect(after.ovulationDate).toEqual(new Date(2026, 9, 22));
+    expect(after.fertilityWindow.start).toEqual(new Date(2026, 9, 17));
+  });
+
+  it('keeps fertile days that fall inside a short-cycle period', () => {
+    const short = calculateCycleData('2026-09-10', 21, 7, 8, 2026, now);
+    expect(short.periodDays).toEqual([10, 11, 12, 13, 14, 15, 16]);
+    expect(short.fertilityDays).toEqual(expect.arrayContaining([12, 13, 14, 15, 16]));
+  });
+});
+
+describe.each(['America/New_York', 'Europe/London', 'Africa/Nairobi'])(
+  'dates in %s',
+  (tz) => {
+    const original = process.env.TZ;
+    beforeAll(() => {
+      process.env.TZ = tz;
+    });
+    afterAll(() => {
+      process.env.TZ = original;
+    });
+
+    it('draws a stored date on that day, not the day before', () => {
+      const d = calculateCycleData('2026-09-10', 28, 5, 8, 2026, new Date(2026, 8, 21, 9));
+      expect(d.periodDays).toEqual([10, 11, 12, 13, 14]);
+    });
+
+    it('starts the next cycle exactly one cycle later across a clock change', () => {
+      // London and New York both change clocks in March 2026.
+      expect(getMostRecentCycleStart('2026-03-20', 28, new Date(2026, 3, 17, 9))).toEqual(
+        new Date(2026, 3, 17)
+      );
+      expect(getMostRecentCycleStart('2026-03-20', 28, new Date(2026, 3, 16, 9))).toEqual(
+        new Date(2026, 2, 20)
+      );
+    });
+
+    it('counts days to the next period across a clock change', () => {
+      expect(getDaysUntilPeriod(new Date(2026, 3, 17), new Date(2026, 2, 20, 23))).toBe(28);
+    });
+  }
+);

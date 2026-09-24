@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   Animated,
   Dimensions,
@@ -17,7 +17,9 @@ import {
   useLanguage,
   useTranslate,
   useToast,
-  NUIButton
+  NUIButton,
+  useScrollToSelected,
+  parseISODate,
 } from '@siku-zangu/expo';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 
@@ -39,7 +41,7 @@ export default function UpdatingDOBScreen() {
   const language = useLanguage();
   const t = useTranslate();
   const userId = params.userId as string;
-  const { updateCurrentUser, isUpsertingUser } = useUser(userId);
+  const { user, updateCurrentUser, isUpsertingUser } = useUser(userId);
 
   const [selectedDay, setSelectedDay] = useState<number>(12);
   const [selectedMonth, setSelectedMonth] = useState<number>(8);
@@ -114,6 +116,22 @@ export default function UpdatingDOBScreen() {
       { length: maxBirthYear - minBirthYear + 1 },
       (_, i) => minBirthYear + i
   );
+
+  // Open on what was saved, so going back a step shows the answer already
+  // given rather than the default. Once only, and never over a value the
+  // user has already picked on this visit.
+  const seededRef = useRef(false);
+  useEffect(() => {
+    if (seededRef.current || !user?.kv) return;
+    seededRef.current = true;
+    const saved = user.kv.date_of_birth;
+    if (!saved) return;
+    const date = parseISODate(saved);
+    if (!years.includes(date.getFullYear())) return;
+    setSelectedDay(date.getDate());
+    setSelectedMonth(date.getMonth());
+    setSelectedYear(date.getFullYear());
+  }, [user]);
 
   const formatDateToISO = (
       day: number,
@@ -266,9 +284,21 @@ export default function UpdatingDOBScreen() {
       </View>
   );
 
+  // One list shows day, month or year in turn; keying the selection by list
+  // makes switching lists re-centre on that list's value.
+  const pickerSelected =
+      activePicker === 'day'
+          ? `day:${selectedDay}`
+          : activePicker === 'month'
+              ? `month:${selectedMonth}`
+              : `year:${selectedYear}`;
+  const picker = useScrollToSelected(pickerSelected);
+
   const renderPicker = () => (
       <View style={styles.pickerContainer}>
         <ScrollView
+            ref={picker.scrollRef}
+            onLayout={picker.onScrollLayout}
             showsVerticalScrollIndicator={false}
             contentContainerStyle={styles.pickerScrollContent}
         >
@@ -276,11 +306,16 @@ export default function UpdatingDOBScreen() {
               days.map((day) => (
                   <TouchableOpacity
                       key={day}
+                      onLayout={picker.onItemLayout(`day:${day}`)}
                       style={[
                         styles.pickerItem,
                         selectedDay === day && styles.selectedPickerItem,
                       ]}
-                      onPress={() => setSelectedDay(day)}
+                      onPress={() => {
+                        seededRef.current = true;
+                        picker.markTapped(`day:${day}`);
+                        setSelectedDay(day);
+                      }}
                   >
                     <Text
                         style={[
@@ -297,11 +332,16 @@ export default function UpdatingDOBScreen() {
               months.map((month) => (
                   <TouchableOpacity
                       key={month.value}
+                      onLayout={picker.onItemLayout(`month:${month.value}`)}
                       style={[
                         styles.pickerItem,
                         selectedMonth === month.value && styles.selectedPickerItem,
                       ]}
-                      onPress={() => setSelectedMonth(month.value)}
+                      onPress={() => {
+                        seededRef.current = true;
+                        picker.markTapped(`month:${month.value}`);
+                        setSelectedMonth(month.value);
+                      }}
                   >
                     <Text
                         style={[
@@ -319,11 +359,16 @@ export default function UpdatingDOBScreen() {
               years.map((year) => (
                   <TouchableOpacity
                       key={year}
+                      onLayout={picker.onItemLayout(`year:${year}`)}
                       style={[
                         styles.pickerItem,
                         selectedYear === year && styles.selectedPickerItem,
                       ]}
-                      onPress={() => setSelectedYear(year)}
+                      onPress={() => {
+                        seededRef.current = true;
+                        picker.markTapped(`year:${year}`);
+                        setSelectedYear(year);
+                      }}
                   >
                     <Text
                         style={[
