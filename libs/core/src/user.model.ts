@@ -16,6 +16,8 @@ export type UserKv = {
     avg_cycle_length_days?: number;
     avg_period_length_days?: number;
     prev_cycle_start_date?: string;
+    /** Last day of the period that began on `prev_cycle_start_date`. An empty string clears it. */
+    prev_period_end_date?: string;
     receive_period_alerts?: boolean;
     receive_fertile_alerts?: boolean;
     receive_medication_tips?: boolean;
@@ -27,6 +29,9 @@ export type UserKv = {
     symptom_logs?: Array<{ symptom: string; timestamp: string; }>;
     mood_logs?: Array<{ mood: string; timestamp: string; }>;
     medication_logs?: Array<{ medication: string; timestamp: string; }>;
+    /** Entries to append to the history: `date` is the day marked, `timestamp` when it was marked. */
+    period_start_logs?: Array<{ date: string; timestamp: string; }>;
+    period_end_logs?: Array<{ date: string; timestamp: string; }>;
     fcm_token?: string;
     onboarding_complete?: boolean;
 };
@@ -54,6 +59,21 @@ const LOG_VALUE = z.string().min(1, {message: 'Log value is required'}).max(64, 
 
 const LOG_TIMESTAMP = z.string().datetime({message: 'Log timestamp must be an ISO datetime'});
 
+/**
+ * A period date is a calendar day on the user's device, not an instant, so the
+ * server cannot know which day it is for them. Allow up to UTC+14 — the
+ * furthest-ahead timezone — so a user whose "today" is already tomorrow in UTC
+ * is not rejected, while anything genuinely in the future still is.
+ */
+const MAX_TZ_AHEAD_MS = 14 * 60 * 60 * 1000;
+const isNotFutureDay = (iso: string): boolean =>
+    iso === '' || iso <= new Date(Date.now() + MAX_TZ_AHEAD_MS).toISOString().slice(0, 10);
+const NOT_FUTURE = {message: 'Period dates cannot be in the future'};
+
+const LOG_DATE = z.string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, {message: 'Log date must be in YYYY-MM-DD format'})
+    .refine(isNotFutureDay, NOT_FUTURE);
+
 export const USER_ZOD_SCHEMA = z.object({
     kv: z.object({
         first_name: z.string().max(64, {message: 'First name is too long'}).optional(),
@@ -67,7 +87,10 @@ export const USER_ZOD_SCHEMA = z.object({
         email: z.email({message: 'E-mail address is invalid'}).optional(),
         avg_cycle_length_days: z.number().min(0, {message: 'Average cycle length is invalid'}).max(365, {message: 'Average cycle length is invalid'}).optional(),
         avg_period_length_days: z.number().min(0, {message: 'Average period length is invalid'}).max(365, {message: 'Average period length is invalid'}).optional(),
-        prev_cycle_start_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, {message: 'Previous cycle start date must be in YYYY-MM-DD format'}).optional(),
+        prev_cycle_start_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, {message: 'Previous cycle start date must be in YYYY-MM-DD format'}).refine(isNotFutureDay, NOT_FUTURE).optional(),
+        // Empty is allowed: it is how a new start date that falls on or after the
+        // stored end clears that end.
+        prev_period_end_date: z.string().regex(/^(\d{4}-\d{2}-\d{2})?$/, {message: 'Previous period end date must be in YYYY-MM-DD format'}).refine(isNotFutureDay, NOT_FUTURE).optional(),
         receive_period_alerts: z.boolean().optional(),
         receive_fertile_alerts: z.boolean().optional(),
         receive_medication_tips: z.boolean().optional(),
@@ -86,6 +109,8 @@ export const USER_ZOD_SCHEMA = z.object({
         symptom_logs: z.array(z.object({symptom: LOG_VALUE, timestamp: LOG_TIMESTAMP,})).max(MAX_LOGS_PER_SAVE).optional(),
         mood_logs: z.array(z.object({mood: LOG_VALUE, timestamp: LOG_TIMESTAMP,})).max(MAX_LOGS_PER_SAVE).optional(),
         medication_logs: z.array(z.object({medication: LOG_VALUE, timestamp: LOG_TIMESTAMP,})).max(MAX_LOGS_PER_SAVE).optional(),
+        period_start_logs: z.array(z.object({date: LOG_DATE, timestamp: LOG_TIMESTAMP,})).max(MAX_LOGS_PER_SAVE).optional(),
+        period_end_logs: z.array(z.object({date: LOG_DATE, timestamp: LOG_TIMESTAMP,})).max(MAX_LOGS_PER_SAVE).optional(),
         fcm_token: z.string().optional(),
         onboarding_complete: z.boolean().optional(),
     }),

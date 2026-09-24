@@ -1,3 +1,4 @@
+import { USER_ZOD_SCHEMA } from '@siku-zangu/core';
 import {
   parseLoggedAt,
   selectedFromLogs,
@@ -212,5 +213,51 @@ describe('selectedFromLogs', () => {
       ],
     });
     expect(next.selected_symptoms).toEqual(['cramps']);
+  });
+});
+
+describe('period date logs', () => {
+  it('records the marked day as the value and when it was marked as logged_at', () => {
+    const rows = userLogsToRows(
+      {
+        period_start_logs: [{ date: '2026-09-10', timestamp: iso('2026-09-22T09:00:00Z') }],
+        period_end_logs: [{ date: '2026-09-14', timestamp: iso('2026-09-22T09:00:00Z') }],
+      },
+      NOW
+    );
+    expect(rows).toEqual([
+      { kind: 'period_start', value: '2026-09-10', logged_at: new Date('2026-09-22T09:00:00Z'), cleared: false },
+      { kind: 'period_end', value: '2026-09-14', logged_at: new Date('2026-09-22T09:00:00Z'), cleared: false },
+    ]);
+  });
+
+  it('does not touch the current symptom, mood or medication selection', () => {
+    expect(
+      selectedFromLogs({
+        period_start_logs: [{ date: '2026-09-10', timestamp: iso('2026-09-22T09:00:00Z') }],
+      })
+    ).toEqual({});
+  });
+});
+
+describe('USER_ZOD_SCHEMA period dates', () => {
+  const day = (offsetDays: number) =>
+    new Date(Date.now() + offsetDays * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+  const parse = (kv: Record<string, unknown>) => USER_ZOD_SCHEMA.safeParse({ kv }).success;
+  const ts = new Date().toISOString();
+
+  it('accepts today and past days', () => {
+    expect(parse({ prev_cycle_start_date: day(-5), prev_period_end_date: day(0) })).toBe(true);
+    expect(parse({ period_start_logs: [{ date: day(-5), timestamp: ts }] })).toBe(true);
+  });
+
+  it('accepts an empty end date, which clears it', () => {
+    expect(parse({ prev_period_end_date: '' })).toBe(true);
+  });
+
+  it('rejects future days', () => {
+    expect(parse({ prev_cycle_start_date: day(3) })).toBe(false);
+    expect(parse({ prev_period_end_date: day(3) })).toBe(false);
+    expect(parse({ period_end_logs: [{ date: day(3), timestamp: ts }] })).toBe(false);
   });
 });

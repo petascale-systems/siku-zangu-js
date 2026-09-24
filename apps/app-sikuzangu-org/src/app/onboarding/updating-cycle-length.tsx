@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   Animated,
   Dimensions,
@@ -17,7 +17,8 @@ import {
   useLanguage,
   useTranslate,
   useToast,
-  NUIButton
+  NUIButton,
+  useScrollToSelected,
 } from '@siku-zangu/expo';
 import {User} from '@siku-zangu/core';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -35,9 +36,21 @@ export default function UpdatingCycleLengthScreen() {
   const language = useLanguage();
   const t = useTranslate();
   const userId = params.userId as string;
-  const { updateCurrentUser, isUpsertingUser } = useUser(userId);
+  const { user, updateCurrentUser, isUpsertingUser } = useUser(userId);
 
   const [selectedLength, setSelectedLength] = useState<number>(28);
+  const picker = useScrollToSelected(selectedLength, { horizontal: true });
+
+  // Open on what was saved, so going back a step shows the answer already
+  // given rather than the default. Once only, and never over a value the
+  // user has already picked on this visit.
+  const seededRef = useRef(false);
+  useEffect(() => {
+    if (seededRef.current || !user?.kv) return;
+    seededRef.current = true;
+    const saved = user.kv.avg_cycle_length_days;
+    if (saved && CYCLE_LENGTH_OPTIONS.includes(saved)) setSelectedLength(saved);
+  }, [user]);
   const cycleLengths = CYCLE_LENGTH_OPTIONS;
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -150,6 +163,8 @@ export default function UpdatingCycleLengthScreen() {
 
         <View style={styles.lengthContainer}>
           <ScrollView
+            ref={picker.scrollRef}
+            onLayout={picker.onScrollLayout}
             horizontal
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.scrollContent}
@@ -159,11 +174,16 @@ export default function UpdatingCycleLengthScreen() {
               return (
                 <TouchableOpacity
                   key={length}
+                  onLayout={picker.onItemLayout(length)}
                   style={[
                     styles.lengthCard,
                     selectedLength === length && styles.lengthCardSelected,
                   ]}
-                  onPress={() => setSelectedLength(length)}
+                  onPress={() => {
+                    seededRef.current = true;
+                    picker.markTapped(length);
+                    setSelectedLength(length);
+                  }}
                   accessibilityLabel={`${length} ${
                     t('updating_cycle_length.days')
                   }`}

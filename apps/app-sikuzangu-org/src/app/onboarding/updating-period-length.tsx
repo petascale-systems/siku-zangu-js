@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   Animated,
   Dimensions,
@@ -12,12 +12,14 @@ import { Ionicons } from '@expo/vector-icons';
 import {useUser} from '@siku-zangu/react-native';
 import {
   PERIOD_LENGTH_OPTIONS,
+  buildPeriodLengthUpdate,
   colors,
   typography,
   useLanguage,
   useTranslate,
   useToast,
-  NUIButton
+  NUIButton,
+  useScrollToSelected,
 } from '@siku-zangu/expo';
 import {User} from '@siku-zangu/core';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -35,9 +37,21 @@ export default function UpdatingPeriodLengthScreen() {
   const language = useLanguage();
   const t = useTranslate();
   const userId = params.userId as string;
-  const { updateCurrentUser, isUpsertingUser } = useUser(userId);
+  const { user, updateCurrentUser, isUpsertingUser } = useUser(userId);
 
   const [selectedLength, setSelectedLength] = useState<number>(7);
+  const picker = useScrollToSelected(selectedLength, { horizontal: true });
+
+  // Open on what was saved, so going back a step shows the answer already
+  // given rather than the default. Once only, and never over a value the
+  // user has already picked on this visit.
+  const seededRef = useRef(false);
+  useEffect(() => {
+    if (seededRef.current || !user?.kv) return;
+    seededRef.current = true;
+    const saved = user.kv.avg_period_length_days;
+    if (saved && PERIOD_LENGTH_OPTIONS.includes(saved)) setSelectedLength(saved);
+  }, [user]);
   const periodLengths = PERIOD_LENGTH_OPTIONS;
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -65,10 +79,12 @@ export default function UpdatingPeriodLengthScreen() {
     }
 
     try {
+      // The start was set on the previous screen; the last day follows from it.
+      const startISO = user?.kv?.prev_cycle_start_date;
       const updateData: User = {
-        kv: {
-          avg_period_length_days: selectedLength,
-        },
+        kv: startISO
+            ? buildPeriodLengthUpdate(startISO, selectedLength, user?.kv?.prev_period_end_date)
+            : { avg_period_length_days: selectedLength },
       };
       await updateCurrentUser(updateData);
       router.push({
@@ -129,6 +145,8 @@ export default function UpdatingPeriodLengthScreen() {
         </View>
         <View style={styles.lengthContainer}>
           <ScrollView
+            ref={picker.scrollRef}
+            onLayout={picker.onScrollLayout}
             horizontal
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.scrollContent}
@@ -136,11 +154,16 @@ export default function UpdatingPeriodLengthScreen() {
             {periodLengths.map((length) => (
               <TouchableOpacity
                 key={length}
+                onLayout={picker.onItemLayout(length)}
                 style={[
                   styles.lengthCard,
                   selectedLength === length && styles.lengthCardSelected,
                 ]}
-                onPress={() => setSelectedLength(length)}
+                onPress={() => {
+                  seededRef.current = true;
+                  picker.markTapped(length);
+                  setSelectedLength(length);
+                }}
                 accessibilityLabel={`${length} ${
                   t('updating_period_length.days')
                 }`}

@@ -12,6 +12,8 @@ import {UserKv} from '@siku-zangu/core';
 import {
   CYCLE_LENGTH_OPTIONS,
   PERIOD_LENGTH_OPTIONS,
+  buildPeriodLengthUpdate,
+  buildPeriodStartUpdate,
   colors,
   getLastLoggedValues,
   getMostRecentLogTimestamp,
@@ -22,6 +24,7 @@ import {
   useTabContentInset,
   useTranslate,
   useToast,
+  useScrollToSelected,
   NUIButton
 } from '@siku-zangu/expo';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -40,60 +43,38 @@ const sameSelection = (a: string[], b: string[]): boolean =>
 
 const DAY_CIRCLE_SIZE = 50;
 const DAY_CIRCLE_GAP = 8;
-const DAY_ITEM_WIDTH = DAY_CIRCLE_SIZE + DAY_CIRCLE_GAP;
 
 /**
  * Horizontally scrollable row of day circles. The ranges are wide enough that
- * they no longer fit on screen, so the saved value is centred on first render
- * to stop a user with a 35-day cycle opening to a row that looks unselected.
+ * they no longer fit on screen, so the saved value is kept centred to stop a
+ * user with a 35-day cycle opening to a row that looks unselected.
  */
 function DaysSelector({
   options,
   value,
   onSelect,
   unitLabel,
+  scrollKey,
 }: {
   options: number[];
   value: number | null;
   onSelect: (value: number) => void;
   unitLabel: string;
+  /** Changing this re-centres the selection, e.g. each time the tab opens. */
+  scrollKey?: number;
 }) {
-  const scrollRef = useRef<ScrollView>(null);
-  const viewportWidthRef = useRef(0);
-  const hasCenteredRef = useRef(false);
-
-  const centerOnValue = useCallback(() => {
-    if (hasCenteredRef.current || value == null) return;
-    if (viewportWidthRef.current <= 0) return;
-
-    const index = options.indexOf(value);
-    if (index < 0) return;
-
-    hasCenteredRef.current = true;
-    const offset =
-        index * DAY_ITEM_WIDTH -
-        viewportWidthRef.current / 2 +
-        DAY_ITEM_WIDTH / 2;
-    scrollRef.current?.scrollTo({ x: Math.max(0, offset), animated: false });
-  }, [options, value]);
-
-  // Centring depends on both the stored value and layout, and either can land
-  // first, so it is attempted from both and guarded to run only once.
-  useEffect(() => {
-    centerOnValue();
-  }, [centerOnValue]);
+  // Re-centres on every outside change, not just the first: the Calendar tab
+  // can change the period length while this tab stays mounted.
+  const picker = useScrollToSelected(value, { horizontal: true, resetKey: scrollKey });
 
   return (
       <ScrollView
-          ref={scrollRef}
+          ref={picker.scrollRef}
           horizontal
           showsHorizontalScrollIndicator={false}
           style={styles.daysSelector}
           contentContainerStyle={styles.daysSelectorContent}
-          onLayout={(e) => {
-            viewportWidthRef.current = e.nativeEvent.layout.width;
-            centerOnValue();
-          }}
+          onLayout={picker.onScrollLayout}
       >
         {options.map((day) => {
           const isSelected = value === day;
@@ -101,7 +82,11 @@ function DaysSelector({
               <TouchableOpacity
                   key={day}
                   style={[styles.dayCircle, isSelected && styles.dayCircleSelected]}
-                  onPress={() => onSelect(day)}
+                  onLayout={picker.onItemLayout(day)}
+                  onPress={() => {
+                    picker.markTapped(day);
+                    onSelect(day);
+                  }}
                   accessibilityLabel={`${day} ${unitLabel}`}
                   accessibilityRole="radio"
                   accessibilityState={{ selected: isSelected }}
@@ -115,6 +100,74 @@ function DaysSelector({
           );
         })}
       </ScrollView>
+  );
+}
+
+type PickerColumnProps = {
+  label: string;
+  options: number[];
+  selectedValue: number;
+  onSelect: (value: number) => void;
+  formatOption?: (value: number) => string;
+  /** Changing this re-centres the selection, e.g. each time the tab opens. */
+  scrollKey?: number;
+};
+
+/**
+ * One scrolling column of the date picker. Opens scrolled to the selected
+ * value — a list starting at the top showed day 1, Jan and 1950, so the date
+ * actually set was out of sight, most of all in the year column.
+ */
+function PickerColumn({
+  label,
+  options,
+  selectedValue,
+  onSelect,
+  formatOption = String,
+  scrollKey,
+}: PickerColumnProps) {
+  const picker = useScrollToSelected(selectedValue, { resetKey: scrollKey });
+
+  return (
+      <View style={styles.pickerContainer}>
+        <Text style={styles.pickerLabel}>{label}</Text>
+        <ScrollView
+            ref={picker.scrollRef}
+            style={styles.pickerScroll}
+            showsVerticalScrollIndicator={false}
+            nestedScrollEnabled={true}
+            onLayout={picker.onScrollLayout}
+        >
+          {options.map((option) => {
+            const isSelected = selectedValue === option;
+            return (
+                <TouchableOpacity
+                    key={option}
+                    style={[
+                      styles.pickerOption,
+                      isSelected && styles.pickerOptionSelected,
+                    ]}
+                    onLayout={picker.onItemLayout(option)}
+                    onPress={() => {
+                      picker.markTapped(option);
+                      onSelect(option);
+                    }}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected: isSelected }}
+                >
+                  <Text
+                      style={[
+                        styles.pickerOptionText,
+                        isSelected && styles.pickerOptionTextSelected,
+                      ]}
+                  >
+                    {formatOption(option)}
+                  </Text>
+                </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
+      </View>
   );
 }
 
@@ -323,6 +376,13 @@ export default function LogEntry() {
     hasSeededRef.current = false;
   }, [userId]);
 
+  // Bumped on every focus so the seed below actually re-runs. Resetting the
+  // ref alone is not enough: the Calendar tab can change the period length
+  // while this tab sits mounted in the background, and the seed effect then
+  // fires (and is skipped) before this tab is focused again — leaving "Last
+  // period lasted for" showing the old value.
+  const [focusCount, setFocusCount] = useState(0);
+
   // A tab is never unmounted, so without this the form would keep whatever it
   // seeded on the very first visit. Re-seed each time the tab is opened.
   useFocusEffect(
@@ -330,6 +390,7 @@ export default function LogEntry() {
         hasSeededRef.current = false;
         // A fresh visit starts clean, so re-seeding is correct again.
         isDirtyRef.current = false;
+        setFocusCount((n) => n + 1);
       }, [])
   );
 
@@ -397,7 +458,7 @@ export default function LogEntry() {
       loggedOn: lastLoggedOn ? toISODate(new Date(lastLoggedOn)) : '',
     };
     setDateTouched(false);
-  }, [user]);
+  }, [user, focusCount]);
   const getDaysInMonth = (month: number, year: number) => {
     return new Date(year, month + 1, 0).getDate();
   };
@@ -492,49 +553,20 @@ export default function LogEntry() {
       selectedValue: number,
       onSelect: (value: number) => void,
       isMonth = false
-  ) => {
-    return (
-        <View style={styles.pickerContainer}>
-          <Text style={styles.pickerLabel}>{label}</Text>
-          <ScrollView
-              style={styles.pickerScroll}
-              showsVerticalScrollIndicator={false}
-              nestedScrollEnabled={true}
-          >
-            {options.map((option) => {
-              const displayValue = isMonth
-                  ? months[option].label
-                  : option.toString();
-              const isSelected = selectedValue === option;
-
-              return (
-                  <TouchableOpacity
-                      key={option}
-                      style={[
-                        styles.pickerOption,
-                        isSelected && styles.pickerOptionSelected,
-                      ]}
-                      onPress={() => {
-                        isDirtyRef.current = true;
-                        setDateTouched(true);
-                        onSelect(option);
-                      }}
-                  >
-                    <Text
-                        style={[
-                          styles.pickerOptionText,
-                          isSelected && styles.pickerOptionTextSelected,
-                        ]}
-                    >
-                      {displayValue}
-                    </Text>
-                  </TouchableOpacity>
-              );
-            })}
-          </ScrollView>
-        </View>
-    );
-  };
+  ) => (
+      <PickerColumn
+          label={label}
+          options={options}
+          selectedValue={selectedValue}
+          onSelect={(value) => {
+            isDirtyRef.current = true;
+            setDateTouched(true);
+            onSelect(value);
+          }}
+          formatOption={isMonth ? (value) => months[value].label : undefined}
+          scrollKey={focusCount}
+      />
+  );
 
   const handleSave = async () => {
     // Check if there are any changes
@@ -607,8 +639,29 @@ export default function LogEntry() {
     ) {
       updates.avg_cycle_length_days = avgCycleDays;
     }
-    if (hasCycleStartChanged()) {
-      updates.prev_cycle_start_date = formatDateToISO();
+    const startChanged = hasCycleStartChanged();
+    if (startChanged) {
+      // Also logs the start.
+      Object.assign(
+          updates,
+          buildPeriodStartUpdate(formatDateToISO(), user?.kv?.prev_period_end_date)
+      );
+    }
+    // The length is on screen here, so it is what the user means: the last day
+    // moves to match it rather than the length being re-measured from the old
+    // end. Applied after the start update so it wins over that re-measure.
+    const periodStart = startChanged
+        ? formatDateToISO()
+        : initialValuesRef.current.prevCycleStart;
+    if (
+        periodStart &&
+        lastPeriodDays != null &&
+        (startChanged || updates.avg_period_length_days !== undefined)
+    ) {
+      Object.assign(
+          updates,
+          buildPeriodLengthUpdate(periodStart, lastPeriodDays, user?.kv?.prev_period_end_date)
+      );
     }
 
     if (Object.keys(updates).length === 0) {
@@ -749,6 +802,7 @@ export default function LogEntry() {
                     setLastPeriodDays(value);
                   }}
                   unitLabel={t('log_entry.days')}
+                  scrollKey={focusCount}
               />
             </View>
             <View style={styles.cycleDetailCard}>
@@ -763,6 +817,7 @@ export default function LogEntry() {
                     setAvgCycleDays(value);
                   }}
                   unitLabel={t('log_entry.days')}
+                  scrollKey={focusCount}
               />
             </View>
           </View>

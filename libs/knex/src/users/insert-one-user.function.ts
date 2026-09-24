@@ -21,6 +21,7 @@ export const USER_TABLE_COLUMN_ALIASES = {
     avg_cycle_length_days: DATABASE.raw('convert(_avg_cycle_length_days.v,unsigned)'),
     avg_period_length_days: DATABASE.raw('convert(_avg_period_length_days.v,unsigned)'),
     prev_cycle_start_date: '_prev_cycle_start_date.v',
+    prev_period_end_date: '_prev_period_end_date.v',
     receive_period_alerts: '_receive_period_alerts.v',
     receive_fertile_alerts: '_receive_fertile_alerts.v',
     receive_medication_tips: '_receive_medication_tips.v',
@@ -53,6 +54,7 @@ export function buildUserTableJoins(db: Knex | Knex.Transaction) {
         .leftJoin('s_user_kv as _avg_cycle_length_days', DATABASE.raw('_avg_cycle_length_days.id_user=_u.id_user and _avg_cycle_length_days.k="avg_cycle_length_days"'))
         .leftJoin('s_user_kv as _avg_period_length_days', DATABASE.raw('_avg_period_length_days.id_user=_u.id_user and _avg_period_length_days.k="avg_period_length_days"'))
         .leftJoin('s_user_kv as _prev_cycle_start_date', DATABASE.raw('_prev_cycle_start_date.id_user=_u.id_user and _prev_cycle_start_date.k="prev_cycle_start_date"'))
+        .leftJoin('s_user_kv as _prev_period_end_date', DATABASE.raw('_prev_period_end_date.id_user=_u.id_user and _prev_period_end_date.k="prev_period_end_date"'))
         .leftJoin('s_user_kv as _receive_period_alerts', DATABASE.raw('_receive_period_alerts.id_user=_u.id_user and _receive_period_alerts.k="receive_period_alerts"'))
         .leftJoin('s_user_kv as _receive_fertile_alerts', DATABASE.raw('_receive_fertile_alerts.id_user=_u.id_user and _receive_fertile_alerts.k="receive_fertile_alerts"'))
         .leftJoin('s_user_kv as _receive_medication_tips', DATABASE.raw('_receive_medication_tips.id_user=_u.id_user and _receive_medication_tips.k="receive_medication_tips"'))
@@ -108,6 +110,8 @@ export function rowToUser(row: any) {
             avg_cycle_length_days: row.avg_cycle_length_days != null ? Number(row.avg_cycle_length_days) : undefined,
             avg_period_length_days: row.avg_period_length_days != null ? Number(row.avg_period_length_days) : undefined,
             prev_cycle_start_date: row.prev_cycle_start_date ?? undefined,
+            // A cleared end is stored as '' and read back as unset.
+            prev_period_end_date: row.prev_period_end_date || undefined,
             receive_period_alerts: row.receive_period_alerts === 'true' ? true : row.receive_period_alerts === 'false' ? false : undefined,
             receive_fertile_alerts: row.receive_fertile_alerts === 'true' ? true : row.receive_fertile_alerts === 'false' ? false : undefined,
             receive_medication_tips: row.receive_medication_tips === 'true' ? true : row.receive_medication_tips === 'false' ? false : undefined,

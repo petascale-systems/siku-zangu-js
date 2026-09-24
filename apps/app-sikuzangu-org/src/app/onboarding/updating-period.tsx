@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   Animated,
   Dimensions,
@@ -11,12 +11,15 @@ import {
 import {useUser} from '@siku-zangu/react-native';
 import {User} from '@siku-zangu/core';
 import {
+  buildPeriodStartUpdate,
   colors,
   typography,
   useLanguage,
   useTranslate,
   useToast,
-  NUIButton
+  NUIButton,
+  useScrollToSelected,
+  parseISODate,
 } from '@siku-zangu/expo';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 
@@ -33,7 +36,7 @@ export default function UpdatingPeriodScreen() {
   const language = useLanguage();
   const t = useTranslate();
   const userId = params.userId as string;
-  const { updateCurrentUser, isUpsertingUser } = useUser(userId);
+  const { user, updateCurrentUser, isUpsertingUser } = useUser(userId);
 
   const currentDate = new Date();
   const [selectedDay, setSelectedDay] = useState<number>(currentDate.getDate());
@@ -101,6 +104,23 @@ export default function UpdatingPeriodScreen() {
       (_, i) => currentDate.getFullYear() - 3 + i
   );
 
+  // Open on what was saved, so going back a step shows the answer already
+  // given rather than the default. Once only, and never over a value the
+  // user has already picked on this visit.
+  const seededRef = useRef(false);
+  useEffect(() => {
+    if (seededRef.current || !user?.kv) return;
+    seededRef.current = true;
+    const saved = user.kv.prev_cycle_start_date;
+    if (!saved) return;
+    const date = parseISODate(saved);
+    // The year list only covers recent years.
+    if (!years.includes(date.getFullYear())) return;
+    setSelectedDay(date.getDate());
+    setSelectedMonth(date.getMonth());
+    setSelectedYear(date.getFullYear());
+  }, [user]);
+
   const formatDateToISO = (
       day: number,
       month: number,
@@ -151,7 +171,7 @@ export default function UpdatingPeriodScreen() {
           selectedMonth,
           selectedYear
       );
-      const updateData: User = { kv: { prev_cycle_start_date } };
+      const updateData: User = { kv: buildPeriodStartUpdate(prev_cycle_start_date, user?.kv?.prev_period_end_date) };
       await updateCurrentUser(updateData);
       router.push({
         pathname: '/onboarding/updating-period-length',
@@ -255,9 +275,21 @@ export default function UpdatingPeriodScreen() {
       </View>
   );
 
+  // One list shows day, month or year in turn; keying the selection by list
+  // makes switching lists re-centre on that list's value.
+  const pickerSelected =
+      activePicker === 'day'
+          ? `day:${selectedDay}`
+          : activePicker === 'month'
+              ? `month:${selectedMonth}`
+              : `year:${selectedYear}`;
+  const picker = useScrollToSelected(pickerSelected);
+
   const renderPicker = () => (
       <View style={styles.pickerContainer}>
         <ScrollView
+            ref={picker.scrollRef}
+            onLayout={picker.onScrollLayout}
             showsVerticalScrollIndicator={false}
             contentContainerStyle={styles.pickerScrollContent}
         >
@@ -265,11 +297,16 @@ export default function UpdatingPeriodScreen() {
               days.map((day) => (
                   <TouchableOpacity
                       key={day}
+                      onLayout={picker.onItemLayout(`day:${day}`)}
                       style={[
                         styles.pickerItem,
                         selectedDay === day && styles.selectedPickerItem,
                       ]}
-                      onPress={() => setSelectedDay(day)}
+                      onPress={() => {
+                        seededRef.current = true;
+                        picker.markTapped(`day:${day}`);
+                        setSelectedDay(day);
+                      }}
                   >
                     <Text
                         style={[
@@ -286,12 +323,17 @@ export default function UpdatingPeriodScreen() {
               months.map((month) => (
                   <TouchableOpacity
                       key={month.value}
+                      onLayout={picker.onItemLayout(`month:${month.value}`)}
                       style={[
                         styles.pickerItem,
                         styles.monthPickerItem,
                         selectedMonth === month.value && styles.selectedMonthPickerItem,
                       ]}
-                      onPress={() => setSelectedMonth(month.value)}
+                      onPress={() => {
+                        seededRef.current = true;
+                        picker.markTapped(`month:${month.value}`);
+                        setSelectedMonth(month.value);
+                      }}
                   >
                     <Text
                         style={[
@@ -310,11 +352,16 @@ export default function UpdatingPeriodScreen() {
               years.map((year) => (
                   <TouchableOpacity
                       key={year}
+                      onLayout={picker.onItemLayout(`year:${year}`)}
                       style={[
                         styles.pickerItem,
                         selectedYear === year && styles.selectedPickerItem,
                       ]}
-                      onPress={() => setSelectedYear(year)}
+                      onPress={() => {
+                        seededRef.current = true;
+                        picker.markTapped(`year:${year}`);
+                        setSelectedYear(year);
+                      }}
                   >
                     <Text
                         style={[
