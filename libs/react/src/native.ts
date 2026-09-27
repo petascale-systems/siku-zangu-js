@@ -7,7 +7,8 @@
 
 // Users - hooks and utilities
 export { useUser } from './users/use-user.function';
-export { fetchUserById, updateUser } from './users/use-user.shared';
+export { usePeriodHistory } from './users/use-period-history.function';
+export { fetchUserById, fetchPeriodHistory, updateUser } from './users/use-user.shared';
 export { useAccessToken, ACCESS_TOKEN_KEY } from './users/use-access-token.function';
 
 // Articles - hooks only (not ArticleCard component which uses Next.js)

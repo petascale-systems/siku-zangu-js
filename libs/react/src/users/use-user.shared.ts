@@ -1,4 +1,4 @@
-import {APIError, User} from '@siku-zangu/core';
+import {APIError, PeriodHistoryCycle, User} from '@siku-zangu/core';
 import {getJSON} from '../get-json.function';
 import {postJSON} from '../post-json.function';
 import {patchJSON} from '../patch-json.function';
@@ -6,6 +6,7 @@ import {deleteJSON} from '../delete-json.function';
 
 export const USERS_API_PATH = '/api/users';
 export const USER_BY_ID_API_PATH = (id: string) => `/api/users/${id}`;
+export const PERIOD_HISTORY_API_PATH = (id: string) => `/api/users/${id}/period-history`;
 export const CHANGE_PIN_API_PATH = (id: string) => `/api/users/${id}/change-pin`;
 export const REQUEST_PIN_RESET_API_PATH = '/api/auth/request-pin-reset';
 export const VERIFY_OTP_API_PATH = '/api/auth/verify-otp';
@@ -13,6 +14,10 @@ export const RESET_PIN_API_PATH = '/api/auth/reset-pin';
 
 export async function fetchUserById(id: string): Promise<User> {
     return getJSON<User>(USER_BY_ID_API_PATH(id));
+}
+
+export async function fetchPeriodHistory(id: string): Promise<PeriodHistoryCycle[]> {
+    return getJSON<PeriodHistoryCycle[]>(PERIOD_HISTORY_API_PATH(id));
 }
 
 export async function createUser(user: User): Promise<User> {

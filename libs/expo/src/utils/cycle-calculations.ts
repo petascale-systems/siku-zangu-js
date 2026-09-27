@@ -721,6 +721,83 @@ export const buildPeriodEndUpdate = (
   period_end_logs: [{ date: endISO, timestamp: now.toISOString() }],
 });
 
+/** `DD/MM`, the compact form the period history rows use. */
+export const formatShortDate = (date: Date): string =>
+  `${String(date.getDate()).padStart(2, '0')}/${String(date.getMonth() + 1).padStart(2, '0')}`;
+
+/** One cycle as `GET /api/users/:id/period-history` returns it. */
+export type HistoryCycleInput = {
+  start_date: string;
+  end_date: string | null;
+  cycle_length_days: number | null;
+};
+
+/**
+ * Where everything sits on one history bar, in days from the cycle's first
+ * day. The bar is `barDays` long.
+ */
+export type HistoryRow = {
+  start: Date;
+  /** Last period day: the logged one, or the start plus the average length. */
+  periodEnd: Date;
+  periodDays: number;
+  /** True when no end was logged and `periodDays` is the average. */
+  periodEstimated: boolean;
+  /** Null for the current cycle, which has not ended. */
+  cycleLength: number | null;
+  barDays: number;
+  fertileStartDay: number;
+  fertileEndDay: number;
+  ovulationDay: number;
+  /** Today's offset; only set on the current cycle. */
+  todayDay: number | null;
+  isCurrent: boolean;
+};
+
+/**
+ * Lays out one cycle for the history card. A finished cycle is as long as it
+ * was; the current one is drawn to its predicted end. Ovulation is counted
+ * back 14 days from that end, as on the calendar ring.
+ */
+export const buildHistoryRow = (
+  cycle: HistoryCycleInput,
+  avgCycleLength: number,
+  avgPeriodLength: number,
+  today: Date = new Date()
+): HistoryRow => {
+  const start = parseISODate(cycle.start_date);
+  const isCurrent = cycle.cycle_length_days === null;
+  const barDays = cycle.cycle_length_days ?? avgCycleLength;
+
+  const periodEstimated = !cycle.end_date;
+  const periodDays = cycle.end_date
+    ? getPeriodLengthDays(cycle.start_date, cycle.end_date)
+    : avgPeriodLength;
+  const periodEnd = new Date(start);
+  periodEnd.setDate(periodEnd.getDate() + periodDays - 1);
+
+  const cycleEnd = new Date(start);
+  cycleEnd.setDate(cycleEnd.getDate() + barDays);
+  const ovulation = getOvulationDate(cycleEnd);
+  const fertile = getFertilityWindow(ovulation);
+
+  const todayDay = isCurrent ? daysBetween(start, today) : null;
+
+  return {
+    start,
+    periodEnd,
+    periodDays,
+    periodEstimated,
+    cycleLength: cycle.cycle_length_days,
+    barDays,
+    fertileStartDay: daysBetween(start, fertile.start),
+    fertileEndDay: daysBetween(start, fertile.end),
+    ovulationDay: daysBetween(start, ovulation),
+    todayDay: todayDay !== null && todayDay >= 0 && todayDay < barDays ? todayDay : null,
+    isCurrent,
+  };
+};
+
 export const MONTH_NAMES_EN = [
   'January', 'February', 'March', 'April', 'May', 'June',
   'July', 'August', 'September', 'October', 'November', 'December',

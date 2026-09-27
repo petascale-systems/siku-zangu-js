@@ -2,7 +2,7 @@
   "expo": {
     "name": "Siku zangu",
     "slug": "app-sikuzangu-org",
-    "version": "1.1.1",
+    "version": "1.1.2",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "org.sikuzangu.app",
@@ -25,7 +25,7 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "versionCode": 20,
+      "versionCode": 21,
       "edgeToEdgeEnabled": true,
       "package": "org.sikuzangu.app",
       "googleServicesFile": "./google-services.json",
@@ -94,7 +94,8 @@
           }
         }
       ],
-      "./plugins/with-light-theme"
+      "./plugins/with-light-theme",
+      "./plugins/with-universal-abi"
     ],
     "extra": {
       "router": {
