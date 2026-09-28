@@ -34,11 +34,14 @@ export const colors = {
 
   surface: {
     /**
-     * A neutral canvas. This was a 100%-saturated cream at hue 14 — an orange,
-     * while the brand is pink at ~345, so the background quietly fought the UI
-     * on every screen. Neutral also lets white cards actually read as cards.
+     * A soft blush on the brand hue (~342). This was a 100%-saturated cream at
+     * hue 14 — an orange that fought the pink UI — then a neutral grey, which
+     * read as flat. Half-saturated so it reads as pink without tinting the UI;
+     * white cards still separate from it (1.12:1), and every text, border and
+     * state colour keeps its AA ratio on it (see theme.spec.ts) — state.success
+     * is the tightest, at 4.54:1.
      */
-    app: '#F4F4F7',
+    app: '#FAF0F3',
     card: '#FFFFFF',
     muted: '#EFEFF2',
     /** Brand tints, for callouts and selected chips. */

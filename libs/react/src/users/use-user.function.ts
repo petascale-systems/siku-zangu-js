@@ -99,8 +99,10 @@ export function useUser(userId?: string) {
                     queryKey: queryKeys.users.detail(userId),
                 });
             }
-            // Any list showing this user is now stale.
+            // Any list showing this user is now stale, and so is the period
+            // history if a period day was just marked.
             queryClient.invalidateQueries({queryKey: queryKeys.users.lists()});
+            queryClient.invalidateQueries({queryKey: queryKeys.users.periodHistory(userId)});
         },
         onError: (e) => setMutationError(toMessage(e, 'Failed to upsert user')),
     });

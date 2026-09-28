@@ -19,6 +19,8 @@ export const queryKeys = {
     lists: () => ['users', 'list'] as const,
     list: (params?: UsersFetchParams) => ['users', 'list', params ?? {}] as const,
     detail: (userId?: string) => ['users', 'detail', userId] as const,
+    periodHistory: (userId?: string) =>
+      ['users', 'detail', userId, 'period-history'] as const,
   },
   admins: {
     all: () => ['admins'] as const,

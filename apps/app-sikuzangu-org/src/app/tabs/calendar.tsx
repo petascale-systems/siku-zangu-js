@@ -24,10 +24,11 @@ import {
   useTranslate,
   PAGE_BOTTOM_PADDING,
   NUICard,
+  NUIPeriodHistoryCard,
   MAX_PERIOD_LENGTH_DAYS,
   useToast,
 } from '@siku-zangu/expo';
-import {useUser} from '@siku-zangu/react-native';
+import {usePeriodHistory, useUser} from '@siku-zangu/react-native';
 import {calculateCycleData, formatDate, formatDateRange, getCircularCoordinates, buildPeriodEndUpdate, buildPeriodStartUpdate, getDayFromPoint, getDaysInMonth, parseISODate, getPeriodLengthDays, toISODateString, PeriodDatesUpdate, MONTH_NAMES_EN, MONTH_NAMES_SW} from '@siku-zangu/expo';
 import {useRouter, useFocusEffect} from 'expo-router';
 
@@ -57,6 +58,11 @@ export default function Calendar() {
   const tabInset = useTabContentInset();
   const { user, userUpdatedAt, refetchUser, isFetchingUser, updateCurrentUser, isUpsertingUser } =
       useUser(userId);
+  const {
+    cycles: historyCycles,
+    isLoading: isLoadingHistory,
+    refetch: refetchHistory,
+  } = usePeriodHistory(userId);
   const { showError, showSuccess } = useToast();
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
   const STALE_TIME = 3 * 60 * 1000;
@@ -94,7 +100,8 @@ export default function Calendar() {
         if (!userId || !refetchUser || !user) return;
         if (Date.now() - userUpdatedAt < STALE_TIME) return;
         refetchUser(true);
-      }, [userId, refetchUser, user, userUpdatedAt])
+        refetchHistory();
+      }, [userId, refetchUser, refetchHistory, user, userUpdatedAt])
   );
   const cycleData = useMemo(() => {
     if (!user?.kv?.prev_cycle_start_date) {
@@ -143,9 +150,9 @@ export default function Calendar() {
 
   const handleRefresh = useCallback(async () => {
     if (refetchUser) {
-      await refetchUser(true);
+      await Promise.all([refetchUser(true), refetchHistory()]);
     }
-  }, [refetchUser]);
+  }, [refetchUser, refetchHistory]);
   const saveCycleUpdate = useCallback(
       async (kv: PeriodDatesUpdate, message: string) => {
         try {
@@ -543,6 +550,13 @@ export default function Calendar() {
                 actionHint={startISO ? t('calendar.showOnCalendar') : undefined}
             />
           </View>
+          <NUIPeriodHistoryCard
+              cycles={historyCycles}
+              avgCycleLength={user?.kv?.avg_cycle_length_days || 28}
+              avgPeriodLength={user?.kv?.avg_period_length_days || 6}
+              loading={isLoadingHistory}
+              style={styles.historyCard}
+          />
           {user?.kv?.prev_cycle_start_date && (
               <>
                 <PhaseCard
@@ -924,6 +938,9 @@ const styles = StyleSheet.create({
     height: 4,
     borderRadius: 2,
     marginTop: 10,
+  },
+  historyCard: {
+    marginVertical: 10,
   },
   phaseCard: {
     marginVertical: 10,

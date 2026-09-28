@@ -4,8 +4,10 @@ import {
   formatRelativeLogDate,
   getCircularCoordinates,
   getDayFromPoint,
+  buildHistoryRow,
   buildPeriodEndUpdate,
   buildPeriodLengthUpdate,
+  formatShortDate,
   buildPeriodStartUpdate,
   calculateCycleData,
   getDaysUntilPeriod,
@@ -482,3 +484,58 @@ describe.each(['America/New_York', 'Europe/London', 'Africa/Nairobi'])(
     });
   }
 );
+
+describe('history rows', () => {
+  it('formats a day as DD/MM', () => {
+    expect(formatShortDate(new Date(2026, 8, 5))).toBe('05/09');
+  });
+
+  it('lays out a finished cycle from its own lengths', () => {
+    const row = buildHistoryRow(
+      { start_date: '2026-08-26', end_date: '2026-08-31', cycle_length_days: 25 },
+      30,
+      6,
+      NOW
+    );
+    expect(row).toMatchObject({
+      periodDays: 6,
+      periodEstimated: false,
+      cycleLength: 25,
+      barDays: 25,
+      // Ovulation 14 days before the next start, fertile 5 before to 1 after.
+      ovulationDay: 11,
+      fertileStartDay: 6,
+      fertileEndDay: 12,
+      todayDay: null,
+      isCurrent: false,
+    });
+  });
+
+  it('draws the current cycle to its predicted end, with today marked', () => {
+    const row = buildHistoryRow(
+      { start_date: '2026-09-20', end_date: null, cycle_length_days: null },
+      30,
+      6,
+      NOW
+    );
+    expect(row).toMatchObject({
+      periodDays: 6,
+      periodEstimated: true,
+      cycleLength: null,
+      barDays: 30,
+      ovulationDay: 16,
+      todayDay: 1,
+      isCurrent: true,
+    });
+  });
+
+  it('leaves today unmarked once the current cycle runs past its prediction', () => {
+    const row = buildHistoryRow(
+      { start_date: '2026-07-01', end_date: null, cycle_length_days: null },
+      28,
+      5,
+      NOW
+    );
+    expect(row.todayDay).toBeNull();
+  });
+});
