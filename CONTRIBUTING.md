@@ -190,14 +190,18 @@ configuration at all. Two of those fallbacks are not safe outside development:
 | `FIREBASE_*` | Push notifications are skipped; initialisation is already guarded. |
 | `REQUIRE_USER_AUTH` | Defaults to off — see below. |
 
-Secrets are mapped to the container in `.drone.yml`.
+All of them are set as environment variables on the host running the container.
 
 `REQUIRE_USER_AUTH` gates enforcement on the mobile-facing user routes. It is
 off by default: the shipped app stored its token but never sent it, so
 requiring it would 401 every install until users updated. Mobile sends the
-header as of 1.1.0 — set it to `"true"` in `.drone.yml` once that build has
-rolled out. It is a literal there rather than a secret so the change is
-reviewable in version control.
+header as of 1.1.0 — set it to `"true"` once that build has rolled out.
+
+While it is off, an unauthenticated caller can still write logs, which append
+to `s_user_log` rather than a 4096-byte cell. The old column width used to be
+an accidental ceiling on that; now the bound is the 200-entry cap and the
+64-character value limit in `USER_ZOD_SCHEMA`. Both are load-bearing until the
+flag is on.
 
 Even with the flag off, a token belonging to a *different* user is always
 rejected — that closes cross-user access without waiting for the rollout.

@@ -41,6 +41,6 @@ npx nx run-many -t lint         # lint everything
 
 ## Deployment
 
-Pushing a git tag starts the Drone pipeline in [.drone.yml](.drone.yml). It builds `sikuzangu-org`, packages it with [sikuzangu-org-Dockerfile](sikuzangu-org-Dockerfile), and runs the container. On startup the container applies the Atlas schema, then starts the server. Secrets are stored in Drone. See [apps/sikuzangu-org](apps/sikuzangu-org/README.md) for the environment variables and how to run the container locally.
+[sikuzangu-org-Dockerfile](sikuzangu-org-Dockerfile) builds `sikuzangu-org` from source and packages it, so the image needs nothing built beforehand. On startup the container applies the Atlas schema, then starts the server. Configuration comes from environment variables on the host. See [apps/sikuzangu-org](apps/sikuzangu-org/README.md) for the variables and how to run the container locally.
 
 Mobile builds go through EAS. See [apps/app-sikuzangu-org](apps/app-sikuzangu-org/README.md).

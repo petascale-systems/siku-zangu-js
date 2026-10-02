@@ -30,8 +30,9 @@ npx nx lint sikuzangu-org
 
 ## Docker
 
+The image builds the app itself, so there is no separate `nx build` step:
+
 ```bash
-npx nx build sikuzangu-org --skip-nx-cache
 docker build -t sikuzangu-org:<tag> -f ./sikuzangu-org-Dockerfile .
 docker run -p 3001:3000 \
   -e S_DATABASE_HOST=<host> -e S_DATABASE_USER=<user> \
@@ -40,5 +41,3 @@ docker run -p 3001:3000 \
   -e ATLASGO_URL=mysql://<user>:<password>@<host>:3306/siku_zangu \
   sikuzangu-org:<tag>
 ```
-
-In production, Drone does this on every git tag (see `.drone.yml`).

@@ -1,19 +1,46 @@
+# Builds sikuzangu-org from source and packages it with the Atlas schema.
+#
+#   docker build -t sikuzangu-org -f sikuzangu-org-Dockerfile .
+#
+# Three stages, so the runtime image carries the standalone server and nothing
+# from the workspace's (large, Expo-inclusive) node_modules.
+
+# deps: node_modules only, so the install is cached until the lockfile changes.
+FROM node:22-alpine AS deps
+WORKDIR /workspace
+COPY package.json package-lock.json ./
+# The postinstall hook (`flowbite-react register`) reads this config.
+COPY .flowbite-react ./.flowbite-react
+# --force: the Expo and Next peer ranges in this one workspace conflict.
+RUN npm ci --force --no-audit --no-fund
+
+# build: the Next.js standalone output in dist/apps/sikuzangu-org.
+FROM node:22-alpine AS build
+WORKDIR /workspace
+ENV NX_DAEMON=false \
+    NX_NO_CLOUD=true \
+    NEXT_TELEMETRY_DISABLED=1
+COPY --from=deps /workspace/node_modules ./node_modules
+COPY . .
+RUN npx nx build sikuzangu-org --skip-nx-cache
+
+# runtime
 FROM node:22-alpine
-
 WORKDIR /var/lib/sikuzangu-org
-COPY dist/apps/sikuzangu-org/.next/standalone .
-COPY dist/apps/sikuzangu-org/public ./dist/apps/sikuzangu-org/public
-COPY dist/apps/sikuzangu-org/.next/static ./dist/apps/sikuzangu-org/.next/static
-# Carries both the declarative schema (hcl/) and the data migrations (sql/),
-# which the entrypoint applies in that order.
-COPY atlasgo ./atlasgo
-COPY sikuzangu-org-docker-entrypoint.sh /usr/bin/
+ENV NODE_ENV=production \
+    NEXT_TELEMETRY_DISABLED=1
 
-# RUN npm install
-# mysql-client runs the data migrations; curl installs the atlas CLI below.
-RUN apk add --no-cache curl mysql-client
-RUN curl -sSf https://atlasgo.sh | sh
-RUN chmod 550 /usr/bin/sikuzangu-org-docker-entrypoint.sh
+# curl installs the atlas CLI, which the entrypoint uses to apply the schema.
+RUN apk add --no-cache curl \
+ && curl -sSf https://atlasgo.sh | sh
+
+COPY --from=build /workspace/dist/apps/sikuzangu-org/.next/standalone .
+# public/ is served from beside server.js, not from the dist directory.
+COPY --from=build /workspace/dist/apps/sikuzangu-org/public ./apps/sikuzangu-org/public
+COPY --from=build /workspace/dist/apps/sikuzangu-org/.next/static ./dist/apps/sikuzangu-org/.next/static
+# The declarative schema the entrypoint applies on startup.
+COPY atlasgo/hcl ./atlasgo/hcl
+COPY --chmod=550 sikuzangu-org-docker-entrypoint.sh /usr/bin/
 
 EXPOSE 3000
 ENTRYPOINT [ "sikuzangu-org-docker-entrypoint.sh" ]

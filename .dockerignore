@@ -1,11 +1,33 @@
-*
-!/apps
-/apps/*/*
-!/apps/*/.output
-!/.output
-!/dist
-!/dist/apps
-!/atlasgo
-!/atlasgo/hcl
-!*Dockerfile
-!*entrypoint.sh
+# The image builds the app itself, so the context is the source tree minus
+# local state, build output and secrets.
+
+# dependencies and build output: rebuilt inside the image
+node_modules
+**/node_modules
+dist
+tmp
+.nx
+**/.next
+**/tsconfig.tsbuildinfo
+coverage
+
+# mobile: native projects and Expo state, unused by the web build
+apps/app-sikuzangu-org/android
+apps/app-sikuzangu-org/ios
+apps/app-sikuzangu-org/.expo
+
+# secrets and local config
+.env
+.env.*
+*-secret.json
+**/google-services.json
+**/GoogleService-Info.plist
+.flowbite-react/pid
+.flowbite-react/class-list.json
+
+# tooling
+.git
+.idea
+.vscode
+.zed
+*.log
