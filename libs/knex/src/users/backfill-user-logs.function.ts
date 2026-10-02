@@ -12,10 +12,9 @@ const LOG_KV_KEYS = USER_LOG_KINDS.map((k) => k.kvKey);
 /**
  * Copies one user's kv log history into `s_user_log`.
  *
- * The sweep over every account is a data migration and lives in
- * `tools/scripts/backfill-user-logs.mjs`, run by the docker entrypoint. This is
- * the lazy counterpart: a user who signs in before that has reached them is
- * migrated on first access, so correctness never waits on the batch.
+ * The only migration path: there is no sweep over every account, so each user
+ * is migrated on first access and an account nobody signs in to keeps its
+ * history in `s_user_kv` alone.
  *
  * Idempotent twice over — the unique index ignores rows already present, and
  * the marker skips an account that has already been done.

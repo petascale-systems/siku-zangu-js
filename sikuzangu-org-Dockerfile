@@ -30,16 +30,16 @@ WORKDIR /var/lib/sikuzangu-org
 ENV NODE_ENV=production \
     NEXT_TELEMETRY_DISABLED=1
 
-# mysql-client runs the data migrations; curl installs the atlas CLI.
-RUN apk add --no-cache curl mysql-client \
+# curl installs the atlas CLI, which the entrypoint uses to apply the schema.
+RUN apk add --no-cache curl \
  && curl -sSf https://atlasgo.sh | sh
 
 COPY --from=build /workspace/dist/apps/sikuzangu-org/.next/standalone .
-COPY --from=build /workspace/dist/apps/sikuzangu-org/public ./dist/apps/sikuzangu-org/public
+# public/ is served from beside server.js, not from the dist directory.
+COPY --from=build /workspace/dist/apps/sikuzangu-org/public ./apps/sikuzangu-org/public
 COPY --from=build /workspace/dist/apps/sikuzangu-org/.next/static ./dist/apps/sikuzangu-org/.next/static
-# Carries both the declarative schema (hcl/) and the data migrations (sql/),
-# which the entrypoint applies in that order.
-COPY atlasgo ./atlasgo
+# The declarative schema the entrypoint applies on startup.
+COPY atlasgo/hcl ./atlasgo/hcl
 COPY --chmod=550 sikuzangu-org-docker-entrypoint.sh /usr/bin/
 
 EXPOSE 3000
