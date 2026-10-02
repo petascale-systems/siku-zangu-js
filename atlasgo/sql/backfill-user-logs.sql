@@ -24,7 +24,8 @@
 -- Entries first; the marker below depends on them having landed.
 INSERT INTO s_user_log (id_log, id_user, kind, value, cleared, logged_at)
 SELECT
-    UUID_TO_BIN(UUID()),
+    -- Not UUID_TO_BIN: MySQL-only, and production runs MariaDB. Same bytes.
+    UNHEX(REPLACE(UUID(), '-', '')),
     parsed.id_user,
     parsed.kind,
     parsed.value,

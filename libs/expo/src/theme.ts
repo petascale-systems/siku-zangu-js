@@ -36,12 +36,15 @@ export const colors = {
     /**
      * A soft blush on the brand hue (~342). This was a 100%-saturated cream at
      * hue 14 — an orange that fought the pink UI — then a neutral grey, which
-     * read as flat. Half-saturated so it reads as pink without tinting the UI;
-     * white cards still separate from it (1.12:1), and every text, border and
-     * state colour keeps its AA ratio on it (see theme.spec.ts) — state.success
-     * is the tightest, at 4.54:1.
+     * read as flat. Half-saturated so it reads as pink without tinting the UI,
+     * and a step deeper than the first blush (#FAF0F3), which washed out on
+     * bright screens: white cards now separate from it at 1.20:1, up from
+     * 1.12:1. Lightness dropped, saturation did not, so it stays a blush rather
+     * than a candy pink. The greys, brand border and success green were each
+     * nudged a step darker to keep their AA ratio on it (see theme.spec.ts);
+     * border.default is the tightest, at 3.14:1.
      */
-    app: '#FAF0F3',
+    app: '#F7E6EB',
     card: '#FFFFFF',
     muted: '#EFEFF2',
     /** Brand tints, for callouts and selected chips. */
@@ -53,20 +56,20 @@ export const colors = {
     primary: '#1C1C1E',
     secondary: '#55555C',
     /** Lightest grey that still clears 4.5:1 on every surface we use. */
-    muted: '#6B6B73',
-    placeholder: '#6B6B73',
+    muted: '#66666E',
+    placeholder: '#66666E',
     inverse: '#FFFFFF',
   },
 
   border: {
     /**
-     * Neutral control boundary: >=3.07:1 on every surface (SC 1.4.11).
+     * Neutral control boundary: >=3.14:1 on every surface (SC 1.4.11).
      * iOS systemGray cleared 3:1 on the old cream but not on the lighter
      * neutral canvas, so this is a step darker.
      */
-    default: '#88888D',
-    /** Brand boundary for focus and selection only, >=3.01:1. */
-    brand: '#E25C7B',
+    default: '#838388',
+    /** Brand boundary for focus and selection only, >=3.16:1. */
+    brand: '#DC5375',
     /** Decorative hairlines — list separators, never a control boundary. */
     subtle: '#D8D8DC',
     focus: '#A81E40',
@@ -91,7 +94,7 @@ export const colors = {
 
   state: {
     error: '#B3261E',
-    success: '#1B7F3B',
+    success: '#1A7838',
     warning: '#8A5300',
     info: '#0B6E8F',
   },

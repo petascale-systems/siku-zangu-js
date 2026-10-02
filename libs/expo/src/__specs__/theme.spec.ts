@@ -48,9 +48,11 @@ describe('colour tokens meet WCAG AA', () => {
     expect(ratio(colors.text.secondary, bg)).toBeGreaterThanOrEqual(4.5);
   });
 
-  it.each(PINK_TINTS)('text.muted is NOT safe on %s', (bg) => {
-    // Documented deliberately: muted is for neutral surfaces only.
-    expect(ratio(colors.text.muted, bg)).toBeLessThan(4.5);
+  it('text.muted is NOT safe on surface.tintStrong', () => {
+    // Documented deliberately: muted is for neutral surfaces only. Darkening it
+    // for the deeper app blush lifted it just over 4.5:1 on the light tint, but
+    // it still fails on the strong one, so chips keep using text.secondary.
+    expect(ratio(colors.text.muted, colors.surface.tintStrong)).toBeLessThan(4.5);
   });
 
   // A border has to be perceptible against the surface it delimits.
