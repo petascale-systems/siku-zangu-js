@@ -27,7 +27,7 @@ export default function TermsOfServicePage() {
               <p className="text-sm sm:text-base leading-relaxed">
                 These Terms of Service ("Terms") govern your access to and use
                 of the Siku Zangu mobile app and related services ("Services")
-                provided by Siku Zangu Health Technologies Ltd ("Company", "we",
+                provided by Osilgi Solutions Co. Limited ("Company", "we",
                 "us", or "our").
               </p>
             </div>
@@ -90,7 +90,7 @@ export default function TermsOfServicePage() {
               </h2>
               <p className="text-sm sm:text-base leading-relaxed">
                 All App content, excluding user-submitted materials, is owned by
-                Siku Zangu Health Technologies Ltd. You may not copy or
+                Osilgi Solutions Co. Limited. You may not copy or
                 reproduce content without permission.
               </p>
             </div>
@@ -248,16 +248,16 @@ export default function TermsOfServicePage() {
               </p>
               <div className="space-y-2 text-sm sm:text-base">
                 <p className="font-semibold text-gray-900">
-                  Siku Zangu Health Technologies Ltd
+                  Osilgi Solutions Co. Limited
                 </p>
                 <p>P.O. BOX 708 Arusha, Tanzania</p>
                 <p>
                   Email:{' '}
                   <a
-                    href="mailto:info@sikuzangu.com"
+                    href="mailto:sikuzangu@gmail.com"
                     className="text-primary hover:underline"
                   >
-                    info@sikuzangu.com
+                    sikuzangu@gmail.com
                   </a>
                 </p>
               </div>

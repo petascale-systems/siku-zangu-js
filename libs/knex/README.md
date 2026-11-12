@@ -23,4 +23,5 @@ The schema itself is in [atlasgo](../../atlasgo/README.md).
 ```bash
 npx nx lint knex
 npx nx typecheck knex
+npx nx test knex
 ```

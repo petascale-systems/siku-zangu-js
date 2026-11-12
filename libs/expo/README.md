@@ -10,4 +10,5 @@
 ```bash
 npx nx lint expo
 npx nx typecheck expo
+npx nx test expo
 ```
