@@ -33,7 +33,7 @@ export default function PrivacyPolicyPage() {
               </p>
               <p className="text-sm sm:text-base leading-relaxed">
                 By downloading, accessing, or using the App, you acknowledge
-                that you have read and understood and agree to this policy. This
+                that you have read, understood, and agree to this policy. This
                 Policy should be read together with our Terms of Service.
               </p>
             </div>
@@ -47,7 +47,7 @@ export default function PrivacyPolicyPage() {
               </p>
               <p className="text-sm sm:text-base leading-relaxed mb-3">
                 <span className="font-semibold">
-                  Siku Zangu Health Technologies Ltd.
+                  Osilgi Solutions Co. Limited.
                 </span>
                 <br />
                 P.O. BOX 708
@@ -58,10 +58,10 @@ export default function PrivacyPolicyPage() {
                 For any privacy-related questions or requests, please contact us
                 at:{' '}
                 <a
-                  href="mailto:info@sikuzangu.com"
+                  href="mailto:sikuzangu@gmail.com"
                   className="text-primary hover:underline"
                 >
-                  info@sikuzangu.com
+                  sikuzangu@gmail.com
                 </a>
               </p>
             </div>
@@ -303,16 +303,16 @@ export default function PrivacyPolicyPage() {
               </p>
               <div className="space-y-2 text-sm sm:text-base">
                 <p className="font-semibold text-gray-900">
-                  Siku Zangu Health Technologies Ltd
+                  Osilgi Solutions Co. Limited
                 </p>
                 <p>P.O. BOX 708 Arusha, Tanzania</p>
                 <p>
                   Email:{' '}
                   <a
-                    href="mailto:info@sikuzangu.com"
+                    href="mailto:sikuzangu@gmail.com"
                     className="text-primary hover:underline"
                   >
-                    info@sikuzangu.com
+                    sikuzangu@gmail.com
                   </a>
                 </p>
               </div>

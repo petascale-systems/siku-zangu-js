@@ -64,7 +64,7 @@ const _ADMIN_INVITE_TEMPLATE = handlebars.compile(`<!DOCTYPE html>
                         </p>
                         
                         <p style="margin: 0; color: #666666; font-size: 14px; line-height: 1.5;">
-                            Questions? Contact us at <a href="mailto:support@sikuzangu.com" style="color: #FD5A7E; text-decoration: none;">support@sikuzangu.org</a>
+                            Questions? Contact us at <a href="mailto:support@sikuzangu.org" style="color: #FD5A7E; text-decoration: none;">support@sikuzangu.org</a>
                         </p>
                     </td>
                 </tr>

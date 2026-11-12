@@ -1,6 +1,6 @@
 # app-sikuzangu-org
 
-The Siku Zangu mobile app for iOS and Android, built with Expo (SDK 54) and expo-router.
+The Siku Zangu mobile app for iOS and Android: track your cycle and understand your body, in Kiswahili and English. Built with Expo (SDK 54) and expo-router.
 
 - **App Store:** [Siku Zangu](https://apps.apple.com/us/app/siku-zangu/id6755812712)
 - **Play Store:** [org.sikuzangu.app](https://play.google.com/store/apps/details?id=org.sikuzangu.app)
@@ -9,7 +9,8 @@ Screens live in `src/app`:
 
 - `auth/`: register, login, OTP verification, forgot PIN, and reset PIN
 - `onboarding/`: names, date of birth, period and cycle length, symptoms, and medication
-- `tabs/`: home, calendar, log entry, insights, articles, notifications, and profile and account settings
+- `tabs/`: home, calendar, log entry, insights, and profile (personal info, language, notification settings, change PIN, and delete account)
+- `article-detail.tsx`: a single health article; `language.tsx`: the first-launch language picker
 
 Shared UI and cycle logic come from [libs/expo](../../libs/expo/README.md). API hooks come from `@siku-zangu/react-native` ([libs/react](../../libs/react/README.md)).
 

@@ -1,6 +1,6 @@
 # sikuzangu-org
 
-The Next.js app behind sikuzangu.org. It contains:
+The Next.js app behind [sikuzangu.org](https://sikuzangu.org). It introduces Siku Zangu to the public, serves the store-required legal pages, and runs the API and admin tools behind the mobile app. It contains:
 
 - **Public site**: home, about, features, user manual, contact, privacy policy, terms of service, and delete-account.
 - **Admin dashboard** (`/dashboard`): users, admins, articles, trends, and notifications.
@@ -13,6 +13,7 @@ The Next.js app behind sikuzangu.org. It contains:
 npx nx serve sikuzangu-org   # dev server on :3000
 npx nx build sikuzangu-org   # output in dist/apps/sikuzangu-org
 npx nx lint sikuzangu-org
+npx nx test sikuzangu-org   # unit tests (Jest)
 ```
 
 ## Environment

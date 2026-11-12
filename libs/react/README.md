@@ -16,4 +16,5 @@ The API host comes from `NEXT_PUBLIC_SIKUZANGU_COM_HOST` or `EXPO_PUBLIC_SIKUZAN
 ```bash
 npx nx lint react
 npx nx typecheck react
+npx nx test react
 ```

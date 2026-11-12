@@ -26,7 +26,7 @@ export default function ContactPage() {
                     </h2>
                     <div className="space-y-5 sm:space-y-6">
                       <a
-                          href="mailto:info@sikuzangu.com "
+                          href="mailto:sikuzangu@gmail.com"
                           className="flex items-center gap-3 sm:gap-4 hover:opacity-80 transition-opacity"
                       >
                         <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-50 rounded-full flex items-center justify-center flex-shrink-0">
@@ -34,7 +34,7 @@ export default function ContactPage() {
                         </div>
                         <div>
                           <p className="text-sm sm:text-base text-neutral-placeholder font-medium">
-                            info@sikuzangu.com
+                            sikuzangu@gmail.com
                           </p>
                         </div>
                       </a>
