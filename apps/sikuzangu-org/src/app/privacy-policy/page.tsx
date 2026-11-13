@@ -142,7 +142,9 @@ export default function PrivacyPolicyPage() {
                   <span className="font-semibold">
                     Data from minors (under 18):
                   </span>{' '}
-                  The app is not intended for children.
+                  The App may be used by people aged 12 and older. Users under
+                  18 may only use the App with the consent of a parent or legal
+                  guardian.
                 </li>
               </ul>
             </div>
@@ -270,8 +272,13 @@ export default function PrivacyPolicyPage() {
                 10. Children's Privacy
               </h2>
               <p className="text-sm sm:text-base leading-relaxed">
-                We do not knowingly collect data from individuals under 18. If
-                we do, we will delete it promptly.
+                The App is intended for users aged 12 and older. We do not
+                knowingly collect data from children under 12; if we learn that
+                we have, we will delete it promptly. Users aged 12 to 17 may
+                only use the App with the consent of a parent or legal guardian.
+                If you are a parent or guardian and have questions about your
+                child&apos;s data, or wish to withdraw consent and have it
+                deleted, please contact us.
               </p>
             </div>
             <div>
