@@ -48,8 +48,10 @@ export default function TermsOfServicePage() {
                 2. Eligibility & User Accounts
               </h2>
               <p className="text-sm sm:text-base leading-relaxed">
-                You must be at least 18 years old to use the App. Account
-                registration requires accurate and up-to-date information. You
+                You must be at least 12 years old to use the App. If you are
+                under 18, you may only use the App with the consent of a parent
+                or legal guardian, who agrees to these Terms on your behalf.
+                Account registration requires accurate and up-to-date information. You
                 are responsible for safeguarding your login credentials.
               </p>
             </div>
